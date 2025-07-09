@@ -1,10 +1,10 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Loader2, Search, Check, X, AlertCircle, ShoppingCart, Sparkles } from "lucide-react";
+import { Loader2, Search, Check, X, AlertCircle, ShoppingCart, Sparkles, Lock } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -41,7 +41,99 @@ export const DomainSearchForm = ({ className = "" }: DomainSearchFormProps) => {
   const [isCheckingAiDomains, setIsCheckingAiDomains] = useState(false);
   const [hasGeneratedSuggestions, setHasGeneratedSuggestions] = useState(false);
   
+  // Usage limits state
+  const [canSearch, setCanSearch] = useState(true);
+  const [usageLimitMessage, setUsageLimitMessage] = useState<string | null>(null);
+  const [isCheckingUsage, setIsCheckingUsage] = useState(false);
+  
   const { toast } = useToast();
+
+  // Check if user can perform search based on usage limits
+  const checkUsageLimits = async (): Promise<boolean> => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        setUsageLimitMessage("Please log in to search domains.");
+        return false;
+      }
+
+      setIsCheckingUsage(true);
+
+      // First, ensure user has a subscriber record - create one if not exists
+      const { data: subscriber, error: subscriberError } = await (supabase as any)
+        .from('subscribers')
+        .select('*')
+        .eq('user_id', user.id)
+        .maybeSingle();
+
+      if (subscriberError) {
+        console.error('Error checking subscriber:', subscriberError);
+        setUsageLimitMessage("Unable to check usage limits. Please try again.");
+        return false;
+      }
+
+      // Create subscriber record if it doesn't exist
+      if (!subscriber) {
+        const { error: insertError } = await (supabase as any)
+          .from('subscribers')
+          .insert({
+            user_id: user.id,
+            email: user.email,
+            tier: 'free'
+          });
+
+        if (insertError) {
+          console.error('Error creating subscriber record:', insertError);
+          setUsageLimitMessage("Unable to create user record. Please try again.");
+          return false;
+        }
+      }
+
+      // Check if user can search using the database function
+      const { data: canUserSearch, error: usageError } = await (supabase as any)
+        .rpc('can_user_search', { user_id: user.id });
+
+      if (usageError) {
+        console.error('Error checking usage limits:', usageError);
+        setUsageLimitMessage("Unable to check usage limits. Please try again.");
+        return false;
+      }
+
+      if (!canUserSearch) {
+        setUsageLimitMessage("You've reached your daily limit. Upgrade to Pro for unlimited searches.");
+        return false;
+      }
+
+      return true;
+    } catch (error) {
+      console.error('Error in checkUsageLimits:', error);
+      setUsageLimitMessage("Unable to check usage limits. Please try again.");
+      return false;
+    } finally {
+      setIsCheckingUsage(false);
+    }
+  };
+
+  // Log search usage after successful search
+  const logSearchUsage = async (searchKeyword: string, searchType: 'manual' | 'ai' = 'manual') => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (user) {
+        await (supabase as any)
+          .from('usage_logs')
+          .insert({
+            user_id: user.id,
+            action: searchType === 'ai' ? 'ai_search' : 'search',
+            details: { keyword: searchKeyword }
+          });
+      }
+    } catch (error) {
+      console.error('Failed to log search usage:', error);
+      // Don't throw - usage logging is not critical for the main functionality
+    }
+  };
 
   const storeSearchHistory = async (searchKeyword: string) => {
     try {
@@ -69,6 +161,15 @@ export const DomainSearchForm = ({ className = "" }: DomainSearchFormProps) => {
       return;
     }
 
+    // Check usage limits before proceeding
+    setUsageLimitMessage(null);
+    const canProceed = await checkUsageLimits();
+    if (!canProceed) {
+      setCanSearch(false);
+      return;
+    }
+
+    setCanSearch(true);
     setIsLoading(true);
     setError(null);
     setHasSearched(true);
@@ -88,6 +189,9 @@ export const DomainSearchForm = ({ className = "" }: DomainSearchFormProps) => {
       }
 
       setDomains(data);
+      
+      // Log the search usage
+      await logSearchUsage(keyword.trim(), 'manual');
       
       // Store search history for logged-in users
       await storeSearchHistory(keyword.trim());
@@ -186,6 +290,15 @@ export const DomainSearchForm = ({ className = "" }: DomainSearchFormProps) => {
       return;
     }
 
+    // Check usage limits before proceeding with AI suggestions
+    setUsageLimitMessage(null);
+    const canProceed = await checkUsageLimits();
+    if (!canProceed) {
+      setCanSearch(false);
+      return;
+    }
+
+    setCanSearch(true);
     setIsGeneratingSuggestions(true);
     setError(null);
     setHasGeneratedSuggestions(true);
@@ -258,6 +371,9 @@ export const DomainSearchForm = ({ className = "" }: DomainSearchFormProps) => {
 
       setAiSuggestions(aiDomainResults);
       
+      // Log the AI search usage
+      await logSearchUsage(keyword.trim(), 'ai');
+      
       toast({
         title: "AI Suggestions Generated",
         description: `Generated ${aiDomainResults.length} domain suggestions.`,
@@ -305,7 +421,7 @@ export const DomainSearchForm = ({ className = "" }: DomainSearchFormProps) => {
                 disabled={isLoading}
               />
               <div className="flex gap-2">
-                <Button type="submit" disabled={isLoading || !keyword.trim()} className="flex-1 sm:flex-none">
+                <Button type="submit" disabled={isLoading || !keyword.trim() || !canSearch || isCheckingUsage} className="flex-1 sm:flex-none">
                   {isLoading ? (
                     <>
                       <Loader2 className="h-4 w-4 mr-2 animate-spin" />
@@ -323,7 +439,7 @@ export const DomainSearchForm = ({ className = "" }: DomainSearchFormProps) => {
                   type="button"
                   variant="outline"
                   onClick={handleSuggestDomains}
-                  disabled={isGeneratingSuggestions || isCheckingAiDomains || !keyword.trim()}
+                  disabled={isGeneratingSuggestions || isCheckingAiDomains || !keyword.trim() || !canSearch || isCheckingUsage}
                   className="flex-1 sm:flex-none"
                 >
                   {isGeneratingSuggestions ? (
@@ -353,6 +469,13 @@ export const DomainSearchForm = ({ className = "" }: DomainSearchFormProps) => {
               <div className="flex items-center gap-2 p-3 rounded-md bg-destructive/10 text-destructive">
                 <AlertCircle className="h-4 w-4" />
                 <span className="text-sm">{error}</span>
+              </div>
+            )}
+            
+            {usageLimitMessage && (
+              <div className="flex items-center gap-2 p-3 rounded-md bg-yellow-50 border border-yellow-200 text-yellow-800">
+                <Lock className="h-4 w-4" />
+                <span className="text-sm">{usageLimitMessage}</span>
               </div>
             )}
           </form>
