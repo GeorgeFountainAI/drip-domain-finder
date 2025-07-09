@@ -235,7 +235,7 @@ export const SearchHistoryViewer = () => {
     <div className="space-y-6">
       <Card>
         <CardHeader>
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
               <CardTitle className="flex items-center gap-2">
                 <History className="h-5 w-5" />
@@ -251,16 +251,20 @@ export const SearchHistoryViewer = () => {
                 onClick={handlePurchase}
                 disabled={isPurchasing}
                 variant="default"
+                size="sm"
+                className="w-full sm:w-auto"
               >
                 {isPurchasing ? (
                   <>
                     <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                    Purchasing...
+                    <span className="hidden sm:inline">Purchasing...</span>
+                    <span className="sm:hidden">Buying...</span>
                   </>
                 ) : (
                   <>
                     <ShoppingCart className="h-4 w-4 mr-2" />
-                    Buy Selected ({selectedDomains.size}) - ${totalPrice.toFixed(2)}
+                    <span className="hidden sm:inline">Buy Selected ({selectedDomains.size}) - ${totalPrice.toFixed(2)}</span>
+                    <span className="sm:hidden">Buy ({selectedDomains.size}) ${totalPrice.toFixed(2)}</span>
                   </>
                 )}
               </Button>
@@ -271,11 +275,11 @@ export const SearchHistoryViewer = () => {
           <div className="space-y-4">
             {searchHistory.map((item) => (
               <div key={item.id} className="space-y-3">
-                <div className="flex items-center justify-between p-3 rounded-md border">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between p-3 rounded-md border gap-3">
                   <div className="flex-1">
-                    <div className="flex items-center gap-3">
-                      <span className="font-medium">{item.keyword}</span>
-                      <Badge variant="outline">{formatDate(item.created_at)}</Badge>
+                    <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+                      <span className="font-medium break-all">{item.keyword}</span>
+                      <Badge variant="outline" className="self-start">{formatDate(item.created_at)}</Badge>
                     </div>
                   </div>
                   <Button
@@ -283,16 +287,19 @@ export const SearchHistoryViewer = () => {
                     disabled={searchingKeyword === item.keyword}
                     variant="outline"
                     size="sm"
+                    className="w-full sm:w-auto"
                   >
                     {searchingKeyword === item.keyword ? (
                       <>
                         <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                        Searching...
+                        <span className="hidden sm:inline">Searching...</span>
+                        <span className="sm:hidden">Search</span>
                       </>
                     ) : (
                       <>
                         <Search className="h-4 w-4 mr-2" />
-                        Search Again
+                        <span className="hidden sm:inline">Search Again</span>
+                        <span className="sm:hidden">Search</span>
                       </>
                     )}
                   </Button>
@@ -300,8 +307,8 @@ export const SearchHistoryViewer = () => {
 
                 {/* Show search results if available */}
                 {searchResults[item.keyword] && (
-                  <div className="ml-6 p-4 bg-accent/30 rounded-md">
-                    <div className="flex items-center justify-between mb-3">
+                  <div className="ml-3 sm:ml-6 p-4 bg-accent/30 rounded-md">
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-3 gap-2">
                       <h4 className="font-medium">
                         Results ({searchResults[item.keyword].length} domains)
                       </h4>
@@ -310,9 +317,9 @@ export const SearchHistoryViewer = () => {
                       {searchResults[item.keyword].map((domain) => (
                         <div
                           key={domain.name}
-                          className="flex items-center justify-between p-2 rounded border bg-background"
+                          className="flex flex-col sm:flex-row sm:items-center sm:justify-between p-2 rounded border bg-background gap-3"
                         >
-                          <div className="flex items-center gap-3">
+                          <div className="flex flex-col sm:flex-row sm:items-center gap-3 flex-1">
                             {domain.available && (
                               <Checkbox
                                 id={`domain-${domain.name}`}

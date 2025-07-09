@@ -185,26 +185,30 @@ export const AdminPanel = ({ user }: AdminPanelProps) => {
   }
 
   return (
-    <div className="container mx-auto p-6 space-y-6">
+    <div className="container mx-auto p-4 sm:p-6 space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold flex items-center gap-3">
-            <Shield className="h-8 w-8 text-primary" />
-            Admin Dashboard
+          <h1 className="text-2xl sm:text-3xl font-bold flex items-center gap-3">
+            <Shield className="h-6 w-6 sm:h-8 sm:w-8 text-primary" />
+            <span className="hidden sm:inline">Admin Dashboard</span>
+            <span className="sm:hidden">Admin</span>
           </h1>
-          <p className="text-muted-foreground mt-1">
-            Monitor domain search activity and user engagement
+          <p className="text-muted-foreground mt-1 text-sm sm:text-base">
+            <span className="hidden sm:inline">Monitor domain search activity and user engagement</span>
+            <span className="sm:hidden">Search activity monitoring</span>
           </p>
         </div>
         <Button 
           onClick={handleRefresh} 
           disabled={isRefreshing}
           variant="outline"
-          className="gap-2"
+          className="gap-2 w-full sm:w-auto"
+          size="sm"
         >
           <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
-          Refresh Data
+          <span className="hidden sm:inline">Refresh Data</span>
+          <span className="sm:hidden">Refresh</span>
         </Button>
       </div>
 
@@ -299,34 +303,54 @@ export const AdminPanel = ({ user }: AdminPanelProps) => {
               No recent searches found.
             </p>
           ) : (
-            <div className="rounded-md border">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>User Email</TableHead>
-                    <TableHead>Keyword</TableHead>
-                    <TableHead>Timestamp</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {recentSearches.map((search) => (
-                    <TableRow key={search.id}>
-                      <TableCell>
-                        <Badge variant="outline" className="font-mono text-xs">
-                          {search.user_email}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        <span className="font-medium">{search.keyword}</span>
-                      </TableCell>
-                      <TableCell className="text-muted-foreground">
+            <>
+              {/* Mobile View */}
+              <div className="block sm:hidden space-y-3">
+                {recentSearches.map((search) => (
+                  <div key={search.id} className="p-3 rounded-md border space-y-2">
+                    <div className="flex items-center justify-between">
+                      <Badge variant="outline" className="font-mono text-xs">
+                        {search.user_email}
+                      </Badge>
+                      <span className="text-xs text-muted-foreground">
                         {formatDate(search.created_at)}
-                      </TableCell>
+                      </span>
+                    </div>
+                    <div className="font-medium">{search.keyword}</div>
+                  </div>
+                ))}
+              </div>
+              
+              {/* Desktop Table View */}
+              <div className="hidden sm:block rounded-md border">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>User Email</TableHead>
+                      <TableHead>Keyword</TableHead>
+                      <TableHead>Timestamp</TableHead>
                     </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
+                  </TableHeader>
+                  <TableBody>
+                    {recentSearches.map((search) => (
+                      <TableRow key={search.id}>
+                        <TableCell>
+                          <Badge variant="outline" className="font-mono text-xs">
+                            {search.user_email}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          <span className="font-medium">{search.keyword}</span>
+                        </TableCell>
+                        <TableCell className="text-muted-foreground">
+                          {formatDate(search.created_at)}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            </>
           )}
         </CardContent>
       </Card>

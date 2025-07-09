@@ -295,7 +295,7 @@ export const DomainSearchForm = ({ className = "" }: DomainSearchFormProps) => {
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="flex gap-2">
+            <div className="flex flex-col sm:flex-row gap-2">
               <Input
                 type="text"
                 placeholder="Enter keyword (e.g., curl*, get*, *app)"
@@ -304,42 +304,49 @@ export const DomainSearchForm = ({ className = "" }: DomainSearchFormProps) => {
                 className="flex-1"
                 disabled={isLoading}
               />
-              <Button type="submit" disabled={isLoading || !keyword.trim()}>
-                {isLoading ? (
-                  <>
-                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                    Searching...
-                  </>
-                ) : (
-                  <>
-                    <Search className="h-4 w-4 mr-2" />
-                    Search
-                  </>
-                )}
-              </Button>
-              <Button
-                type="button"
-                variant="outline"
-                onClick={handleSuggestDomains}
-                disabled={isGeneratingSuggestions || isCheckingAiDomains || !keyword.trim()}
-              >
-                {isGeneratingSuggestions ? (
-                  <>
-                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                    Generating...
-                  </>
-                ) : isCheckingAiDomains ? (
-                  <>
-                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                    Checking...
-                  </>
-                ) : (
-                  <>
-                    <Sparkles className="h-4 w-4 mr-2" />
-                    Suggest
-                  </>
-                )}
-              </Button>
+              <div className="flex gap-2">
+                <Button type="submit" disabled={isLoading || !keyword.trim()} className="flex-1 sm:flex-none">
+                  {isLoading ? (
+                    <>
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      <span className="hidden sm:inline">Searching...</span>
+                      <span className="sm:hidden">Search</span>
+                    </>
+                  ) : (
+                    <>
+                      <Search className="h-4 w-4 mr-2" />
+                      Search
+                    </>
+                  )}
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={handleSuggestDomains}
+                  disabled={isGeneratingSuggestions || isCheckingAiDomains || !keyword.trim()}
+                  className="flex-1 sm:flex-none"
+                >
+                  {isGeneratingSuggestions ? (
+                    <>
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      <span className="hidden sm:inline">Generating...</span>
+                      <span className="sm:hidden">Gen</span>
+                    </>
+                  ) : isCheckingAiDomains ? (
+                    <>
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      <span className="hidden sm:inline">Checking...</span>
+                      <span className="sm:hidden">Check</span>
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles className="h-4 w-4 mr-2" />
+                      <span className="hidden sm:inline">Suggest</span>
+                      <span className="sm:hidden">AI</span>
+                    </>
+                  )}
+                </Button>
+              </div>
             </div>
             
             {error && (
@@ -356,13 +363,13 @@ export const DomainSearchForm = ({ className = "" }: DomainSearchFormProps) => {
       {hasSearched && !isLoading && !error && (
         <Card>
           <CardHeader>
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
               <CardTitle>
                 Search Results {domains.length > 0 && `(${domains.length} domains)`}
               </CardTitle>
               
               {availableDomains.length > 0 && (
-                <div className="flex items-center gap-4">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
                   <div className="flex items-center gap-2">
                     <Checkbox
                       id="select-all"
@@ -370,7 +377,8 @@ export const DomainSearchForm = ({ className = "" }: DomainSearchFormProps) => {
                       onCheckedChange={handleSelectAll}
                     />
                     <label htmlFor="select-all" className="text-sm font-medium">
-                      Select All Available
+                      <span className="hidden sm:inline">Select All Available</span>
+                      <span className="sm:hidden">Select All</span>
                     </label>
                   </div>
                   
@@ -379,17 +387,20 @@ export const DomainSearchForm = ({ className = "" }: DomainSearchFormProps) => {
                       onClick={handlePurchase}
                       disabled={isPurchasing}
                       variant="default"
-                      className="ml-2"
+                      size="sm"
+                      className="w-full sm:w-auto"
                     >
                       {isPurchasing ? (
                         <>
                           <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                          Purchasing...
+                          <span className="hidden sm:inline">Purchasing...</span>
+                          <span className="sm:hidden">Buying...</span>
                         </>
                       ) : (
                         <>
                           <ShoppingCart className="h-4 w-4 mr-2" />
-                          Buy Selected ({selectedDomains.size}) - ${totalPrice.toFixed(2)}
+                          <span className="hidden sm:inline">Buy Selected ({selectedDomains.size}) - ${totalPrice.toFixed(2)}</span>
+                          <span className="sm:hidden">Buy ({selectedDomains.size}) ${totalPrice.toFixed(2)}</span>
                         </>
                       )}
                     </Button>
@@ -405,50 +416,54 @@ export const DomainSearchForm = ({ className = "" }: DomainSearchFormProps) => {
               </p>
             ) : (
               <div className="space-y-2">
-                {domains.map((domain) => (
-                  <div
-                    key={domain.name}
-                    className="flex items-center justify-between p-3 rounded-md border hover:bg-accent/50 transition-colors"
-                  >
-                    <div className="flex items-center gap-3">
-                      {domain.available && (
-                        <Checkbox
-                          id={`domain-${domain.name}`}
-                          checked={selectedDomains.has(domain.name)}
-                          onCheckedChange={(checked) => handleDomainSelect(domain.name, checked as boolean)}
-                        />
-                      )}
-                      <div className="flex items-center gap-2">
-                        {domain.available ? (
-                          <Check className="h-4 w-4 text-green-600" />
-                        ) : (
-                          <X className="h-4 w-4 text-red-600" />
-                        )}
-                        <span className="font-medium">{domain.name}</span>
-                      </div>
-                      <Badge variant={domain.available ? "default" : "secondary"}>
-                        {domain.available ? "Available" : "Unavailable"}
-                      </Badge>
-                      {domain.available && domain.price > 0 && (
-                        <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
-                          ${domain.price.toFixed(2)}/year
-                        </Badge>
-                      )}
-                    </div>
-                    
-                    {domain.available && domain.price > 0 && (
-                      <div className="text-right">
-                        <div className="text-lg font-bold text-green-600">
-                          ${domain.price.toFixed(2)}
-                        </div>
-                        <div className="text-xs text-muted-foreground">
-                          per year
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                ))}
-              </div>
+                 {domains.map((domain) => (
+                   <div
+                     key={domain.name}
+                     className="flex flex-col sm:flex-row sm:items-center sm:justify-between p-3 rounded-md border hover:bg-accent/50 transition-colors gap-3"
+                   >
+                     <div className="flex flex-col sm:flex-row sm:items-center gap-3 flex-1">
+                       <div className="flex items-center gap-3">
+                         {domain.available && (
+                           <Checkbox
+                             id={`domain-${domain.name}`}
+                             checked={selectedDomains.has(domain.name)}
+                             onCheckedChange={(checked) => handleDomainSelect(domain.name, checked as boolean)}
+                           />
+                         )}
+                         <div className="flex items-center gap-2">
+                           {domain.available ? (
+                             <Check className="h-4 w-4 text-green-600" />
+                           ) : (
+                             <X className="h-4 w-4 text-red-600" />
+                           )}
+                           <span className="font-medium break-all">{domain.name}</span>
+                         </div>
+                       </div>
+                       <div className="flex flex-wrap items-center gap-2">
+                         <Badge variant={domain.available ? "default" : "secondary"}>
+                           {domain.available ? "Available" : "Unavailable"}
+                         </Badge>
+                         {domain.available && domain.price > 0 && (
+                           <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
+                             ${domain.price.toFixed(2)}/year
+                           </Badge>
+                         )}
+                       </div>
+                     </div>
+                     
+                     {domain.available && domain.price > 0 && (
+                       <div className="text-right sm:text-right text-left">
+                         <div className="text-lg font-bold text-green-600">
+                           ${domain.price.toFixed(2)}
+                         </div>
+                         <div className="text-xs text-muted-foreground">
+                           per year
+                         </div>
+                       </div>
+                     )}
+                   </div>
+                 ))}
+               </div>
             )}
           </CardContent>
         </Card>
@@ -470,24 +485,26 @@ export const DomainSearchForm = ({ className = "" }: DomainSearchFormProps) => {
       {hasGeneratedSuggestions && !isGeneratingSuggestions && !isCheckingAiDomains && (
         <Card>
           <CardHeader>
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
               <div>
-                <CardTitle className="flex items-center gap-2">
-                  <Sparkles className="h-5 w-5 text-primary" />
-                  AI Suggestions
+                <CardTitle className="flex flex-col sm:flex-row sm:items-center gap-2">
+                  <div className="flex items-center gap-2">
+                    <Sparkles className="h-5 w-5 text-primary" />
+                    AI Suggestions
+                  </div>
                   {aiSuggestions.length > 0 && (
-                    <Badge variant="outline" className="ml-2">
+                    <Badge variant="outline">
                       {aiSuggestions.length} suggestions
                     </Badge>
                   )}
                 </CardTitle>
-                <CardDescription>
+                <CardDescription className="mt-1">
                   AI-generated domain suggestions based on "{keyword}"
                 </CardDescription>
               </div>
               
               {availableAiDomains.length > 0 && (
-                <div className="flex items-center gap-4">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
                   <div className="flex items-center gap-2">
                     <Checkbox
                       id="select-all-ai"
@@ -505,7 +522,8 @@ export const DomainSearchForm = ({ className = "" }: DomainSearchFormProps) => {
                       }}
                     />
                     <label htmlFor="select-all-ai" className="text-sm font-medium">
-                      Select All AI Suggestions
+                      <span className="hidden sm:inline">Select All AI Suggestions</span>
+                      <span className="sm:hidden">Select All AI</span>
                     </label>
                   </div>
                   
@@ -514,17 +532,20 @@ export const DomainSearchForm = ({ className = "" }: DomainSearchFormProps) => {
                       onClick={handlePurchase}
                       disabled={isPurchasing}
                       variant="default"
-                      className="ml-2"
+                      size="sm"
+                      className="w-full sm:w-auto"
                     >
                       {isPurchasing ? (
                         <>
                           <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                          Purchasing...
+                          <span className="hidden sm:inline">Purchasing...</span>
+                          <span className="sm:hidden">Buying...</span>
                         </>
                       ) : (
                         <>
                           <ShoppingCart className="h-4 w-4 mr-2" />
-                          Buy Selected ({selectedDomains.size}) - ${totalPrice.toFixed(2)}
+                          <span className="hidden sm:inline">Buy Selected ({selectedDomains.size}) - ${totalPrice.toFixed(2)}</span>
+                          <span className="sm:hidden">Buy ({selectedDomains.size}) ${totalPrice.toFixed(2)}</span>
                         </>
                       )}
                     </Button>
@@ -540,53 +561,57 @@ export const DomainSearchForm = ({ className = "" }: DomainSearchFormProps) => {
               </p>
             ) : (
               <div className="space-y-2">
-                {aiSuggestions.map((domain) => (
-                  <div
-                    key={`ai-${domain.name}`}
-                    className="flex items-center justify-between p-3 rounded-md border hover:bg-accent/50 transition-colors bg-gradient-to-r from-primary/5 to-transparent"
-                  >
-                    <div className="flex items-center gap-3">
-                      {domain.available && (
-                        <Checkbox
-                          id={`ai-domain-${domain.name}`}
-                          checked={selectedDomains.has(domain.name)}
-                          onCheckedChange={(checked) => handleDomainSelect(domain.name, checked as boolean)}
-                        />
-                      )}
-                      <div className="flex items-center gap-2">
-                        {domain.available ? (
-                          <Check className="h-4 w-4 text-green-600" />
-                        ) : (
-                          <X className="h-4 w-4 text-red-600" />
-                        )}
-                        <span className="font-medium">{domain.name}</span>
-                      </div>
-                      <Badge variant={domain.available ? "default" : "secondary"}>
-                        {domain.available ? "Available" : "Unavailable"}
-                      </Badge>
-                      <Badge variant="outline" className="text-xs bg-primary/10">
-                        AI Generated
-                      </Badge>
-                      {domain.available && domain.price > 0 && (
-                        <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
-                          ${domain.price.toFixed(2)}/year
-                        </Badge>
-                      )}
-                    </div>
-                    
-                    {domain.available && domain.price > 0 && (
-                      <div className="text-right">
-                        <div className="text-lg font-bold text-green-600">
-                          ${domain.price.toFixed(2)}
-                        </div>
-                        <div className="text-xs text-muted-foreground">
-                          per year
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                ))}
-              </div>
+                 {aiSuggestions.map((domain) => (
+                   <div
+                     key={`ai-${domain.name}`}
+                     className="flex flex-col sm:flex-row sm:items-center sm:justify-between p-3 rounded-md border hover:bg-accent/50 transition-colors bg-gradient-to-r from-primary/5 to-transparent gap-3"
+                   >
+                     <div className="flex flex-col sm:flex-row sm:items-center gap-3 flex-1">
+                       <div className="flex items-center gap-3">
+                         {domain.available && (
+                           <Checkbox
+                             id={`ai-domain-${domain.name}`}
+                             checked={selectedDomains.has(domain.name)}
+                             onCheckedChange={(checked) => handleDomainSelect(domain.name, checked as boolean)}
+                           />
+                         )}
+                         <div className="flex items-center gap-2">
+                           {domain.available ? (
+                             <Check className="h-4 w-4 text-green-600" />
+                           ) : (
+                             <X className="h-4 w-4 text-red-600" />
+                           )}
+                           <span className="font-medium break-all">{domain.name}</span>
+                         </div>
+                       </div>
+                       <div className="flex flex-wrap items-center gap-2">
+                         <Badge variant={domain.available ? "default" : "secondary"}>
+                           {domain.available ? "Available" : "Unavailable"}
+                         </Badge>
+                         <Badge variant="outline" className="text-xs bg-primary/10">
+                           AI Generated
+                         </Badge>
+                         {domain.available && domain.price > 0 && (
+                           <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
+                             ${domain.price.toFixed(2)}/year
+                           </Badge>
+                         )}
+                       </div>
+                     </div>
+                     
+                     {domain.available && domain.price > 0 && (
+                       <div className="text-right sm:text-right text-left">
+                         <div className="text-lg font-bold text-green-600">
+                           ${domain.price.toFixed(2)}
+                         </div>
+                         <div className="text-xs text-muted-foreground">
+                           per year
+                         </div>
+                       </div>
+                     )}
+                   </div>
+                 ))}
+               </div>
             )}
           </CardContent>
         </Card>
