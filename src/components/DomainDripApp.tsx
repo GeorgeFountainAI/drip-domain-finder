@@ -1,11 +1,12 @@
 import { useState } from "react";
 import { DomainSearch } from "./DomainSearch";
+import { DomainSearchForm } from "./DomainSearchForm";
 import { DomainResults } from "./DomainResults";
 import { DomainCart } from "./DomainCart";
 import { DomainCheckout } from "./DomainCheckout";
 import { searchDomains } from "../utils/domainGenerator";
 import { Button } from "@/components/ui/button";
-import { ShoppingCart } from "lucide-react";
+import { ShoppingCart, Sparkles } from "lucide-react";
 
 interface Domain {
   name: string;
@@ -103,10 +104,35 @@ export const DomainDripApp = () => {
   return (
     <div className="min-h-screen">
       {currentState === 'search' && (
-        <DomainSearch 
-          onSearch={handleSearch} 
-          isLoading={isLoading}
-        />
+        <div className="bg-gradient-hero">
+          {/* Hero Section */}
+          <div className="min-h-screen flex items-center justify-center p-4">
+            <div className="max-w-4xl w-full">
+              <div className="text-center mb-12">
+                <div className="flex items-center justify-center gap-2 mb-4">
+                  <Sparkles className="h-8 w-8 text-primary" />
+                  <h1 className="text-5xl font-bold bg-gradient-primary bg-clip-text text-transparent">
+                    DomainDrip.AI
+                  </h1>
+                </div>
+                <p className="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
+                  Generate perfect domain names for your next project. Enter a keyword or pattern and discover available domains instantly.
+                </p>
+              </div>
+              
+              {/* Original Search Component */}
+              <DomainSearch 
+                onSearch={handleSearch} 
+                isLoading={isLoading}
+              />
+              
+              {/* New API-Connected Search Form */}
+              <div className="mt-16">
+                <DomainSearchForm />
+              </div>
+            </div>
+          </div>
+        </div>
       )}
       
       {currentState === 'results' && (
