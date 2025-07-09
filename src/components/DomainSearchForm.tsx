@@ -429,11 +429,21 @@ export const DomainSearchForm = ({ className = "" }: DomainSearchFormProps) => {
                       <Badge variant={domain.available ? "default" : "secondary"}>
                         {domain.available ? "Available" : "Unavailable"}
                       </Badge>
+                      {domain.available && domain.price > 0 && (
+                        <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
+                          ${domain.price.toFixed(2)}/year
+                        </Badge>
+                      )}
                     </div>
                     
-                    {domain.available && (
-                      <div className="text-sm font-medium">
-                        ${domain.price.toFixed(2)}
+                    {domain.available && domain.price > 0 && (
+                      <div className="text-right">
+                        <div className="text-lg font-bold text-green-600">
+                          ${domain.price.toFixed(2)}
+                        </div>
+                        <div className="text-xs text-muted-foreground">
+                          per year
+                        </div>
                       </div>
                     )}
                   </div>
@@ -557,11 +567,21 @@ export const DomainSearchForm = ({ className = "" }: DomainSearchFormProps) => {
                       <Badge variant="outline" className="text-xs bg-primary/10">
                         AI Generated
                       </Badge>
+                      {domain.available && domain.price > 0 && (
+                        <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
+                          ${domain.price.toFixed(2)}/year
+                        </Badge>
+                      )}
                     </div>
                     
-                    {domain.available && (
-                      <div className="text-sm font-medium">
-                        ${domain.price.toFixed(2)}
+                    {domain.available && domain.price > 0 && (
+                      <div className="text-right">
+                        <div className="text-lg font-bold text-green-600">
+                          ${domain.price.toFixed(2)}
+                        </div>
+                        <div className="text-xs text-muted-foreground">
+                          per year
+                        </div>
                       </div>
                     )}
                   </div>

@@ -1,5 +1,6 @@
 // server/namecheap.js
 import axios from 'axios';
+import xml2js from 'xml2js';
 
 export async function searchDomains(keyword) {
   const username = process.env.NAMECHEAP_API_USER;
@@ -17,11 +18,105 @@ export async function searchDomains(keyword) {
 
   try {
     const response = await axios.get(url, { params });
-    return response.data;
+    
+    // Parse XML response
+    const parser = new xml2js.Parser();
+    const result = await parser.parseStringPromise(response.data);
+    
+    const domains = [];
+    const domainChecks = result?.ApiResponse?.CommandResponse?.[0]?.DomainCheckResult || [];
+    
+    for (const domain of domainChecks) {
+      const domainName = domain.$?.Domain;
+      const isAvailable = domain.$?.Available === 'true';
+      const tld = domainName?.split('.').pop() || 'com';
+      
+      let price = 0;
+      
+      // Get pricing for available domains
+      if (isAvailable && domainName) {
+        try {
+          price = await getDomainPrice(domainName);
+        } catch (priceError) {
+          console.error(`Failed to get price for ${domainName}:`, priceError);
+          // Use default pricing as fallback
+          price = getDefaultPrice(tld);
+        }
+      }
+      
+      domains.push({
+        name: domainName,
+        available: isAvailable,
+        price: price,
+        tld: tld
+      });
+    }
+    
+    return domains;
   } catch (err) {
     console.error('Error searching domains:', err.message);
     return { error: err.message };
   }
+}
+
+export async function getDomainPrice(domainName) {
+  const username = process.env.NAMECHEAP_API_USER;
+  const apiKey = process.env.NAMECHEAP_API_KEY;
+  const url = process.env.NAMECHEAP_API_URL || 'https://api.sandbox.namecheap.com/xml.response';
+
+  const tld = domainName.split('.').pop();
+  
+  const params = {
+    ApiUser: username,
+    ApiKey: apiKey,
+    UserName: username,
+    ClientIp: '127.0.0.1',
+    Command: 'namecheap.users.getPricing',
+    ProductType: 'DOMAIN',
+    ProductCategory: 'REGISTER',
+    ProductName: tld
+  };
+
+  try {
+    const response = await axios.get(url, { params });
+    
+    // Parse XML response
+    const parser = new xml2js.Parser();
+    const result = await parser.parseStringPromise(response.data);
+    
+    const pricing = result?.ApiResponse?.CommandResponse?.[0]?.UserGetPricingResult?.[0]?.ProductType?.[0]?.ProductCategory?.[0]?.Product;
+    
+    if (pricing && pricing.length > 0) {
+      // Get the first year price
+      const firstYearPrice = pricing[0]?.Price?.[0]?.$?.Price;
+      return firstYearPrice ? parseFloat(firstYearPrice) : getDefaultPrice(tld);
+    }
+    
+    return getDefaultPrice(tld);
+  } catch (err) {
+    console.error('Error getting domain price:', err.message);
+    return getDefaultPrice(tld);
+  }
+}
+
+// Fallback pricing when API fails
+export function getDefaultPrice(tld) {
+  const defaultPrices = {
+    'com': 12.98,
+    'net': 14.98,
+    'org': 14.98,
+    'io': 39.98,
+    'ai': 89.98,
+    'app': 19.98,
+    'co': 32.98,
+    'dev': 15.98,
+    'tech': 49.98,
+    'online': 39.98,
+    'store': 59.98,
+    'blog': 32.98
+  };
+  
+  return defaultPrices[tld?.toLowerCase()] || 15.98;
 }
 
 export async function registerDomain(domainName) {

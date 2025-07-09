@@ -15,6 +15,13 @@ export default async function handler(req, res) {
 
   try {
     const result = await searchDomains(keyword);
+    
+    // Handle API errors
+    if (result.error) {
+      return res.status(500).json({ error: result.error });
+    }
+    
+    // Return the domains array with pricing information
     return res.status(200).json(result);
   } catch (error) {
     console.error('Error searching domains:', error);
