@@ -2,6 +2,8 @@ import { useState, useEffect } from "react";
 import { DomainSearch } from "./DomainSearch";
 import { DomainSearchForm } from "./DomainSearchForm";
 import { SearchHistoryViewer } from "./SearchHistoryViewer";
+import { AuthForm } from "./AuthForm";
+import { AppHeader } from "./AppHeader";
 import { DomainResults } from "./DomainResults";
 import { DomainCart } from "./DomainCart";
 import { DomainCheckout } from "./DomainCheckout";
@@ -120,8 +122,15 @@ export const DomainDripApp = () => {
     );
   };
 
+  // Show authentication form if user is not logged in
+  if (!user) {
+    return <AuthForm />;
+  }
+
   return (
     <div className="min-h-screen">
+      <AppHeader user={user} />
+      
       {currentState === 'search' && (
         <div className="bg-gradient-hero">
           {/* Hero Section */}
@@ -150,12 +159,10 @@ export const DomainDripApp = () => {
                 <DomainSearchForm />
               </div>
               
-              {/* Search History Viewer - Only show if user is logged in */}
-              {user && (
-                <div className="mt-16">
-                  <SearchHistoryViewer />
-                </div>
-              )}
+              {/* Search History Viewer */}
+              <div className="mt-16">
+                <SearchHistoryViewer />
+              </div>
             </div>
           </div>
         </div>
