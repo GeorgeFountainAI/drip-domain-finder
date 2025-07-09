@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Loader2, Search, Check, X, AlertCircle, ShoppingCart } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
 interface Domain {
   name: string;
@@ -35,6 +36,24 @@ export const DomainSearchForm = ({ className = "" }: DomainSearchFormProps) => {
   const [purchaseResults, setPurchaseResults] = useState<PurchaseResult[]>([]);
   const { toast } = useToast();
 
+  const storeSearchHistory = async (searchKeyword: string) => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (user) {
+        await supabase
+          .from('search_history')
+          .insert({
+            user_id: user.id,
+            keyword: searchKeyword
+          });
+      }
+    } catch (error) {
+      // Silently fail - search history is not critical for the main functionality
+      console.error('Failed to store search history:', error);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -62,6 +81,9 @@ export const DomainSearchForm = ({ className = "" }: DomainSearchFormProps) => {
       }
 
       setDomains(data);
+      
+      // Store search history for logged-in users
+      await storeSearchHistory(keyword.trim());
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to search domains");
       setDomains([]);
