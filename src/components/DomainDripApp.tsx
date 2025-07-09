@@ -1,12 +1,14 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { DomainSearch } from "./DomainSearch";
 import { DomainSearchForm } from "./DomainSearchForm";
+import { SearchHistoryViewer } from "./SearchHistoryViewer";
 import { DomainResults } from "./DomainResults";
 import { DomainCart } from "./DomainCart";
 import { DomainCheckout } from "./DomainCheckout";
 import { searchDomains } from "../utils/domainGenerator";
 import { Button } from "@/components/ui/button";
 import { ShoppingCart, Sparkles } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 
 interface Domain {
   name: string;
@@ -23,6 +25,23 @@ export const DomainDripApp = () => {
   const [cartItems, setCartItems] = useState<Domain[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [currentKeyword, setCurrentKeyword] = useState('');
+  const [user, setUser] = useState<any>(null);
+
+  useEffect(() => {
+    // Check for existing session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUser(session?.user ?? null);
+    });
+
+    // Listen for auth changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (event, session) => {
+        setUser(session?.user ?? null);
+      }
+    );
+
+    return () => subscription.unsubscribe();
+  }, []);
 
   const handleSearch = async (keyword: string) => {
     setIsLoading(true);
@@ -130,6 +149,13 @@ export const DomainDripApp = () => {
               <div className="mt-16">
                 <DomainSearchForm />
               </div>
+              
+              {/* Search History Viewer - Only show if user is logged in */}
+              {user && (
+                <div className="mt-16">
+                  <SearchHistoryViewer />
+                </div>
+              )}
             </div>
           </div>
         </div>
