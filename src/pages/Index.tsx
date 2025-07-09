@@ -1,7 +1,7 @@
-import { DomainDripApp } from "@/components/DomainDripApp";
+import LandingPage from "@/components/LandingPage";
 
 const Index = () => {
-  return <DomainDripApp />;
+  return <LandingPage />;
 };
 
 export default Index;

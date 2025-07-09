@@ -7,6 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AlertCircle, Loader2, Mail, Lock, Sparkles } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { useNavigate } from "react-router-dom";
 
 interface AuthFormProps {
   onAuthSuccess?: () => void;
@@ -19,6 +20,7 @@ export const AuthForm = ({ onAuthSuccess }: AuthFormProps) => {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   const validateEmail = (email: string) => {
     return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
@@ -60,7 +62,12 @@ export const AuthForm = ({ onAuthSuccess }: AuthFormProps) => {
         description: "You have successfully logged in.",
       });
 
-      onAuthSuccess?.();
+      // Navigate to app or call callback
+      if (onAuthSuccess) {
+        onAuthSuccess();
+      } else {
+        navigate('/app');
+      }
     } catch (err) {
       setError("An unexpected error occurred. Please try again.");
     } finally {
@@ -90,7 +97,7 @@ export const AuthForm = ({ onAuthSuccess }: AuthFormProps) => {
     setIsLoading(true);
 
     try {
-      const redirectUrl = `${window.location.origin}/`;
+      const redirectUrl = `${window.location.origin}/app`;
       
       const { error } = await supabase.auth.signUp({
         email,

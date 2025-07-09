@@ -11,6 +11,7 @@ import { searchDomains } from "../utils/domainGenerator";
 import { Button } from "@/components/ui/button";
 import { ShoppingCart, Sparkles } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { useNavigate } from "react-router-dom";
 
 interface Domain {
   name: string;
@@ -28,22 +29,33 @@ export const DomainDripApp = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [currentKeyword, setCurrentKeyword] = useState('');
   const [user, setUser] = useState<any>(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
     // Check for existing session
     supabase.auth.getSession().then(({ data: { session } }) => {
-      setUser(session?.user ?? null);
+      if (session?.user) {
+        setUser(session.user);
+      } else {
+        // Redirect to auth if not authenticated
+        navigate('/auth');
+      }
     });
 
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
-        setUser(session?.user ?? null);
+        if (session?.user) {
+          setUser(session.user);
+        } else {
+          // Redirect to auth if logged out
+          navigate('/auth');
+        }
       }
     );
 
     return () => subscription.unsubscribe();
-  }, []);
+  }, [navigate]);
 
   const handleSearch = async (keyword: string) => {
     setIsLoading(true);
@@ -122,9 +134,9 @@ export const DomainDripApp = () => {
     );
   };
 
-  // Show authentication form if user is not logged in
+  // Return null or loading state while checking auth
   if (!user) {
-    return <AuthForm />;
+    return null; // This will only show briefly before redirect
   }
 
   return (
