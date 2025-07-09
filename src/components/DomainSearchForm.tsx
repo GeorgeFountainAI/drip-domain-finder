@@ -3,13 +3,21 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Search, Check, X, AlertCircle } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Loader2, Search, Check, X, AlertCircle, ShoppingCart } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 
 interface Domain {
   name: string;
   available: boolean;
   price: number;
   tld: string;
+}
+
+interface PurchaseResult {
+  domain: string;
+  success: boolean;
+  message: string;
 }
 
 interface DomainSearchFormProps {
@@ -19,9 +27,13 @@ interface DomainSearchFormProps {
 export const DomainSearchForm = ({ className = "" }: DomainSearchFormProps) => {
   const [keyword, setKeyword] = useState("");
   const [domains, setDomains] = useState<Domain[]>([]);
+  const [selectedDomains, setSelectedDomains] = useState<Set<string>>(new Set());
   const [isLoading, setIsLoading] = useState(false);
+  const [isPurchasing, setIsPurchasing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [hasSearched, setHasSearched] = useState(false);
+  const [purchaseResults, setPurchaseResults] = useState<PurchaseResult[]>([]);
+  const { toast } = useToast();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -62,6 +74,88 @@ export const DomainSearchForm = ({ className = "" }: DomainSearchFormProps) => {
     setKeyword(e.target.value);
     if (error) setError(null);
   };
+
+  const handleDomainSelect = (domainName: string, checked: boolean) => {
+    setSelectedDomains(prev => {
+      const newSet = new Set(prev);
+      if (checked) {
+        newSet.add(domainName);
+      } else {
+        newSet.delete(domainName);
+      }
+      return newSet;
+    });
+  };
+
+  const handleSelectAll = (checked: boolean) => {
+    if (checked) {
+      const availableDomains = domains.filter(d => d.available).map(d => d.name);
+      setSelectedDomains(new Set(availableDomains));
+    } else {
+      setSelectedDomains(new Set());
+    }
+  };
+
+  const handlePurchase = async () => {
+    if (selectedDomains.size === 0) {
+      toast({
+        title: "No domains selected",
+        description: "Please select at least one domain to purchase.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsPurchasing(true);
+    setPurchaseResults([]);
+
+    try {
+      const response = await fetch('/api/purchaseDomains', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          domains: Array.from(selectedDomains)
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || `HTTP ${response.status}`);
+      }
+
+      const results = await response.json();
+      setPurchaseResults(results);
+      
+      // Clear selected domains after purchase attempt
+      setSelectedDomains(new Set());
+      
+      // Show success toast
+      const successfulPurchases = results.filter((r: PurchaseResult) => r.success);
+      if (successfulPurchases.length > 0) {
+        toast({
+          title: "Purchase completed",
+          description: `Successfully purchased ${successfulPurchases.length} domain(s).`,
+        });
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to purchase domains");
+      toast({
+        title: "Purchase failed",
+        description: err instanceof Error ? err.message : "Failed to purchase domains",
+        variant: "destructive",
+      });
+    } finally {
+      setIsPurchasing(false);
+    }
+  };
+
+  const availableDomains = domains.filter(d => d.available);
+  const totalPrice = Array.from(selectedDomains).reduce((sum, domainName) => {
+    const domain = domains.find(d => d.name === domainName);
+    return sum + (domain?.price || 0);
+  }, 0);
 
   return (
     <div className={`space-y-6 ${className}`}>
@@ -115,9 +209,47 @@ export const DomainSearchForm = ({ className = "" }: DomainSearchFormProps) => {
       {hasSearched && !isLoading && !error && (
         <Card>
           <CardHeader>
-            <CardTitle>
-              Search Results {domains.length > 0 && `(${domains.length} domains)`}
-            </CardTitle>
+            <div className="flex items-center justify-between">
+              <CardTitle>
+                Search Results {domains.length > 0 && `(${domains.length} domains)`}
+              </CardTitle>
+              
+              {availableDomains.length > 0 && (
+                <div className="flex items-center gap-4">
+                  <div className="flex items-center gap-2">
+                    <Checkbox
+                      id="select-all"
+                      checked={availableDomains.length > 0 && selectedDomains.size === availableDomains.length}
+                      onCheckedChange={handleSelectAll}
+                    />
+                    <label htmlFor="select-all" className="text-sm font-medium">
+                      Select All Available
+                    </label>
+                  </div>
+                  
+                  {selectedDomains.size > 0 && (
+                    <Button
+                      onClick={handlePurchase}
+                      disabled={isPurchasing}
+                      variant="default"
+                      className="ml-2"
+                    >
+                      {isPurchasing ? (
+                        <>
+                          <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                          Purchasing...
+                        </>
+                      ) : (
+                        <>
+                          <ShoppingCart className="h-4 w-4 mr-2" />
+                          Buy Selected ({selectedDomains.size}) - ${totalPrice.toFixed(2)}
+                        </>
+                      )}
+                    </Button>
+                  )}
+                </div>
+              )}
+            </div>
           </CardHeader>
           <CardContent>
             {domains.length === 0 ? (
@@ -132,6 +264,13 @@ export const DomainSearchForm = ({ className = "" }: DomainSearchFormProps) => {
                     className="flex items-center justify-between p-3 rounded-md border hover:bg-accent/50 transition-colors"
                   >
                     <div className="flex items-center gap-3">
+                      {domain.available && (
+                        <Checkbox
+                          id={`domain-${domain.name}`}
+                          checked={selectedDomains.has(domain.name)}
+                          onCheckedChange={(checked) => handleDomainSelect(domain.name, checked as boolean)}
+                        />
+                      )}
                       <div className="flex items-center gap-2">
                         {domain.available ? (
                           <Check className="h-4 w-4 text-green-600" />
@@ -165,6 +304,42 @@ export const DomainSearchForm = ({ className = "" }: DomainSearchFormProps) => {
             <div className="flex items-center justify-center gap-3">
               <Loader2 className="h-5 w-5 animate-spin" />
               <span className="text-muted-foreground">Searching for domains...</span>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Purchase Results */}
+      {purchaseResults.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Purchase Summary</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-2">
+              {purchaseResults.map((result) => (
+                <div
+                  key={result.domain}
+                  className="flex items-center justify-between p-3 rounded-md border"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-2">
+                      {result.success ? (
+                        <Check className="h-4 w-4 text-green-600" />
+                      ) : (
+                        <X className="h-4 w-4 text-red-600" />
+                      )}
+                      <span className="font-medium">{result.domain}</span>
+                    </div>
+                    <Badge variant={result.success ? "default" : "destructive"}>
+                      {result.success ? "Purchased" : "Failed"}
+                    </Badge>
+                  </div>
+                  <div className="text-sm text-muted-foreground">
+                    {result.message}
+                  </div>
+                </div>
+              ))}
             </div>
           </CardContent>
         </Card>
