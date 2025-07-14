@@ -1,6 +1,6 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { DomainSearch } from "./DomainSearch";
-import { DomainSearchForm } from "./DomainSearchForm";
+import { DomainSearchForm, DomainSearchFormRef } from "./DomainSearchForm";
 import { SearchHistoryViewer } from "./SearchHistoryViewer";
 import { AuthForm } from "./AuthForm";
 import { AppHeader } from "./AppHeader";
@@ -30,6 +30,9 @@ export const DomainDripApp = () => {
   const [currentKeyword, setCurrentKeyword] = useState('');
   const [user, setUser] = useState<any>(null);
   const navigate = useNavigate();
+  
+  // Ref for the DomainSearchForm
+  const domainSearchFormRef = useRef<DomainSearchFormRef>(null);
 
   useEffect(() => {
     // Check for existing session
@@ -115,6 +118,13 @@ export const DomainDripApp = () => {
     setDomains([]);
   };
 
+  // Handle search again from SearchHistoryViewer
+  const handleSearchAgain = async (keyword: string) => {
+    if (domainSearchFormRef.current) {
+      await domainSearchFormRef.current.searchKeyword(keyword);
+    }
+  };
+
   // Cart button for results page
   const CartButton = () => {
     if (currentState !== 'results' || cartItems.length === 0) return null;
@@ -168,13 +178,15 @@ export const DomainDripApp = () => {
               
               {/* New API-Connected Search Form */}
               <div className="mt-16">
-                <DomainSearchForm />
+                <DomainSearchForm ref={domainSearchFormRef} />
               </div>
               
-              {/* Search History Viewer */}
-              <div className="mt-16">
-                <SearchHistoryViewer />
-              </div>
+              {/* Search History Viewer - Always visible when logged in */}
+              {user && (
+                <div className="mt-8">
+                  <SearchHistoryViewer onSearchAgain={handleSearchAgain} />
+                </div>
+              )}
             </div>
           </div>
         </div>

@@ -2,8 +2,7 @@ import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Loader2, History, Search, Check, X, AlertCircle, ShoppingCart } from "lucide-react";
+import { Loader2, History, Search } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
@@ -13,27 +12,14 @@ interface SearchHistoryItem {
   created_at: string;
 }
 
-interface Domain {
-  name: string;
-  available: boolean;
-  price: number;
-  tld: string;
+interface SearchHistoryViewerProps {
+  onSearchAgain?: (keyword: string) => Promise<void>;
 }
 
-interface PurchaseResult {
-  domain: string;
-  success: boolean;
-  message: string;
-}
-
-export const SearchHistoryViewer = () => {
+export const SearchHistoryViewer = ({ onSearchAgain }: SearchHistoryViewerProps) => {
   const [searchHistory, setSearchHistory] = useState<SearchHistoryItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchingKeyword, setSearchingKeyword] = useState<string | null>(null);
-  const [searchResults, setSearchResults] = useState<{ [keyword: string]: Domain[] }>({});
-  const [selectedDomains, setSelectedDomains] = useState<Set<string>>(new Set());
-  const [isPurchasing, setIsPurchasing] = useState(false);
-  const [purchaseResults, setPurchaseResults] = useState<PurchaseResult[]>([]);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -83,27 +69,16 @@ export const SearchHistoryViewer = () => {
   };
 
   const handleSearchAgain = async (keyword: string) => {
+    if (!onSearchAgain) return;
+    
     setSearchingKeyword(keyword);
     
     try {
-      const response = await fetch(`/api/domainSearch?keyword=${encodeURIComponent(keyword)}`);
-      
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.error || `HTTP ${response.status}`);
-      }
-
-      const data = await response.json();
-      
-      if (data.error) {
-        throw new Error(data.error);
-      }
-
-      setSearchResults(prev => ({ ...prev, [keyword]: data }));
+      await onSearchAgain(keyword);
       
       toast({
-        title: "Search completed",
-        description: `Found ${data.length} domains for "${keyword}"`,
+        title: "Search triggered",
+        description: `Searching for "${keyword}" again...`,
       });
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : "Failed to search domains";
@@ -116,86 +91,6 @@ export const SearchHistoryViewer = () => {
       setSearchingKeyword(null);
     }
   };
-
-  const handleDomainSelect = (domainName: string, checked: boolean) => {
-    setSelectedDomains(prev => {
-      const newSet = new Set(prev);
-      if (checked) {
-        newSet.add(domainName);
-      } else {
-        newSet.delete(domainName);
-      }
-      return newSet;
-    });
-  };
-
-  const handlePurchase = async () => {
-    if (selectedDomains.size === 0) {
-      toast({
-        title: "No domains selected",
-        description: "Please select at least one domain to purchase.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    setIsPurchasing(true);
-    setPurchaseResults([]);
-
-    try {
-      const response = await fetch('/api/purchaseDomains', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          domains: Array.from(selectedDomains)
-        }),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.error || `HTTP ${response.status}`);
-      }
-
-      const results = await response.json();
-      setPurchaseResults(results);
-      
-      // Clear selected domains after purchase attempt
-      setSelectedDomains(new Set());
-      
-      // Show success toast
-      const successfulPurchases = results.filter((r: PurchaseResult) => r.success);
-      if (successfulPurchases.length > 0) {
-        toast({
-          title: "Purchase completed",
-          description: `Successfully purchased ${successfulPurchases.length} domain(s).`,
-        });
-      }
-    } catch (err) {
-      toast({
-        title: "Purchase failed",
-        description: err instanceof Error ? err.message : "Failed to purchase domains",
-        variant: "destructive",
-      });
-    } finally {
-      setIsPurchasing(false);
-    }
-  };
-
-  const getAllAvailableDomains = () => {
-    const allDomains: Domain[] = [];
-    Object.values(searchResults).forEach(domains => {
-      allDomains.push(...domains.filter(d => d.available));
-    });
-    return allDomains;
-  };
-
-  const totalPrice = Array.from(selectedDomains).reduce((sum, domainName) => {
-    const allDomains = getAllAvailableDomains();
-    const domain = allDomains.find(d => d.name === domainName);
-    return sum + (domain?.price || 0);
-  }, 0);
 
   if (isLoading) {
     return (
@@ -232,165 +127,56 @@ export const SearchHistoryViewer = () => {
   }
 
   return (
-    <div className="space-y-6">
-      <Card>
-        <CardHeader>
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-            <div>
-              <CardTitle className="flex items-center gap-2">
-                <History className="h-5 w-5" />
-                Search History
-              </CardTitle>
-              <CardDescription>
-                Your {searchHistory.length} most recent domain searches
-              </CardDescription>
-            </div>
-            
-            {selectedDomains.size > 0 && (
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <History className="h-5 w-5" />
+          Search History
+        </CardTitle>
+        <CardDescription>
+          Your {searchHistory.length} most recent domain searches
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        <div className="space-y-3">
+          {searchHistory.map((item) => (
+            <div 
+              key={item.id} 
+              className="flex flex-col sm:flex-row sm:items-center sm:justify-between p-3 rounded-md border hover:bg-accent/50 transition-colors gap-3"
+            >
+              <div className="flex-1">
+                <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+                  <span className="font-medium break-all">{item.keyword}</span>
+                  <Badge variant="outline" className="self-start text-xs">
+                    {formatDate(item.created_at)}
+                  </Badge>
+                </div>
+              </div>
               <Button
-                onClick={handlePurchase}
-                disabled={isPurchasing}
-                variant="default"
+                onClick={() => handleSearchAgain(item.keyword)}
+                disabled={searchingKeyword === item.keyword}
+                variant="outline"
                 size="sm"
                 className="w-full sm:w-auto"
               >
-                {isPurchasing ? (
+                {searchingKeyword === item.keyword ? (
                   <>
                     <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                    <span className="hidden sm:inline">Purchasing...</span>
-                    <span className="sm:hidden">Buying...</span>
+                    <span className="hidden sm:inline">Searching...</span>
+                    <span className="sm:hidden">Search</span>
                   </>
                 ) : (
                   <>
-                    <ShoppingCart className="h-4 w-4 mr-2" />
-                    <span className="hidden sm:inline">Buy Selected ({selectedDomains.size}) - ${totalPrice.toFixed(2)}</span>
-                    <span className="sm:hidden">Buy ({selectedDomains.size}) ${totalPrice.toFixed(2)}</span>
+                    <Search className="h-4 w-4 mr-2" />
+                    <span className="hidden sm:inline">Search Again</span>
+                    <span className="sm:hidden">Search</span>
                   </>
                 )}
               </Button>
-            )}
-          </div>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            {searchHistory.map((item) => (
-              <div key={item.id} className="space-y-3">
-                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between p-3 rounded-md border gap-3">
-                  <div className="flex-1">
-                    <div className="flex flex-col sm:flex-row sm:items-center gap-3">
-                      <span className="font-medium break-all">{item.keyword}</span>
-                      <Badge variant="outline" className="self-start">{formatDate(item.created_at)}</Badge>
-                    </div>
-                  </div>
-                  <Button
-                    onClick={() => handleSearchAgain(item.keyword)}
-                    disabled={searchingKeyword === item.keyword}
-                    variant="outline"
-                    size="sm"
-                    className="w-full sm:w-auto"
-                  >
-                    {searchingKeyword === item.keyword ? (
-                      <>
-                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                        <span className="hidden sm:inline">Searching...</span>
-                        <span className="sm:hidden">Search</span>
-                      </>
-                    ) : (
-                      <>
-                        <Search className="h-4 w-4 mr-2" />
-                        <span className="hidden sm:inline">Search Again</span>
-                        <span className="sm:hidden">Search</span>
-                      </>
-                    )}
-                  </Button>
-                </div>
-
-                {/* Show search results if available */}
-                {searchResults[item.keyword] && (
-                  <div className="ml-3 sm:ml-6 p-4 bg-accent/30 rounded-md">
-                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-3 gap-2">
-                      <h4 className="font-medium">
-                        Results ({searchResults[item.keyword].length} domains)
-                      </h4>
-                    </div>
-                    <div className="space-y-2">
-                      {searchResults[item.keyword].map((domain) => (
-                        <div
-                          key={domain.name}
-                          className="flex flex-col sm:flex-row sm:items-center sm:justify-between p-2 rounded border bg-background gap-3"
-                        >
-                          <div className="flex flex-col sm:flex-row sm:items-center gap-3 flex-1">
-                            {domain.available && (
-                              <Checkbox
-                                id={`domain-${domain.name}`}
-                                checked={selectedDomains.has(domain.name)}
-                                onCheckedChange={(checked) => handleDomainSelect(domain.name, checked as boolean)}
-                              />
-                            )}
-                            <div className="flex items-center gap-2">
-                              {domain.available ? (
-                                <Check className="h-4 w-4 text-green-600" />
-                              ) : (
-                                <X className="h-4 w-4 text-red-600" />
-                              )}
-                              <span className="font-medium text-sm">{domain.name}</span>
-                            </div>
-                            <Badge variant={domain.available ? "default" : "secondary"} className="text-xs">
-                              {domain.available ? "Available" : "Unavailable"}
-                            </Badge>
-                          </div>
-                          
-                          {domain.available && (
-                            <div className="text-sm font-medium">
-                              ${domain.price.toFixed(2)}
-                            </div>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Purchase Results */}
-      {purchaseResults.length > 0 && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Purchase Summary</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-2">
-              {purchaseResults.map((result) => (
-                <div
-                  key={result.domain}
-                  className="flex items-center justify-between p-3 rounded-md border"
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="flex items-center gap-2">
-                      {result.success ? (
-                        <Check className="h-4 w-4 text-green-600" />
-                      ) : (
-                        <X className="h-4 w-4 text-red-600" />
-                      )}
-                      <span className="font-medium">{result.domain}</span>
-                    </div>
-                    <Badge variant={result.success ? "default" : "destructive"}>
-                      {result.success ? "Purchased" : "Failed"}
-                    </Badge>
-                  </div>
-                  <div className="text-sm text-muted-foreground">
-                    {result.message}
-                  </div>
-                </div>
-              ))}
             </div>
-          </CardContent>
-        </Card>
-      )}
-    </div>
+          ))}
+        </div>
+      </CardContent>
+    </Card>
   );
 };

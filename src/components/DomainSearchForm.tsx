@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, forwardRef, useImperativeHandle } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -25,7 +25,12 @@ interface DomainSearchFormProps {
   className?: string;
 }
 
-export const DomainSearchForm = ({ className = "" }: DomainSearchFormProps) => {
+export interface DomainSearchFormRef {
+  searchKeyword: (keyword: string) => Promise<void>;
+  focusOnResults: () => void;
+}
+
+export const DomainSearchForm = forwardRef<DomainSearchFormRef, DomainSearchFormProps>(({ className = "" }, ref) => {
   const [keyword, setKeyword] = useState("");
   const [domains, setDomains] = useState<Domain[]>([]);
   const [selectedDomains, setSelectedDomains] = useState<Set<string>>(new Set());
@@ -45,6 +50,9 @@ export const DomainSearchForm = ({ className = "" }: DomainSearchFormProps) => {
   const [canSearch, setCanSearch] = useState(true);
   const [usageLimitMessage, setUsageLimitMessage] = useState<string | null>(null);
   const [isCheckingUsage, setIsCheckingUsage] = useState(false);
+  
+  // Refs for focusing
+  const resultsRef = useRef<HTMLDivElement>(null);
   
   const { toast } = useToast();
 
@@ -397,6 +405,69 @@ export const DomainSearchForm = ({ className = "" }: DomainSearchFormProps) => {
     return sum + (domain?.price || 0);
   }, 0);
 
+  // Expose methods through ref
+  useImperativeHandle(ref, () => ({
+    searchKeyword: async (searchKeyword: string) => {
+      setKeyword(searchKeyword);
+      
+      // Check usage limits before proceeding
+      setUsageLimitMessage(null);
+      const canProceed = await checkUsageLimits();
+      if (!canProceed) {
+        setCanSearch(false);
+        return;
+      }
+
+      setCanSearch(true);
+      setIsLoading(true);
+      setError(null);
+      setHasSearched(true);
+      
+      // Reset previous results
+      setDomains([]);
+      setAiSuggestions([]);
+      setHasGeneratedSuggestions(false);
+      setSelectedDomains(new Set());
+
+      try {
+        const response = await fetch(`/api/domainSearch?keyword=${encodeURIComponent(searchKeyword.trim())}`);
+        
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}));
+          throw new Error(errorData.error || `HTTP ${response.status}`);
+        }
+
+        const data = await response.json();
+        
+        if (data.error) {
+          throw new Error(data.error);
+        }
+
+        setDomains(data);
+        
+        // Log the search usage
+        await logSearchUsage(searchKeyword.trim(), 'manual');
+        
+        // Store search history for logged-in users
+        await storeSearchHistory(searchKeyword.trim());
+        
+        // Focus on results after search
+        setTimeout(() => {
+          resultsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }, 100);
+        
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Failed to search domains");
+        setDomains([]);
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    focusOnResults: () => {
+      resultsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  }), [checkUsageLimits, logSearchUsage, storeSearchHistory]);
+
   return (
     <div className={`space-y-6 ${className}`}>
       <Card>
@@ -484,7 +555,7 @@ export const DomainSearchForm = ({ className = "" }: DomainSearchFormProps) => {
 
       {/* Results Section */}
       {hasSearched && !isLoading && !error && (
-        <Card>
+        <Card ref={resultsRef}>
           <CardHeader>
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
               <CardTitle>
@@ -791,4 +862,4 @@ export const DomainSearchForm = ({ className = "" }: DomainSearchFormProps) => {
       )}
     </div>
   );
-};
+});
