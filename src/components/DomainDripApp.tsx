@@ -1,5 +1,4 @@
 import { useState, useEffect, useRef } from "react";
-import { DomainSearch } from "./DomainSearch";
 import { DomainSearchForm, DomainSearchFormRef } from "./DomainSearchForm";
 import { SearchHistoryViewer } from "./SearchHistoryViewer";
 import { AuthForm } from "./AuthForm";
@@ -7,7 +6,6 @@ import { AppHeader } from "./AppHeader";
 import { DomainResults } from "./DomainResults";
 import { DomainCart } from "./DomainCart";
 import { DomainCheckout } from "./DomainCheckout";
-import { searchDomains } from "../utils/domainGenerator";
 import { Button } from "@/components/ui/button";
 import { ShoppingCart, Sparkles } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -60,20 +58,6 @@ export const DomainDripApp = () => {
     return () => subscription.unsubscribe();
   }, [navigate]);
 
-  const handleSearch = async (keyword: string) => {
-    setIsLoading(true);
-    setCurrentKeyword(keyword);
-    
-    try {
-      const results = await searchDomains(keyword);
-      setDomains(results);
-      setCurrentState('results');
-    } catch (error) {
-      console.error('Search error:', error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
 
   const handleAddToCart = (newDomains: Domain[]) => {
     setCartItems(prev => {
@@ -155,31 +139,20 @@ export const DomainDripApp = () => {
       
       {currentState === 'search' && (
         <div className="bg-gradient-hero">
-          {/* Hero Section */}
+          {/* Main Content */}
           <div className="min-h-screen flex items-center justify-center p-4">
             <div className="max-w-4xl w-full">
               <div className="text-center mb-12">
-                <div className="flex items-center justify-center gap-2 mb-4">
+                <div className="flex items-center justify-center gap-2 mb-6">
                   <Sparkles className="h-8 w-8 text-primary" />
                   <h1 className="text-5xl font-bold bg-gradient-primary bg-clip-text text-transparent">
                     DomainDrip.AI
                   </h1>
                 </div>
-                <p className="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
-                  Generate perfect domain names for your next project. Enter a keyword or pattern and discover available domains instantly.
-                </p>
               </div>
               
-              {/* Original Search Component */}
-              <DomainSearch 
-                onSearch={handleSearch} 
-                isLoading={isLoading}
-              />
-              
-              {/* New API-Connected Search Form */}
-              <div className="mt-16">
-                <DomainSearchForm ref={domainSearchFormRef} />
-              </div>
+              {/* Unified Search Form */}
+              <DomainSearchForm ref={domainSearchFormRef} />
               
               {/* Search History Viewer - Always visible when logged in */}
               {user && (

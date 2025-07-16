@@ -4,7 +4,8 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Loader2, Search, Check, X, AlertCircle, ShoppingCart, Sparkles, Lock } from "lucide-react";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { Loader2, Search, Check, X, AlertCircle, ShoppingCart, Sparkles, Lock, HelpCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -469,89 +470,135 @@ export const DomainSearchForm = forwardRef<DomainSearchFormRef, DomainSearchForm
   }), [checkUsageLimits, logSearchUsage, storeSearchHistory]);
 
   return (
-    <div className={`space-y-6 ${className}`}>
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Search className="h-5 w-5" />
-            Domain Search
-          </CardTitle>
-          <CardDescription>
-            Enter a wildcard keyword (e.g., "curl*", "get*", "*app") to find available domains
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="flex flex-col sm:flex-row gap-2">
-              <Input
-                type="text"
-                placeholder="Enter keyword (e.g., curl*, get*, *app)"
-                value={keyword}
-                onChange={handleKeywordChange}
-                className="flex-1"
-                disabled={isLoading}
-              />
-              <div className="flex gap-2">
-                <Button type="submit" disabled={isLoading || !keyword.trim() || !canSearch || isCheckingUsage} className="flex-1 sm:flex-none">
-                  {isLoading ? (
-                    <>
-                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                      <span className="hidden sm:inline">Searching...</span>
-                      <span className="sm:hidden">Search</span>
-                    </>
-                  ) : (
-                    <>
-                      <Search className="h-4 w-4 mr-2" />
-                      Search
-                    </>
-                  )}
-                </Button>
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={handleSuggestDomains}
-                  disabled={isGeneratingSuggestions || isCheckingAiDomains || !keyword.trim() || !canSearch || isCheckingUsage}
-                  className="flex-1 sm:flex-none"
-                >
-                  {isGeneratingSuggestions ? (
-                    <>
-                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                      <span className="hidden sm:inline">Generating...</span>
-                      <span className="sm:hidden">Gen</span>
-                    </>
-                  ) : isCheckingAiDomains ? (
-                    <>
-                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                      <span className="hidden sm:inline">Checking...</span>
-                      <span className="sm:hidden">Check</span>
-                    </>
-                  ) : (
-                    <>
-                      <Sparkles className="h-4 w-4 mr-2" />
-                      <span className="hidden sm:inline">Suggest</span>
-                      <span className="sm:hidden">AI</span>
-                    </>
-                  )}
-                </Button>
+    <TooltipProvider>
+      <div className={`space-y-6 ${className}`}>
+        {/* Unified Search Section */}
+        <Card className="bg-gradient-card border-border/50 shadow-elevated backdrop-blur-sm">
+          <CardHeader className="text-center">
+            <CardTitle className="text-3xl mb-2">Find Your Perfect Domain</CardTitle>
+            <CardDescription className="text-base">
+              Generate perfect domain names for your next project. Enter a keyword or pattern and discover available domains instantly.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div className="flex flex-col gap-3">
+                <div className="relative">
+                  <Input
+                    type="text"
+                    placeholder="Enter keyword or pattern (e.g., curl*, get*, *app)"
+                    value={keyword}
+                    onChange={handleKeywordChange}
+                    className="text-lg h-14 bg-background/50 border-border/50 focus:border-primary pr-12"
+                    disabled={isLoading}
+                  />
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        className="absolute right-2 top-1/2 -translate-y-1/2 h-8 w-8 p-0 hover:bg-background/50"
+                      >
+                        <HelpCircle className="h-4 w-4 text-muted-foreground" />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent side="bottom" className="max-w-xs">
+                      <div className="space-y-2">
+                        <p className="font-medium">Search Tips:</p>
+                        <ul className="text-sm space-y-1">
+                          <li>• Use * as wildcard: "curl*" finds curly, curler, etc.</li>
+                          <li>• Try patterns: "my*app", "*hub", "get*"</li>
+                          <li>• Simple keywords work too: "myapp", "startup"</li>
+                          <li>• Use AI suggestions for creative alternatives</li>
+                        </ul>
+                      </div>
+                    </TooltipContent>
+                  </Tooltip>
+                </div>
+                
+                <div className="flex flex-col sm:flex-row gap-2">
+                  <Button 
+                    type="submit" 
+                    disabled={isLoading || !keyword.trim() || !canSearch || isCheckingUsage} 
+                    className="flex-1 h-12 text-base"
+                    size="lg"
+                  >
+                    {isLoading ? (
+                      <>
+                        <Loader2 className="h-5 w-5 mr-2 animate-spin" />
+                        Searching Domains...
+                      </>
+                    ) : (
+                      <>
+                        <Search className="h-5 w-5 mr-2" />
+                        Search Domains
+                      </>
+                    )}
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={handleSuggestDomains}
+                    disabled={isGeneratingSuggestions || isCheckingAiDomains || !keyword.trim() || !canSearch || isCheckingUsage}
+                    className="flex-1 sm:flex-none h-12 text-base"
+                    size="lg"
+                  >
+                    {isGeneratingSuggestions ? (
+                      <>
+                        <Loader2 className="h-5 w-5 mr-2 animate-spin" />
+                        Generating...
+                      </>
+                    ) : isCheckingAiDomains ? (
+                      <>
+                        <Loader2 className="h-5 w-5 mr-2 animate-spin" />
+                        Checking...
+                      </>
+                    ) : (
+                      <>
+                        <Sparkles className="h-5 w-5 mr-2" />
+                        AI Suggest
+                      </>
+                    )}
+                  </Button>
+                </div>
               </div>
-            </div>
+              
+              {/* Example Patterns */}
+              <div className="text-center">
+                <p className="text-sm text-muted-foreground mb-3">Try these patterns:</p>
+                <div className="flex flex-wrap justify-center gap-2">
+                  {["curl*", "my*app", "*hub", "get*", "super*"].map((pattern) => (
+                    <Button
+                      key={pattern}
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setKeyword(pattern)}
+                      className="bg-background/50 hover:bg-background/70 text-xs"
+                    >
+                      {pattern}
+                    </Button>
+                  ))}
+                </div>
+              </div>
             
-            {error && (
-              <div className="flex items-center gap-2 p-3 rounded-md bg-destructive/10 text-destructive">
-                <AlertCircle className="h-4 w-4" />
-                <span className="text-sm">{error}</span>
-              </div>
-            )}
-            
-            {usageLimitMessage && (
-              <div className="flex items-center gap-2 p-3 rounded-md bg-yellow-50 border border-yellow-200 text-yellow-800">
-                <Lock className="h-4 w-4" />
-                <span className="text-sm">{usageLimitMessage}</span>
-              </div>
-            )}
-          </form>
-        </CardContent>
-      </Card>
+              {error && (
+                <div className="flex items-center gap-2 p-3 rounded-md bg-destructive/10 text-destructive">
+                  <AlertCircle className="h-4 w-4" />
+                  <span className="text-sm">{error}</span>
+                </div>
+              )}
+              
+              {usageLimitMessage && (
+                <div className="flex items-center gap-2 p-3 rounded-md bg-yellow-50 border border-yellow-200 text-yellow-800">
+                  <Lock className="h-4 w-4" />
+                  <span className="text-sm">{usageLimitMessage}</span>
+                </div>
+              )}
+            </form>
+          </CardContent>
+        </Card>
 
       {/* Results Section */}
       {hasSearched && !isLoading && !error && (
@@ -860,6 +907,7 @@ export const DomainSearchForm = forwardRef<DomainSearchFormRef, DomainSearchForm
           </CardContent>
         </Card>
       )}
-    </div>
+      </div>
+    </TooltipProvider>
   );
 });
