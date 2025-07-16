@@ -9,6 +9,7 @@ import AppPage from "./pages/AppPage";
 import Admin from "./pages/Admin";
 import Privacy from "./pages/Privacy";
 import Terms from "./pages/Terms";
+import Cookie from "./pages/Cookie";
 import ServerError from "./pages/ServerError";
 import NotFound from "./pages/NotFound";
 import ErrorBoundary from "./components/ErrorBoundary";
@@ -29,6 +30,7 @@ const App = () => (
             <Route path="/admin" element={<Admin />} />
             <Route path="/privacy" element={<Privacy />} />
             <Route path="/terms" element={<Terms />} />
+            <Route path="/cookie" element={<Cookie />} />
             <Route path="/error" element={<ServerError />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
