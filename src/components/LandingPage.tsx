@@ -200,7 +200,7 @@ const LandingPage = () => {
       <footer className="border-t bg-background/80 backdrop-blur py-12 px-4">
         <div className="container mx-auto max-w-6xl">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
-            {/* Brand */}
+            {/* About */}
             <div className="space-y-4">
               <div className="flex items-center gap-2">
                 <Sparkles className="h-6 w-6 text-primary" />
@@ -208,9 +208,12 @@ const LandingPage = () => {
                   DomainDrip.AI
                 </span>
               </div>
-              <p className="text-sm text-muted-foreground">
-                AI-powered domain discovery platform for modern entrepreneurs and developers.
-              </p>
+              <div className="space-y-2">
+                <h3 className="font-semibold">About DomainDrip.AI</h3>
+                <p className="text-sm text-muted-foreground">
+                  DomainDrip helps entrepreneurs, creators, and startups discover premium, brandable domains powered by AI. We combine smart search with real-time availability to bring your next big idea to life—one domain at a time.
+                </p>
+              </div>
             </div>
 
             {/* Product */}
