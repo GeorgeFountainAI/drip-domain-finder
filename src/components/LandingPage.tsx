@@ -199,7 +199,7 @@ const LandingPage = () => {
       {/* Footer */}
       <footer className="border-t bg-background/80 backdrop-blur py-12 px-4">
         <div className="container mx-auto max-w-6xl">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {/* About */}
             <div className="space-y-4">
               <div className="flex items-center gap-2">
@@ -209,38 +209,16 @@ const LandingPage = () => {
                 </span>
               </div>
               <div className="space-y-2">
-                <h3 className="font-semibold">About DomainDrip.AI</h3>
+                <h3 className="font-semibold">About</h3>
                 <p className="text-sm text-muted-foreground">
                   DomainDrip helps entrepreneurs, creators, and startups discover premium, brandable domains powered by AI. We combine smart search with real-time availability to bring your next big idea to life—one domain at a time.
                 </p>
               </div>
             </div>
 
-            {/* Product */}
+            {/* Contact */}
             <div className="space-y-4">
-              <h3 className="font-semibold">Product</h3>
-              <ul className="space-y-2 text-sm text-muted-foreground">
-                <li>
-                  <Link to="/auth" className="hover:text-foreground transition-colors">
-                    Domain Search
-                  </Link>
-                </li>
-                <li>
-                  <Link to="/auth" className="hover:text-foreground transition-colors">
-                    AI Suggestions
-                  </Link>
-                </li>
-                <li>
-                  <Link to="/auth" className="hover:text-foreground transition-colors">
-                    Price Comparison
-                  </Link>
-                </li>
-              </ul>
-            </div>
-
-            {/* Support */}
-            <div className="space-y-4">
-              <h3 className="font-semibold">Support</h3>
+              <h3 className="font-semibold">Contact</h3>
               <ul className="space-y-2 text-sm text-muted-foreground">
                 <li>
                   <a href="mailto:support@domaindrip.ai" className="hover:text-foreground transition-colors flex items-center gap-2">
@@ -261,9 +239,9 @@ const LandingPage = () => {
               </ul>
             </div>
 
-            {/* Legal */}
+            {/* Privacy */}
             <div className="space-y-4">
-              <h3 className="font-semibold">Legal</h3>
+              <h3 className="font-semibold">Privacy</h3>
               <ul className="space-y-2 text-sm text-muted-foreground">
                 <li>
                   <Link to="/privacy" className="hover:text-foreground transition-colors flex items-center gap-2">
