@@ -123,15 +123,15 @@ const LandingPage = () => {
               <div className="relative rounded-2xl border bg-background/80 backdrop-blur p-4 sm:p-8 shadow-2xl">
                 <div className="relative rounded-xl overflow-hidden bg-gradient-to-br from-background to-muted/20">
                   <img 
-                    src={appPreviewImage} 
-                    alt="DomainDrip.AI App Interface Preview" 
-                    className="w-full h-auto object-cover"
+                    src="/lovable-uploads/39ce573a-c021-4fde-9016-05b4d1af69b1.png" 
+                    alt="DomainDrip.AI App Interface Preview showing domain search results" 
+                    className="w-full h-auto object-cover rounded-lg"
                   />
                   
                   {/* Play button overlay */}
                   <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                     <Button asChild size="lg" className="shadow-elevated">
-                      <Link to="/auth">
+                      <Link to="/app">
                         <Play className="h-6 w-6 mr-2" />
                         Try Live Demo
                       </Link>
