@@ -11,9 +11,11 @@ import {
   Globe,
   Mail,
   FileText,
-  Users
+  Users,
+  Play
 } from "lucide-react";
 import { Link } from "react-router-dom";
+import appPreviewImage from "@/assets/app-preview.jpg";
 
 const LandingPage = () => {
   const features = [
@@ -114,14 +116,63 @@ const LandingPage = () => {
             </div>
           </div>
 
-          {/* Preview Image Placeholder */}
-          <div className="relative mx-auto max-w-4xl">
-            <div className="rounded-xl border bg-background/50 backdrop-blur p-8 shadow-2xl">
-              <div className="aspect-video bg-gradient-to-br from-primary/20 to-secondary/20 rounded-lg flex items-center justify-center">
-                <div className="text-center">
-                  <Search className="h-16 w-16 text-primary mx-auto mb-4" />
-                  <p className="text-muted-foreground">App Preview Coming Soon</p>
+          {/* App Preview */}
+          <div className="relative mx-auto max-w-5xl">
+            <div className="relative group">
+              <div className="absolute -inset-4 bg-gradient-to-r from-primary/20 via-purple-500/20 to-primary/20 rounded-3xl blur-2xl opacity-50 group-hover:opacity-70 transition-opacity"></div>
+              <div className="relative rounded-2xl border bg-background/80 backdrop-blur p-4 sm:p-8 shadow-2xl">
+                <div className="relative rounded-xl overflow-hidden bg-gradient-to-br from-background to-muted/20">
+                  <img 
+                    src={appPreviewImage} 
+                    alt="DomainDrip.AI App Interface Preview" 
+                    className="w-full h-auto object-cover"
+                  />
+                  
+                  {/* Play button overlay */}
+                  <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                    <Button asChild size="lg" className="shadow-elevated">
+                      <Link to="/auth">
+                        <Play className="h-6 w-6 mr-2" />
+                        Try Live Demo
+                      </Link>
+                    </Button>
+                  </div>
                 </div>
+                
+                {/* Feature callouts */}
+                <div className="absolute top-8 left-8 hidden lg:block">
+                  <div className="bg-background/90 backdrop-blur rounded-lg p-3 shadow-lg border">
+                    <div className="flex items-center gap-2 text-sm">
+                      <Search className="h-4 w-4 text-primary" />
+                      <span className="font-medium">Smart Search</span>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="absolute bottom-8 right-8 hidden lg:block">
+                  <div className="bg-background/90 backdrop-blur rounded-lg p-3 shadow-lg border">
+                    <div className="flex items-center gap-2 text-sm">
+                      <Zap className="h-4 w-4 text-primary" />
+                      <span className="font-medium">Real-time Pricing</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            {/* Stats below preview */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-8 text-center">
+              <div className="bg-background/50 rounded-lg p-4 border">
+                <div className="text-2xl font-bold text-primary">10M+</div>
+                <div className="text-sm text-muted-foreground">Domains Searched</div>
+              </div>
+              <div className="bg-background/50 rounded-lg p-4 border">
+                <div className="text-2xl font-bold text-primary">50K+</div>
+                <div className="text-sm text-muted-foreground">Happy Users</div>
+              </div>
+              <div className="bg-background/50 rounded-lg p-4 border">
+                <div className="text-2xl font-bold text-primary">99.9%</div>
+                <div className="text-sm text-muted-foreground">Uptime</div>
               </div>
             </div>
           </div>
