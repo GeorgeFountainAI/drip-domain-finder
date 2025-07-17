@@ -128,9 +128,9 @@ const LandingPage = () => {
                     className="w-full h-auto object-cover rounded-lg"
                   />
                   
-                  {/* Play button overlay - only visible on hover */}
-                  <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-all duration-300 flex items-center justify-center z-10">
-                    <Button asChild size="lg" variant="hero" className="transform scale-95 group-hover:scale-100 transition-transform duration-300">
+                  {/* Clean overlay with single demo button */}
+                  <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center rounded-lg">
+                    <Button asChild size="lg" className="bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg">
                       <Link to="/auth">
                         <Play className="h-5 w-5 mr-2" />
                         Try Live Demo
