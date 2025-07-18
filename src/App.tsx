@@ -8,6 +8,7 @@ import Auth from "./pages/Auth";
 import AppPage from "./pages/AppPage";
 import Admin from "./pages/Admin";
 import AdminDeploy from "./pages/AdminDeploy";
+import AdminLogs from "./pages/AdminLogs";
 import Privacy from "./pages/Privacy";
 import Terms from "./pages/Terms";
 import Cookie from "./pages/Cookie";
@@ -30,6 +31,7 @@ const App = () => (
             <Route path="/app" element={<AppPage />} />
             <Route path="/admin" element={<Admin />} />
             <Route path="/admin/deploy" element={<AdminDeploy />} />
+            <Route path="/admin/logs" element={<AdminLogs />} />
             <Route path="/privacy" element={<Privacy />} />
             <Route path="/terms" element={<Terms />} />
             <Route path="/cookie" element={<Cookie />} />

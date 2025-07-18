@@ -186,6 +186,12 @@ serve(async (req) => {
         logStep("Stats calculated", responseData.stats);
         break;
 
+      case "checkAdminStatus":
+        logStep("Checking admin status for header");
+        // This just verifies admin access - if we get here, user is admin
+        responseData.isAdmin = true;
+        break;
+
       default:
         throw new Error(`Unknown action: ${action}`);
     }

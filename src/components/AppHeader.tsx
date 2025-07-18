@@ -1,8 +1,9 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { LogOut, User, Sparkles, Shield, CreditCard, Coins } from "lucide-react";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
+import { LogOut, User, Sparkles, Shield, CreditCard, Coins, Settings, Rocket, FileText, UserPlus, ChevronDown } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -17,6 +18,37 @@ export const AppHeader = ({ user }: AppHeaderProps) => {
   const { toast } = useToast();
   const location = useLocation();
   const [showCreditPurchase, setShowCreditPurchase] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [isCheckingAdmin, setIsCheckingAdmin] = useState(true);
+
+  // Check if user is admin
+  useEffect(() => {
+    const checkAdminStatus = async () => {
+      if (!user?.email) {
+        setIsAdmin(false);
+        setIsCheckingAdmin(false);
+        return;
+      }
+
+      try {
+        const { data, error } = await supabase.functions.invoke('admin-data', {
+          body: { action: 'checkAdminStatus' }
+        });
+
+        if (error || data?.error) {
+          setIsAdmin(false);
+        } else {
+          setIsAdmin(true);
+        }
+      } catch (err) {
+        setIsAdmin(false);
+      } finally {
+        setIsCheckingAdmin(false);
+      }
+    };
+
+    checkAdminStatus();
+  }, [user?.email]);
 
   const handleLogout = async () => {
     try {
@@ -65,17 +97,19 @@ export const AppHeader = ({ user }: AppHeaderProps) => {
               <Link to="/">Home</Link>
             </Button>
             
-            <Button
-              asChild
-              variant={location.pathname === "/admin" ? "default" : "ghost"}
-              size="sm"
-              className="gap-2"
-            >
-              <Link to="/admin">
-                <Shield className="h-4 w-4" />
-                Admin
-              </Link>
-            </Button>
+            {isAdmin && (
+              <Button
+                asChild
+                variant={location.pathname === "/admin" ? "default" : "ghost"}
+                size="sm"
+                className="gap-2"
+              >
+                <Link to="/admin">
+                  <Shield className="h-4 w-4" />
+                  Admin
+                </Link>
+              </Button>
+            )}
           </nav>
         </div>
 
@@ -102,6 +136,43 @@ export const AppHeader = ({ user }: AppHeaderProps) => {
               {user?.email?.split('@')[0]}
             </span>
           </div>
+
+          {/* Admin Tools Dropdown */}
+          {isAdmin && !isCheckingAdmin && (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" size="sm" className="gap-2">
+                  <Settings className="h-4 w-4" />
+                  <span className="hidden sm:inline">Admin Tools</span>
+                  <span className="sm:hidden">Tools</span>
+                  <ChevronDown className="h-3 w-3" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent 
+                align="end" 
+                className="w-48 bg-background border shadow-elevated z-50"
+              >
+                <DropdownMenuItem asChild>
+                  <Link to="/admin/deploy" className="flex items-center gap-2 cursor-pointer">
+                    <Rocket className="h-4 w-4" />
+                    Deploy to Production
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link to="/admin/logs" className="flex items-center gap-2 cursor-pointer">
+                    <FileText className="h-4 w-4" />
+                    View Logs
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem disabled className="flex items-center gap-2 text-muted-foreground">
+                  <UserPlus className="h-4 w-4" />
+                  Add Admins
+                  <Badge variant="outline" className="text-xs ml-auto">Soon</Badge>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          )}
 
           <Button
             variant="outline"
