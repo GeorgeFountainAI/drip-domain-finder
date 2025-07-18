@@ -21,6 +21,18 @@ export const AppHeader = ({ user }: AppHeaderProps) => {
   const [isAdmin, setIsAdmin] = useState(false);
   const [isCheckingAdmin, setIsCheckingAdmin] = useState(true);
 
+  // Listen for custom event to open credit purchase modal
+  useEffect(() => {
+    const handleOpenCreditPurchase = () => {
+      setShowCreditPurchase(true);
+    };
+
+    window.addEventListener('openCreditPurchase', handleOpenCreditPurchase);
+    return () => {
+      window.removeEventListener('openCreditPurchase', handleOpenCreditPurchase);
+    };
+  }, []);
+
   // Check if user is admin
   useEffect(() => {
     const checkAdminStatus = async () => {

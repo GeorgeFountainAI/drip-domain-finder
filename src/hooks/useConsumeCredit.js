@@ -43,9 +43,20 @@ export const useConsumeCredit = () => {
       // Check if user has enough credits
       if (availableCredits < creditsToConsume) {
         toast({
-          title: "Insufficient Credits",
-          description: `You need ${creditsToConsume} credit${creditsToConsume > 1 ? 's' : ''} but only have ${availableCredits}`,
-          variant: "destructive",
+          title: "⚠️ Insufficient Credits",
+          description: `You need ${creditsToConsume} credit${creditsToConsume > 1 ? 's' : ''} to proceed but only have ${availableCredits}`,
+          variant: "insufficient-credits",
+          duration: 6000,
+          action: (
+            <button
+              onClick={() => {
+                window.dispatchEvent(new CustomEvent('openCreditPurchase'));
+              }}
+              className="bg-white text-orange-600 hover:bg-gray-100 font-medium px-3 py-1 rounded text-sm transition-colors"
+            >
+              Buy Credits
+            </button>
+          ),
         });
         return { 
           success: false, 

@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useCredits } from '@/hooks/useCredits';
 import { useToast } from '@/hooks/use-toast';
@@ -16,16 +16,59 @@ const RequireCredits = ({
   const { credits: userCredits, loading, hasCredits } = useCredits();
   const { toast } = useToast();
   const navigate = useNavigate();
+  const [attemptCount, setAttemptCount] = useState(0);
+  const timeoutRef = useRef(null);
+
+  // Function to show enhanced insufficient credits toast
+  const showInsufficientCreditsToast = () => {
+    const newAttemptCount = attemptCount + 1;
+    setAttemptCount(newAttemptCount);
+
+    // Clear any existing timeout
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+    }
+
+    // Reset attempt count after 10 seconds
+    timeoutRef.current = setTimeout(() => {
+      setAttemptCount(0);
+    }, 10000);
+
+    toast({
+      title: "⚠️ Insufficient Credits",
+      description: `You need ${credits} credit${credits > 1 ? 's' : ''} to search domains. You have ${userCredits} credit${userCredits !== 1 ? 's' : ''}.`,
+      variant: "insufficient-credits",
+      duration: 6000,
+      action: (
+        <Button
+          variant="secondary"
+          size="sm"
+          onClick={() => {
+            window.dispatchEvent(new CustomEvent('openCreditPurchase'));
+          }}
+          className="bg-white text-orange-600 hover:bg-gray-100 font-medium shrink-0"
+        >
+          Buy Credits
+        </Button>
+      ),
+      className: newAttemptCount > 1 ? "animate-pulse" : "",
+    });
+  };
 
   useEffect(() => {
     if (!loading && !hasCredits(credits) && showAlert) {
-      toast({
-        title: "Insufficient Credits",
-        description: `You need ${credits} credit${credits > 1 ? 's' : ''} to access this feature. You have ${userCredits} credit${userCredits !== 1 ? 's' : ''}.`,
-        variant: "destructive",
-      });
+      showInsufficientCreditsToast();
     }
-  }, [loading, userCredits, credits, showAlert, hasCredits, toast]);
+  }, [loading, userCredits, credits, showAlert, hasCredits]);
+
+  // Cleanup timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+    };
+  }, []);
 
   if (loading) {
     return (
