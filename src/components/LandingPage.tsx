@@ -116,7 +116,7 @@ const LandingPage = () => {
             </div>
           </div>
 
-          {/* App Preview */}
+          {/* App Preview - Clean Single Section */}
           <div className="relative mx-auto max-w-5xl">
             <div className="relative group">
               <div className="absolute -inset-4 bg-gradient-to-r from-primary/20 via-purple-500/20 to-primary/20 rounded-3xl blur-2xl opacity-50 group-hover:opacity-70 transition-opacity"></div>
@@ -124,13 +124,13 @@ const LandingPage = () => {
                 <div className="relative rounded-xl overflow-hidden bg-gradient-to-br from-background to-muted/20">
                   <img 
                     src="/lovable-uploads/dcc00cc2-12db-4c74-80bc-2507e25e78cd.png" 
-                    alt="DomainDrip.AI App Interface Preview showing domain search results" 
+                    alt="DomainDrip.AI App Interface Preview" 
                     className="w-full h-auto object-cover rounded-lg"
                   />
                   
-                  {/* Single clean demo button on hover */}
-                  <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center rounded-lg">
-                    <Button asChild size="lg" className="bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg">
+                  {/* ONLY hover overlay - no static callouts */}
+                  <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-all duration-300 flex items-center justify-center rounded-lg">
+                    <Button asChild size="lg" className="bg-primary hover:bg-primary/90 text-primary-foreground shadow-xl animate-scale-in">
                       <Link to="/auth">
                         <Play className="h-5 w-5 mr-2" />
                         Try Live Demo
