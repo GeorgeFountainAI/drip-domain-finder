@@ -122,20 +122,40 @@ const LandingPage = () => {
               <div className="absolute -inset-4 bg-gradient-to-r from-primary/20 via-purple-500/20 to-primary/20 rounded-3xl blur-2xl opacity-50 group-hover:opacity-70 transition-opacity"></div>
               <div className="relative rounded-2xl border bg-background/80 backdrop-blur p-4 sm:p-8 shadow-2xl">
                 <div className="relative rounded-xl overflow-hidden bg-gradient-to-br from-background to-muted/20">
-                  <img 
-                    src="/lovable-uploads/dcc00cc2-12db-4c74-80bc-2507e25e78cd.png" 
-                    alt="DomainDrip.AI App Interface Preview" 
+                  {/* Video Demo - Replace with your recorded demo video */}
+                  <video 
                     className="w-full h-auto object-cover rounded-lg"
-                  />
+                    muted
+                    loop
+                    playsInline
+                    onMouseEnter={(e) => e.currentTarget.play()}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.pause();
+                      e.currentTarget.currentTime = 0;
+                    }}
+                    poster="/lovable-uploads/dcc00cc2-12db-4c74-80bc-2507e25e78cd.png"
+                  >
+                    {/* Add your demo video file here - placeholder for now */}
+                    <source src="/demo-video.webm" type="video/webm" />
+                    <source src="/demo-video.mp4" type="video/mp4" />
+                    {/* Fallback to static image if video fails */}
+                    <img 
+                      src="/lovable-uploads/dcc00cc2-12db-4c74-80bc-2507e25e78cd.png" 
+                      alt="DomainDrip.AI App Interface Preview" 
+                      className="w-full h-auto object-cover rounded-lg"
+                    />
+                  </video>
                   
-                  {/* ONLY hover overlay - no static callouts */}
-                  <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-all duration-300 flex items-center justify-center rounded-lg">
-                    <Button asChild size="lg" className="bg-primary hover:bg-primary/90 text-primary-foreground shadow-xl animate-scale-in">
-                      <Link to="/auth">
-                        <Play className="h-5 w-5 mr-2" />
-                        Try Live Demo
-                      </Link>
-                    </Button>
+                  {/* Watch Demo overlay on hover */}
+                  <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-all duration-300 flex items-center justify-center rounded-lg">
+                    <div className="text-center">
+                      <div className="bg-primary/90 hover:bg-primary text-primary-foreground rounded-full p-4 mb-3 shadow-2xl animate-scale-in inline-flex">
+                        <Play className="h-8 w-8" />
+                      </div>
+                      <p className="text-white font-semibold text-lg drop-shadow-lg">
+                        Watch Smart Search Demo
+                      </p>
+                    </div>
                   </div>
                 </div>
               </div>
