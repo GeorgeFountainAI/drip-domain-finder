@@ -128,7 +128,7 @@ const LandingPage = () => {
                     className="w-full h-auto object-cover rounded-lg"
                   />
                   
-                  {/* Clean overlay with single demo button */}
+                  {/* Single clean demo button on hover */}
                   <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center rounded-lg">
                     <Button asChild size="lg" className="bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg">
                       <Link to="/auth">
@@ -136,25 +136,6 @@ const LandingPage = () => {
                         Try Live Demo
                       </Link>
                     </Button>
-                  </div>
-                </div>
-                
-                {/* Feature callouts */}
-                <div className="absolute top-8 left-8 hidden lg:block">
-                  <div className="bg-background/90 backdrop-blur rounded-lg p-3 shadow-lg border">
-                    <div className="flex items-center gap-2 text-sm">
-                      <Search className="h-4 w-4 text-primary" />
-                      <span className="font-medium">Smart Search</span>
-                    </div>
-                  </div>
-                </div>
-                
-                <div className="absolute bottom-8 right-8 hidden lg:block">
-                  <div className="bg-background/90 backdrop-blur rounded-lg p-3 shadow-lg border">
-                    <div className="flex items-center gap-2 text-sm">
-                      <Zap className="h-4 w-4 text-primary" />
-                      <span className="font-medium">Real-time Pricing</span>
-                    </div>
                   </div>
                 </div>
               </div>
