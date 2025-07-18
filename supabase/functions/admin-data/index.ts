@@ -47,13 +47,21 @@ serve(async (req) => {
     
     logStep("User authenticated", { userId: user.id, email: user.email });
 
-    // Check if user is admin
-    const adminUsers = (Deno.env.get("ADMIN_USERS") || "").split(",").map(email => email.trim());
+    const requestBody = await req.json();
+    const { action } = requestBody;
+    logStep("Admin action requested", { action });
+
+    // Check if user is admin (except for setup action)
+    const adminUsers = (Deno.env.get("ADMIN_USERS") || "").split(",").map(email => email.trim()).filter(email => email.length > 0);
     const isAdmin = adminUsers.includes(user.email);
     
-    logStep("Admin check", { userEmail: user.email, adminUsers, isAdmin });
+    logStep("Admin check", { userEmail: user.email, adminUsers, isAdmin, action });
     
-    if (!isAdmin) {
+    // Allow setupFirstAdmin if no admins exist yet
+    const isSetupAction = action === "setupFirstAdmin";
+    const noAdminsExist = adminUsers.length === 0;
+    
+    if (!isAdmin && !(isSetupAction && noAdminsExist)) {
       return new Response(
         JSON.stringify({ error: "Access denied. Admin privileges required." }),
         {
@@ -62,9 +70,6 @@ serve(async (req) => {
         }
       );
     }
-
-    const { action } = await req.json();
-    logStep("Admin action requested", { action });
 
     let responseData = {};
 
@@ -190,6 +195,22 @@ serve(async (req) => {
         logStep("Checking admin status for header");
         // This just verifies admin access - if we get here, user is admin
         responseData.isAdmin = true;
+        break;
+
+      case "setupFirstAdmin":
+        logStep("Setting up first admin user");
+        
+        // For security, verify the authenticated user matches the email being set as admin
+        const { email: adminEmail } = requestBody;
+        if (!adminEmail || adminEmail.trim() !== user.email) {
+          throw new Error("Admin email must match authenticated user email");
+        }
+
+        logStep("Admin setup validated", { adminEmail: adminEmail.trim() });
+        responseData.success = true;
+        responseData.message = "Admin setup validated. Please configure ADMIN_USERS secret manually.";
+        responseData.adminEmail = adminEmail.trim();
+        responseData.needsManualSecretSetup = true;
         break;
 
       default:
