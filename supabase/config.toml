@@ -11,3 +11,6 @@ verify_jwt = false
 
 [functions.slack-bot-handler]
 verify_jwt = false
+
+[functions.deploy-to-production]
+verify_jwt = false

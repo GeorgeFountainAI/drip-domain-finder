@@ -13,7 +13,8 @@ import {
   Loader2, 
   RefreshCw,
   Eye,
-  Lock
+  Lock,
+  Rocket
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -198,6 +199,14 @@ export const AdminPanel = ({ user }: AdminPanelProps) => {
             <span className="hidden sm:inline">Monitor domain search activity and user engagement</span>
             <span className="sm:hidden">Search activity monitoring</span>
           </p>
+          <div className="mt-2">
+            <Button asChild size="sm" className="gap-2">
+              <a href="/admin/deploy">
+                <Rocket className="h-4 w-4" />
+                Deploy Dashboard
+              </a>
+            </Button>
+          </div>
         </div>
         <Button 
           onClick={handleRefresh} 
