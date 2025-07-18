@@ -144,16 +144,16 @@ const LandingPage = () => {
                     />
                   </div>
                   
-                  {/* Watch Demo overlay on hover */}
-                  <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-all duration-300 flex items-center justify-center rounded-lg">
-                    <div className="text-center">
-                      <div className="bg-primary/90 hover:bg-primary text-primary-foreground rounded-full p-4 mb-3 shadow-2xl animate-scale-in inline-flex">
-                        <Play className="h-8 w-8" />
-                      </div>
-                      <p className="text-white font-semibold text-lg drop-shadow-lg">
-                        Watch Smart Search Demo
-                      </p>
-                    </div>
+                  {/* Slideshow indicators */}
+                  <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex space-x-2 opacity-70 group-hover:opacity-100 transition-opacity duration-300">
+                    <div className="w-2 h-2 rounded-full bg-white group-hover:bg-primary transition-colors duration-500"></div>
+                    <div className="w-2 h-2 rounded-full bg-white/50 group-hover:bg-primary/50 transition-colors duration-500 delay-1000"></div>
+                    <div className="w-2 h-2 rounded-full bg-white/50 group-hover:bg-primary/50 transition-colors duration-500 delay-2000"></div>
+                  </div>
+                  
+                  {/* Frame counter */}
+                  <div className="absolute top-4 right-4 bg-black/50 backdrop-blur rounded-lg px-3 py-1 text-white text-sm opacity-70 group-hover:opacity-100 transition-opacity duration-300">
+                    <span className="font-mono">1/3</span>
                   </div>
                 </div>
               </div>
