@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { ShoppingCart, Check, Globe, ArrowLeft } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import RequireCredits from "@/components/RequireCredits";
 
 interface Domain {
   name: string;
@@ -63,7 +64,8 @@ export const DomainResults = ({ domains, onAddToCart, onBack, isLoading }: Domai
   }
 
   return (
-    <div className="min-h-screen bg-background p-4">
+    <RequireCredits credits={1} blockRender={false}>
+      <div className="min-h-screen bg-background p-4">
       <div className="max-w-6xl mx-auto">
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
@@ -164,5 +166,6 @@ export const DomainResults = ({ domains, onAddToCart, onBack, isLoading }: Domai
         )}
       </div>
     </div>
+    </RequireCredits>
   );
 };

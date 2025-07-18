@@ -1,9 +1,13 @@
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { LogOut, User, Sparkles, Shield } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { LogOut, User, Sparkles, Shield, CreditCard, Coins } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import CreditBalance from "@/components/CreditBalance";
+import CreditPurchase from "@/components/CreditPurchase";
 
 interface AppHeaderProps {
   user: any;
@@ -12,6 +16,7 @@ interface AppHeaderProps {
 export const AppHeader = ({ user }: AppHeaderProps) => {
   const { toast } = useToast();
   const location = useLocation();
+  const [showCreditPurchase, setShowCreditPurchase] = useState(false);
 
   const handleLogout = async () => {
     try {
@@ -40,6 +45,7 @@ export const AppHeader = ({ user }: AppHeaderProps) => {
   };
 
   return (
+    <>
     <header className="sticky top-0 z-40 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container flex h-16 items-center justify-between">
         <div className="flex items-center gap-6">
@@ -74,6 +80,19 @@ export const AppHeader = ({ user }: AppHeaderProps) => {
         </div>
 
         <div className="flex items-center gap-4">
+          <CreditBalance />
+          
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setShowCreditPurchase(true)}
+            className="gap-2"
+          >
+            <CreditCard className="h-4 w-4" />
+            <span className="hidden sm:inline">Buy Credits</span>
+            <span className="sm:hidden">Credits</span>
+          </Button>
+
           <div className="flex items-center gap-2">
             <User className="h-4 w-4 text-muted-foreground" />
             <Badge variant="outline" className="hidden sm:inline-flex">
@@ -96,5 +115,18 @@ export const AppHeader = ({ user }: AppHeaderProps) => {
         </div>
       </div>
     </header>
+
+    <Dialog open={showCreditPurchase} onOpenChange={setShowCreditPurchase}>
+      <DialogContent className="max-w-4xl">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <Coins className="h-5 w-5" />
+            Purchase Credits
+          </DialogTitle>
+        </DialogHeader>
+        <CreditPurchase />
+      </DialogContent>
+    </Dialog>
+    </>
   );
 };

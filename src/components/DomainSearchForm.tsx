@@ -8,6 +8,8 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import { Loader2, Search, Check, X, AlertCircle, ShoppingCart, Sparkles, Lock, HelpCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { useConsumeCredit } from "@/hooks/useConsumeCredit";
+import RequireCredits from "@/components/RequireCredits";
 
 interface Domain {
   name: string;
@@ -56,6 +58,7 @@ export const DomainSearchForm = forwardRef<DomainSearchFormRef, DomainSearchForm
   const resultsRef = useRef<HTMLDivElement>(null);
   
   const { toast } = useToast();
+  const { consumeCredit, loading: creditLoading } = useConsumeCredit();
 
   // Check if user can perform search based on usage limits
   const checkUsageLimits = async (): Promise<boolean> => {
@@ -182,6 +185,14 @@ export const DomainSearchForm = forwardRef<DomainSearchFormRef, DomainSearchForm
     setIsLoading(true);
     setError(null);
     setHasSearched(true);
+
+    // Consume 1 credit for domain search
+    const creditResult = await consumeCredit(1);
+    if (!creditResult.success) {
+      setIsLoading(false);
+      setError("Unable to deduct credit for search");
+      return;
+    }
 
     try {
       const response = await fetch(`/api/domainSearch?keyword=${encodeURIComponent(keyword.trim())}`);
@@ -430,6 +441,14 @@ export const DomainSearchForm = forwardRef<DomainSearchFormRef, DomainSearchForm
       setHasGeneratedSuggestions(false);
       setSelectedDomains(new Set());
 
+      // Consume 1 credit for domain search
+      const creditResult = await consumeCredit(1);
+      if (!creditResult.success) {
+        setIsLoading(false);
+        setError("Unable to deduct credit for search");
+        return;
+      }
+
       try {
         const response = await fetch(`/api/domainSearch?keyword=${encodeURIComponent(searchKeyword.trim())}`);
         
@@ -470,8 +489,9 @@ export const DomainSearchForm = forwardRef<DomainSearchFormRef, DomainSearchForm
   }), [checkUsageLimits, logSearchUsage, storeSearchHistory]);
 
   return (
-    <TooltipProvider>
-      <div className={`space-y-6 ${className}`}>
+    <RequireCredits credits={1} blockRender={false}>
+      <TooltipProvider>
+        <div className={`space-y-6 ${className}`}>
         {/* Unified Search Section */}
         <Card className="bg-gradient-card border-border/50 shadow-elevated backdrop-blur-sm">
           <CardHeader className="text-center">
@@ -909,5 +929,6 @@ export const DomainSearchForm = forwardRef<DomainSearchFormRef, DomainSearchForm
       )}
       </div>
     </TooltipProvider>
+    </RequireCredits>
   );
 });
