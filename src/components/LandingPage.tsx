@@ -16,6 +16,9 @@ import {
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import appPreviewImage from "@/assets/app-preview.jpg";
+import demoFrame1 from "@/assets/demo-frame-1-signin.jpg";
+import demoFrame2 from "@/assets/demo-frame-2-credits.jpg";
+import demoFrame3 from "@/assets/demo-frame-3-search.jpg";
 
 const LandingPage = () => {
   const features = [
@@ -122,29 +125,24 @@ const LandingPage = () => {
               <div className="absolute -inset-4 bg-gradient-to-r from-primary/20 via-purple-500/20 to-primary/20 rounded-3xl blur-2xl opacity-50 group-hover:opacity-70 transition-opacity"></div>
               <div className="relative rounded-2xl border bg-background/80 backdrop-blur p-4 sm:p-8 shadow-2xl">
                 <div className="relative rounded-xl overflow-hidden bg-gradient-to-br from-background to-muted/20">
-                  {/* Video Demo - Replace with your recorded demo video */}
-                  <video 
-                    className="w-full h-auto object-cover rounded-lg"
-                    muted
-                    loop
-                    playsInline
-                    onMouseEnter={(e) => e.currentTarget.play()}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.pause();
-                      e.currentTarget.currentTime = 0;
-                    }}
-                    poster="/lovable-uploads/dcc00cc2-12db-4c74-80bc-2507e25e78cd.png"
-                  >
-                    {/* Add your demo video file here - placeholder for now */}
-                    <source src="/demo-video.webm" type="video/webm" />
-                    <source src="/demo-video.mp4" type="video/mp4" />
-                    {/* Fallback to static image if video fails */}
+                  {/* Demo Slideshow - Shows app functionality on hover */}
+                  <div className="relative w-full h-auto">
                     <img 
-                      src="/lovable-uploads/dcc00cc2-12db-4c74-80bc-2507e25e78cd.png" 
-                      alt="DomainDrip.AI App Interface Preview" 
-                      className="w-full h-auto object-cover rounded-lg"
+                      src={demoFrame1}
+                      alt="DomainDrip.AI Sign In Demo" 
+                      className="w-full h-auto object-cover rounded-lg transition-opacity duration-500 group-hover:opacity-0"
                     />
-                  </video>
+                    <img 
+                      src={demoFrame2}
+                      alt="DomainDrip.AI Credit Purchase Demo" 
+                      className="absolute inset-0 w-full h-auto object-cover rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-500 delay-1000"
+                    />
+                    <img 
+                      src={demoFrame3}
+                      alt="DomainDrip.AI Domain Search Demo" 
+                      className="absolute inset-0 w-full h-auto object-cover rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-500 delay-2000"
+                    />
+                  </div>
                   
                   {/* Watch Demo overlay on hover */}
                   <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-all duration-300 flex items-center justify-center rounded-lg">
