@@ -32,6 +32,15 @@ const suffixes = [
   'link', 'bridge', 'gate', 'port', 'base', 'core', 'stack', 'deck',
   'board', 'room', 'space', 'place', 'site', 'page', 'docs', 'wiki',
   'guide', 'help', 'tips', 'hacks', 'tricks', 'secrets', 'magic',
+  'shift', 'flow', 'pilot', 'verse', 'scope', 'sync', 'wave', 'boost',
+];
+
+// Brand-style pattern generators for wildcard suggestions
+const brandPatterns = [
+  'get{keyword}', '{keyword}shift', '{keyword}pilot', '{keyword}flow',
+  '{keyword}hub', '{keyword}lab', '{keyword}scope', '{keyword}sync',
+  'my{keyword}', 'use{keyword}', 'try{keyword}', '{keyword}wave',
+  '{keyword}boost', '{keyword}verse', 'super{keyword}', '{keyword}pro',
 ];
 
 const alternatives = [
@@ -135,6 +144,46 @@ export const generateDomains = async (keyword: string): Promise<Domain[]> => {
   
   // Sort by availability first, then by price
   return domains.sort((a, b) => {
+    if (a.available && !b.available) return -1;
+    if (!a.available && b.available) return 1;
+    return a.price - b.price;
+  });
+};
+
+// Generate wildcard brand-style suggestions
+export const generateWildcardSuggestions = (keyword: string): string[] => {
+  const baseKeyword = keyword.toLowerCase().replace(/[^a-z0-9]/g, '');
+  const suggestions = new Set<string>();
+  
+  // Apply brand patterns
+  brandPatterns.forEach(pattern => {
+    const suggestion = pattern.replace('{keyword}', baseKeyword);
+    if (suggestion.length >= 3 && suggestion.length <= 20) {
+      suggestions.add(suggestion);
+    }
+  });
+  
+  return Array.from(suggestions).slice(0, 8);
+};
+
+// Generate TLD variations for a base domain name
+export const generateTldVariations = async (baseName: string): Promise<Domain[]> => {
+  const tldVariations: Domain[] = [];
+  
+  // Use all common TLDs for TLD swapper
+  commonTlds.forEach(({ tld, price }) => {
+    const domainName = `${baseName}.${tld}`;
+    const available = mockAvailabilityCheck(baseName + tld);
+    
+    tldVariations.push({
+      name: domainName,
+      available,
+      price: price + (Math.random() - 0.5) * 2,
+      tld,
+    });
+  });
+  
+  return tldVariations.sort((a, b) => {
     if (a.available && !b.available) return -1;
     if (!a.available && b.available) return 1;
     return a.price - b.price;

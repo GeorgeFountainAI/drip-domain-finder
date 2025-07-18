@@ -49,6 +49,15 @@ export const DomainSearchForm = forwardRef<DomainSearchFormRef, DomainSearchForm
   const [isCheckingAiDomains, setIsCheckingAiDomains] = useState(false);
   const [hasGeneratedSuggestions, setHasGeneratedSuggestions] = useState(false);
   
+  // Wildcard suggestions state
+  const [wildcardSuggestions, setWildcardSuggestions] = useState<Domain[]>([]);
+  const [isLoadingWildcards, setIsLoadingWildcards] = useState(false);
+  
+  // TLD variations state
+  const [tldVariations, setTldVariations] = useState<Domain[]>([]);
+  const [isLoadingTlds, setIsLoadingTlds] = useState(false);
+  const [baseDomainName, setBaseDomainName] = useState<string>("");
+  
   // Usage limits state
   const [canSearch, setCanSearch] = useState(true);
   const [usageLimitMessage, setUsageLimitMessage] = useState<string | null>(null);
@@ -209,6 +218,10 @@ export const DomainSearchForm = forwardRef<DomainSearchFormRef, DomainSearchForm
       }
 
       setDomains(data);
+      
+      // Generate wildcard suggestions and TLD variations
+      await generateWildcardSuggestionsForKeyword(keyword.trim());
+      await generateTldVariationsForKeyword(keyword.trim());
       
       // Log the search usage
       await logSearchUsage(keyword.trim(), 'manual');
@@ -408,12 +421,73 @@ export const DomainSearchForm = forwardRef<DomainSearchFormRef, DomainSearchForm
     }
   };
 
+  // Generate wildcard suggestions
+  const generateWildcardSuggestionsForKeyword = async (searchKeyword: string) => {
+    setIsLoadingWildcards(true);
+    try {
+      // Import the utility function
+      const { generateWildcardSuggestions } = await import('@/utils/domainGenerator');
+      const suggestions = generateWildcardSuggestions(searchKeyword);
+      
+      // Check availability for each suggestion
+      const wildcardResults: Domain[] = [];
+      for (const suggestion of suggestions) {
+        try {
+          const response = await fetch(`/api/domainSearch?keyword=${encodeURIComponent(suggestion)}`);
+          if (response.ok) {
+            const data = await response.json();
+            if (Array.isArray(data) && data.length > 0) {
+              // Find the exact domain or create a mock one
+              const exactMatch = data.find(d => d.name.toLowerCase().includes(suggestion.toLowerCase()));
+              if (exactMatch) {
+                wildcardResults.push(exactMatch);
+              } else {
+                // Create mock domain with availability check
+                wildcardResults.push({
+                  name: `${suggestion}.com`,
+                  available: Math.random() > 0.3,
+                  price: 12.99 + Math.random() * 5,
+                  tld: 'com'
+                });
+              }
+            }
+          }
+        } catch (error) {
+          console.error(`Failed to check ${suggestion}:`, error);
+        }
+      }
+      setWildcardSuggestions(wildcardResults);
+    } catch (error) {
+      console.error('Failed to generate wildcard suggestions:', error);
+    } finally {
+      setIsLoadingWildcards(false);
+    }
+  };
+
+  // Generate TLD variations for base domain
+  const generateTldVariationsForKeyword = async (searchKeyword: string) => {
+    setIsLoadingTlds(true);
+    setBaseDomainName(searchKeyword);
+    
+    try {
+      const { generateTldVariations } = await import('@/utils/domainGenerator');
+      const variations = await generateTldVariations(searchKeyword);
+      setTldVariations(variations);
+    } catch (error) {
+      console.error('Failed to generate TLD variations:', error);
+    } finally {
+      setIsLoadingTlds(false);
+    }
+  };
+
   const availableDomains = domains.filter(d => d.available);
   const availableAiDomains = aiSuggestions.filter(d => d.available);
-  const allAvailableDomains = [...availableDomains, ...availableAiDomains];
+  const availableWildcardDomains = wildcardSuggestions.filter(d => d.available);
+  const availableTldDomains = tldVariations.filter(d => d.available);
+  const allAvailableDomains = [...availableDomains, ...availableAiDomains, ...availableWildcardDomains, ...availableTldDomains];
   
   const totalPrice = Array.from(selectedDomains).reduce((sum, domainName) => {
-    const domain = [...domains, ...aiSuggestions].find(d => d.name === domainName);
+    const domain = [...domains, ...aiSuggestions, ...wildcardSuggestions, ...tldVariations].find(d => d.name === domainName);
     return sum + (domain?.price || 0);
   }, 0);
 
@@ -438,6 +512,8 @@ export const DomainSearchForm = forwardRef<DomainSearchFormRef, DomainSearchForm
       // Reset previous results
       setDomains([]);
       setAiSuggestions([]);
+      setWildcardSuggestions([]);
+      setTldVariations([]);
       setHasGeneratedSuggestions(false);
       setSelectedDomains(new Set());
 
@@ -874,6 +950,222 @@ export const DomainSearchForm = forwardRef<DomainSearchFormRef, DomainSearchForm
                  ))}
                </div>
             )}
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Wildcard Brand Suggestions Section */}
+      {wildcardSuggestions.length > 0 && !isLoadingWildcards && (
+        <Card>
+          <CardHeader>
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+              <div>
+                <CardTitle className="flex flex-col sm:flex-row sm:items-center gap-2">
+                  <div className="flex items-center gap-2">
+                    <Search className="h-5 w-5 text-amber-600" />
+                    Brand-Style Suggestions
+                  </div>
+                  {wildcardSuggestions.length > 0 && (
+                    <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-200">
+                      {wildcardSuggestions.length} suggestions
+                    </Badge>
+                  )}
+                </CardTitle>
+                <CardDescription className="mt-1">
+                  Creative brand-style domain variations for "{keyword}"
+                </CardDescription>
+              </div>
+              
+              {availableWildcardDomains.length > 0 && (
+                <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
+                  <div className="flex items-center gap-2">
+                    <Checkbox
+                      id="select-all-wildcard"
+                      checked={availableWildcardDomains.length > 0 && availableWildcardDomains.every(d => selectedDomains.has(d.name))}
+                      onCheckedChange={(checked) => {
+                        if (checked) {
+                          const newSelected = new Set(selectedDomains);
+                          availableWildcardDomains.forEach(d => newSelected.add(d.name));
+                          setSelectedDomains(newSelected);
+                        } else {
+                          const newSelected = new Set(selectedDomains);
+                          availableWildcardDomains.forEach(d => newSelected.delete(d.name));
+                          setSelectedDomains(newSelected);
+                        }
+                      }}
+                    />
+                    <label htmlFor="select-all-wildcard" className="text-sm font-medium">
+                      <span className="hidden sm:inline">Select All Brand Suggestions</span>
+                      <span className="sm:hidden">Select All</span>
+                    </label>
+                  </div>
+                </div>
+              )}
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-2">
+               {wildcardSuggestions.map((domain) => (
+                 <div
+                   key={`wildcard-${domain.name}`}
+                   className="flex flex-col sm:flex-row sm:items-center sm:justify-between p-3 rounded-md border hover:bg-accent/50 transition-colors bg-gradient-to-r from-amber-50/50 to-transparent gap-3"
+                 >
+                   <div className="flex flex-col sm:flex-row sm:items-center gap-3 flex-1">
+                     <div className="flex items-center gap-3">
+                       {domain.available && (
+                         <Checkbox
+                           id={`wildcard-domain-${domain.name}`}
+                           checked={selectedDomains.has(domain.name)}
+                           onCheckedChange={(checked) => handleDomainSelect(domain.name, checked as boolean)}
+                         />
+                       )}
+                       <div className="flex items-center gap-2">
+                         {domain.available ? (
+                           <Check className="h-4 w-4 text-green-600" />
+                         ) : (
+                           <X className="h-4 w-4 text-red-600" />
+                         )}
+                         <span className="font-medium break-all">{domain.name}</span>
+                       </div>
+                     </div>
+                     <div className="flex flex-wrap items-center gap-2">
+                       <Badge variant={domain.available ? "default" : "secondary"}>
+                         {domain.available ? "Available" : "Unavailable"}
+                       </Badge>
+                       <Badge variant="outline" className="text-xs bg-amber-50 text-amber-700 border-amber-200">
+                         Brand Style
+                       </Badge>
+                       {domain.available && domain.price > 0 && (
+                         <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
+                           ${domain.price.toFixed(2)}/year
+                         </Badge>
+                       )}
+                     </div>
+                   </div>
+                   
+                   {domain.available && domain.price > 0 && (
+                     <div className="text-right sm:text-right text-left">
+                       <div className="text-lg font-bold text-green-600">
+                         ${domain.price.toFixed(2)}
+                       </div>
+                       <div className="text-xs text-muted-foreground">
+                         per year
+                       </div>
+                     </div>
+                   )}
+                 </div>
+               ))}
+             </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* TLD Variations Section */}
+      {tldVariations.length > 0 && !isLoadingTlds && (
+        <Card>
+          <CardHeader>
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+              <div>
+                <CardTitle className="flex flex-col sm:flex-row sm:items-center gap-2">
+                  <div className="flex items-center gap-2">
+                    <span className="h-5 w-5 text-blue-600 font-bold">.TLD</span>
+                    TLD Swapper
+                  </div>
+                  {tldVariations.length > 0 && (
+                    <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
+                      {tldVariations.length} extensions
+                    </Badge>
+                  )}
+                </CardTitle>
+                <CardDescription className="mt-1">
+                  "{baseDomainName}" across popular domain extensions
+                </CardDescription>
+              </div>
+              
+              {availableTldDomains.length > 0 && (
+                <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
+                  <div className="flex items-center gap-2">
+                    <Checkbox
+                      id="select-all-tld"
+                      checked={availableTldDomains.length > 0 && availableTldDomains.every(d => selectedDomains.has(d.name))}
+                      onCheckedChange={(checked) => {
+                        if (checked) {
+                          const newSelected = new Set(selectedDomains);
+                          availableTldDomains.forEach(d => newSelected.add(d.name));
+                          setSelectedDomains(newSelected);
+                        } else {
+                          const newSelected = new Set(selectedDomains);
+                          availableTldDomains.forEach(d => newSelected.delete(d.name));
+                          setSelectedDomains(newSelected);
+                        }
+                      }}
+                    />
+                    <label htmlFor="select-all-tld" className="text-sm font-medium">
+                      <span className="hidden sm:inline">Select All Available TLDs</span>
+                      <span className="sm:hidden">Select All</span>
+                    </label>
+                  </div>
+                </div>
+              )}
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+               {tldVariations.map((domain) => (
+                 <div
+                   key={`tld-${domain.name}`}
+                   className="flex items-center justify-between p-3 rounded-md border hover:bg-accent/50 transition-colors bg-gradient-to-r from-blue-50/30 to-transparent"
+                 >
+                   <div className="flex items-center gap-3 flex-1">
+                     {domain.available && (
+                       <Checkbox
+                         id={`tld-domain-${domain.name}`}
+                         checked={selectedDomains.has(domain.name)}
+                         onCheckedChange={(checked) => handleDomainSelect(domain.name, checked as boolean)}
+                       />
+                     )}
+                     <div className="flex items-center gap-2 flex-1">
+                       {domain.available ? (
+                         <Check className="h-4 w-4 text-green-600" />
+                       ) : (
+                         <X className="h-4 w-4 text-red-600" />
+                       )}
+                       <div className="flex flex-col">
+                         <span className="font-medium text-sm break-all">{domain.name}</span>
+                         <div className="flex items-center gap-1 mt-1">
+                           <Badge 
+                             variant={domain.available ? "default" : "secondary"}
+                             className="text-xs"
+                           >
+                             {domain.available ? "Available" : "Taken"}
+                           </Badge>
+                           {domain.available && domain.price > 0 && (
+                             <span className="text-xs text-green-600 font-medium">
+                               ${domain.price.toFixed(2)}/yr
+                             </span>
+                           )}
+                         </div>
+                       </div>
+                     </div>
+                   </div>
+                 </div>
+               ))}
+             </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Loading States */}
+      {(isLoadingWildcards || isLoadingTlds) && (
+        <Card>
+          <CardContent className="py-8">
+            <div className="flex items-center justify-center gap-3">
+              <Loader2 className="h-5 w-5 animate-spin" />
+              <span className="text-muted-foreground">
+                {isLoadingWildcards && "Generating brand suggestions..."}
+                {isLoadingTlds && "Checking TLD variations..."}
+              </span>
+            </div>
           </CardContent>
         </Card>
       )}
