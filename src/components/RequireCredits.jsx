@@ -19,6 +19,7 @@ const RequireCredits = ({
   const navigate = useNavigate();
   const [attemptCount, setAttemptCount] = useState(0);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [hasShownToast, setHasShownToast] = useState(false);
   const timeoutRef = useRef(null);
 
   // Check admin status - Admin bypass for internal testing and demo use
@@ -75,11 +76,19 @@ const RequireCredits = ({
     });
   };
 
+  // Reset toast flag when user gains credits or changes credit requirements
   useEffect(() => {
-    if (!loading && !hasCredits(credits) && showAlert && !isAdmin) {
+    if (hasCredits(credits) || isAdmin) {
+      setHasShownToast(false);
+    }
+  }, [userCredits, credits, hasCredits, isAdmin]);
+
+  useEffect(() => {
+    if (!loading && !hasCredits(credits) && showAlert && !isAdmin && !hasShownToast) {
+      setHasShownToast(true);
       showInsufficientCreditsToast();
     }
-  }, [loading, userCredits, credits, showAlert, hasCredits, isAdmin]);
+  }, [loading, userCredits, credits, showAlert, hasCredits, isAdmin, hasShownToast]);
 
   // Cleanup timeout on unmount
   useEffect(() => {
