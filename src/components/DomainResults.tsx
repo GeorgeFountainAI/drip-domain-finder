@@ -19,9 +19,22 @@ interface DomainResultsProps {
   onAddToCart: (domains: Domain[]) => void;
   onBack: () => void;
   isLoading: boolean;
+  totalResults?: number;
+  hasMore?: boolean;
+  onLoadMore?: () => void;
+  isLoadingMore?: boolean;
 }
 
-export const DomainResults = ({ domains, onAddToCart, onBack, isLoading }: DomainResultsProps) => {
+export const DomainResults = ({ 
+  domains, 
+  onAddToCart, 
+  onBack, 
+  isLoading, 
+  totalResults, 
+  hasMore = false, 
+  onLoadMore, 
+  isLoadingMore = false 
+}: DomainResultsProps) => {
   const [selectedDomains, setSelectedDomains] = useState<Set<string>>(new Set());
   const [selectedDomain, setSelectedDomain] = useState<Domain | null>(null);
   const { toast } = useToast();
@@ -220,6 +233,56 @@ export const DomainResults = ({ domains, onAddToCart, onBack, isLoading }: Domai
           </div>
         )}
 
+        {/* Pagination Indicators and Load More */}
+        {availableDomains.length > 0 && (
+          <div className="mt-8 space-y-4">
+            {/* Results Status */}
+            <div className="text-center">
+              <div className="inline-flex items-center gap-2 px-4 py-2 bg-muted/50 rounded-full">
+                <span className="text-sm text-muted-foreground">
+                  {totalResults ? (
+                    `Showing ${availableDomains.length} of ${totalResults} results`
+                  ) : hasMore ? (
+                    `Showing ${availableDomains.length} results`
+                  ) : (
+                    `${availableDomains.length} results • End of list`
+                  )}
+                </span>
+              </div>
+            </div>
+
+            {/* Load More Button */}
+            {hasMore && onLoadMore && (
+              <div className="flex justify-center">
+                <Button
+                  onClick={onLoadMore}
+                  disabled={isLoadingMore}
+                  variant="outline"
+                  size="lg"
+                  className="px-8"
+                >
+                  {isLoadingMore ? (
+                    <>
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary mr-2"></div>
+                      Loading more domains...
+                    </>
+                  ) : (
+                    'Load More Results'
+                  )}
+                </Button>
+              </div>
+            )}
+
+            {/* End of Results Message */}
+            {!hasMore && totalResults && availableDomains.length < totalResults && (
+              <div className="text-center">
+                <p className="text-sm text-muted-foreground">
+                  Some domains may not be shown due to filtering or availability
+                </p>
+              </div>
+            )}
+          </div>
+        )}
         {availableDomains.length === 0 && (
           <Card className="bg-gradient-card border-border/50 shadow-card">
             <CardContent className="p-8 text-center">
