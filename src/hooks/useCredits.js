@@ -51,7 +51,29 @@ export const useCredits = () => {
         return;
       }
 
-      setCredits(data || { current_credits: 0, total_purchased_credits: 0 });
+      // If no record exists, create one automatically
+      if (!data) {
+        console.log('No user_credits record found, creating one for user:', user.id);
+        const { data: newRecord, error: insertError } = await supabase
+          .from('user_credits')
+          .insert({
+            user_id: user.id,
+            current_credits: 0,
+            total_purchased_credits: 0
+          })
+          .select('current_credits, total_purchased_credits')
+          .single();
+
+        if (insertError) {
+          console.error('Error creating user_credits record:', insertError);
+          setError(insertError);
+          return;
+        }
+
+        setCredits(newRecord);
+      } else {
+        setCredits(data);
+      }
     } catch (err) {
       console.error('Error:', err);
       setError(err);
