@@ -5,6 +5,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { AlertTriangle, CreditCard } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
 
 const RequireCredits = ({ 
   credits = 1, 
@@ -17,7 +18,26 @@ const RequireCredits = ({
   const { toast } = useToast();
   const navigate = useNavigate();
   const [attemptCount, setAttemptCount] = useState(0);
+  const [isAdmin, setIsAdmin] = useState(false);
   const timeoutRef = useRef(null);
+
+  // Check admin status - Admin bypass for internal testing and demo use
+  useEffect(() => {
+    const checkAdminStatus = async () => {
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+          const adminStatus = user.email === 'gfountain257@gmail.com' || 
+                            user.user_metadata?.role === 'admin';
+          setIsAdmin(adminStatus);
+        }
+      } catch (error) {
+        console.error('Error checking admin status:', error);
+      }
+    };
+    
+    checkAdminStatus();
+  }, []);
 
   // Function to show enhanced insufficient credits toast
   const showInsufficientCreditsToast = () => {
@@ -56,10 +76,10 @@ const RequireCredits = ({
   };
 
   useEffect(() => {
-    if (!loading && !hasCredits(credits) && showAlert) {
+    if (!loading && !hasCredits(credits) && showAlert && !isAdmin) {
       showInsufficientCreditsToast();
     }
-  }, [loading, userCredits, credits, showAlert, hasCredits]);
+  }, [loading, userCredits, credits, showAlert, hasCredits, isAdmin]);
 
   // Cleanup timeout on unmount
   useEffect(() => {
@@ -83,8 +103,8 @@ const RequireCredits = ({
     );
   }
 
-  // If user has enough credits, render children
-  if (hasCredits(credits)) {
+  // If user has enough credits or is admin, render children
+  if (hasCredits(credits) || isAdmin) {
     return children;
   }
 
@@ -93,7 +113,7 @@ const RequireCredits = ({
     return children;
   }
 
-  // Show insufficient credits message
+  // Show insufficient credits message (only for non-admin users)
   return (
     <Card className="w-full max-w-md mx-auto">
       <CardContent className="p-6 text-center">

@@ -21,6 +21,26 @@ export const useConsumeCredit = () => {
         return { success: false, error: 'User not authenticated' };
       }
 
+      // Admin bypass for internal testing and demo use
+      const isAdmin = user.email === 'gfountain257@gmail.com' || 
+                     user.user_metadata?.role === 'admin';
+      
+      if (isAdmin) {
+        // Admin users can search without consuming credits
+        toast({
+          title: "Admin Access",
+          description: "Searching with admin privileges - no credits consumed",
+          duration: 3000,
+        });
+        
+        return { 
+          success: true, 
+          newBalance: 'unlimited',
+          creditsConsumed: 0,
+          isAdmin: true
+        };
+      }
+
       // Get current credits
       const { data: currentCredits, error: fetchError } = await supabase
         .from('user_credits')
