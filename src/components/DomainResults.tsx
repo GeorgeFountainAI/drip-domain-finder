@@ -23,6 +23,7 @@ interface DomainResultsProps {
 
 export const DomainResults = ({ domains, onAddToCart, onBack, isLoading }: DomainResultsProps) => {
   const [selectedDomains, setSelectedDomains] = useState<Set<string>>(new Set());
+  const [selectedDomain, setSelectedDomain] = useState<Domain | null>(null);
   const { toast } = useToast();
 
   const handleDomainToggle = (domainName: string) => {
@@ -35,6 +36,10 @@ export const DomainResults = ({ domains, onAddToCart, onBack, isLoading }: Domai
     setSelectedDomains(newSelected);
   };
 
+  const handleDomainSelect = (domain: Domain) => {
+    setSelectedDomain(selectedDomain?.name === domain.name ? null : domain);
+  };
+
   const handleAddToCart = () => {
     const domainsToAdd = domains.filter(d => selectedDomains.has(d.name));
     if (domainsToAdd.length > 0) {
@@ -44,6 +49,17 @@ export const DomainResults = ({ domains, onAddToCart, onBack, isLoading }: Domai
         description: `${domainsToAdd.length} domain${domainsToAdd.length > 1 ? 's' : ''} added to cart`,
       });
       setSelectedDomains(new Set());
+    }
+  };
+
+  const handleContinueToCheckout = () => {
+    if (selectedDomain) {
+      toast({
+        title: "Proceeding to Checkout",
+        description: `Continuing with ${selectedDomain.name}`,
+      });
+      // Here you would typically navigate to a checkout page
+      console.log("Selected domain for checkout:", selectedDomain);
     }
   };
 
@@ -115,24 +131,36 @@ export const DomainResults = ({ domains, onAddToCart, onBack, isLoading }: Domai
             const domainParts = domain.name.split('.');
             const domainBase = domainParts[0];
             const tldExtension = domainParts.slice(1).join('.');
+            const isSelected = selectedDomain?.name === domain.name;
             
             return (
               <Card 
                 key={domain.name} 
-                className="bg-card/50 backdrop-blur-sm border shadow-sm hover:shadow-md transition-all duration-200 rounded-xl p-6"
+                onClick={() => handleDomainSelect(domain)}
+                className={`
+                  backdrop-blur-sm border shadow-sm hover:shadow-md transition-all duration-200 rounded-xl p-6 cursor-pointer
+                  ${isSelected 
+                    ? 'bg-primary/10 border-primary/30 ring-2 ring-primary/20 shadow-lg' 
+                    : 'bg-card/50 hover:bg-card/70'
+                  }
+                `}
               >
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                   {/* Domain Info */}
                   <div className="flex items-center gap-3 flex-1 min-w-0">
                     <div className="flex items-center gap-2 flex-1 min-w-0">
-                      <Globe className="h-5 w-5 text-primary flex-shrink-0" />
+                      <Globe className={`h-5 w-5 flex-shrink-0 ${isSelected ? 'text-primary' : 'text-primary'}`} />
                       <div className="flex items-center gap-1 flex-wrap">
-                        <span className="font-bold text-lg text-foreground truncate">
+                        <span className={`font-bold text-lg truncate ${isSelected ? 'text-primary' : 'text-foreground'}`}>
                           {domainBase}
                         </span>
                         <Badge 
                           variant="secondary" 
-                          className="text-xs px-2 py-1 bg-primary/10 text-primary border-primary/20"
+                          className={`text-xs px-2 py-1 ${
+                            isSelected 
+                              ? 'bg-primary/20 text-primary border-primary/30' 
+                              : 'bg-primary/10 text-primary border-primary/20'
+                          }`}
                         >
                           .{tldExtension}
                         </Badge>
@@ -146,10 +174,10 @@ export const DomainResults = ({ domains, onAddToCart, onBack, isLoading }: Domai
                     </Badge>
                   </div>
 
-                  {/* Price and Actions */}
+                  {/* Price and Selection Indicator */}
                   <div className="flex items-center gap-4 flex-shrink-0">
                     <div className="text-right">
-                      <p className="text-xl font-bold text-primary">
+                      <p className={`text-xl font-bold ${isSelected ? 'text-primary' : 'text-primary'}`}>
                         ${domain.price.toFixed(2)}
                       </p>
                       <p className="text-sm text-muted-foreground">
@@ -157,26 +185,40 @@ export const DomainResults = ({ domains, onAddToCart, onBack, isLoading }: Domai
                       </p>
                     </div>
                     
-                    <div className="flex items-center space-x-2">
-                      <Checkbox
-                        id={domain.name}
-                        checked={selectedDomains.has(domain.name)}
-                        onCheckedChange={() => handleDomainToggle(domain.name)}
-                        className="data-[state=checked]:bg-primary data-[state=checked]:border-primary"
-                      />
-                      <label
-                        htmlFor={domain.name}
-                        className="text-sm font-medium leading-none cursor-pointer select-none"
-                      >
-                        Select
-                      </label>
-                    </div>
+                    {isSelected && (
+                      <div className="flex items-center text-primary">
+                        <Check className="h-5 w-5" />
+                      </div>
+                    )}
                   </div>
                 </div>
               </Card>
             );
           })}
         </div>
+
+        {/* Checkout Button */}
+        {selectedDomain && (
+          <div className="mt-8 flex justify-center">
+            <Card className="bg-gradient-to-r from-primary/10 to-primary/5 border-primary/20 shadow-lg">
+              <CardContent className="p-6">
+                <div className="text-center">
+                  <h3 className="text-lg font-semibold mb-2">Ready to proceed?</h3>
+                  <p className="text-muted-foreground mb-4">
+                    Continue with <span className="font-semibold text-foreground">{selectedDomain.name}</span> for ${selectedDomain.price.toFixed(2)}/year
+                  </p>
+                  <Button 
+                    onClick={handleContinueToCheckout}
+                    size="lg"
+                    className="bg-primary hover:bg-primary/90 text-primary-foreground px-8"
+                  >
+                    Continue to Simulated Checkout
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        )}
 
         {availableDomains.length === 0 && (
           <Card className="bg-gradient-card border-border/50 shadow-card">
