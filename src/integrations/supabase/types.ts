@@ -71,6 +71,21 @@ export type Database = {
         }
         Relationships: []
       }
+      settings: {
+        Row: {
+          key: string
+          value: number | null
+        }
+        Insert: {
+          key: string
+          value?: number | null
+        }
+        Update: {
+          key?: string
+          value?: number | null
+        }
+        Relationships: []
+      }
       user_credits: {
         Row: {
           created_at: string
