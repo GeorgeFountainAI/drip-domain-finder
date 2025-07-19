@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import AppPage from "./pages/AppPage";
+import Checkout from "./pages/Checkout";
 import Admin from "./pages/Admin";
 import AdminDeploy from "./pages/AdminDeploy";
 import AdminLogs from "./pages/AdminLogs";
@@ -31,6 +32,7 @@ const App = () => (
             <Route path="/auth" element={<Auth />} />
             <Route path="/app" element={<AppPage />} />
             <Route path="/search" element={<AppPage />} />
+            <Route path="/checkout" element={<Checkout />} />
             <Route path="/admin" element={<Admin />} />
             <Route path="/admin/deploy" element={<AdminDeploy />} />
             <Route path="/admin/logs" element={<AdminLogs />} />

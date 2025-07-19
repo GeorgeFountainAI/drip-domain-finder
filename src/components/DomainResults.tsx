@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -38,6 +39,7 @@ export const DomainResults = ({
   const [selectedDomains, setSelectedDomains] = useState<Set<string>>(new Set());
   const [selectedDomain, setSelectedDomain] = useState<Domain | null>(null);
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   const handleDomainToggle = (domainName: string) => {
     const newSelected = new Set(selectedDomains);
@@ -67,12 +69,13 @@ export const DomainResults = ({
 
   const handleContinueToCheckout = () => {
     if (selectedDomain) {
-      toast({
-        title: "Proceeding to Checkout",
-        description: `Continuing with ${selectedDomain.name}`,
+      const searchParams = new URLSearchParams({
+        domain: selectedDomain.name,
+        price: selectedDomain.price.toString(),
+        tld: selectedDomain.tld
       });
-      // Here you would typically navigate to a checkout page
-      console.log("Selected domain for checkout:", selectedDomain);
+      
+      navigate(`/checkout?${searchParams.toString()}`);
     }
   };
 
