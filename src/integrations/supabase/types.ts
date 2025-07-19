@@ -14,6 +14,42 @@ export type Database = {
   }
   public: {
     Tables: {
+      credit_purchases: {
+        Row: {
+          amount: number
+          created_at: string
+          credits: number
+          currency: string
+          id: string
+          status: string
+          stripe_session_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          credits: number
+          currency?: string
+          id?: string
+          status?: string
+          stripe_session_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          credits?: number
+          currency?: string
+          id?: string
+          status?: string
+          stripe_session_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       search_history: {
         Row: {
           created_at: string
@@ -35,12 +71,42 @@ export type Database = {
         }
         Relationships: []
       }
+      user_credits: {
+        Row: {
+          created_at: string
+          current_credits: number
+          id: string
+          total_purchased_credits: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          current_credits?: number
+          id?: string
+          total_purchased_credits?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          current_credits?: number
+          id?: string
+          total_purchased_credits?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      complete_credit_purchase: {
+        Args: { stripe_session_id: string; user_id: string; credits: number }
+        Returns: Json
+      }
     }
     Enums: {
       [_ in never]: never
