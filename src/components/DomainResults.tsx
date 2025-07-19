@@ -109,48 +109,73 @@ export const DomainResults = ({ domains, onAddToCart, onBack, isLoading }: Domai
           )}
         </div>
 
-        {/* Results Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {availableDomains.map((domain) => (
-            <Card key={domain.name} className="bg-gradient-card border-border/50 shadow-card hover:shadow-elevated transition-smooth">
-              <CardHeader className="pb-3">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <Globe className="h-5 w-5 text-primary" />
-                    <CardTitle className="text-lg">{domain.name}</CardTitle>
-                  </div>
-                  <Badge variant={domain.available ? "default" : "secondary"}>
-                    {domain.available ? "Available" : "Taken"}
-                  </Badge>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-2xl font-bold text-primary">
-                      ${domain.price.toFixed(2)}
-                    </p>
-                    <p className="text-sm text-muted-foreground">
-                      .{domain.tld} domain
-                    </p>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <Checkbox
-                      id={domain.name}
-                      checked={selectedDomains.has(domain.name)}
-                      onCheckedChange={() => handleDomainToggle(domain.name)}
-                    />
-                    <label
-                      htmlFor={domain.name}
-                      className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+        {/* Results List */}
+        <div className="space-y-4">
+          {availableDomains.map((domain) => {
+            const domainParts = domain.name.split('.');
+            const domainBase = domainParts[0];
+            const tldExtension = domainParts.slice(1).join('.');
+            
+            return (
+              <Card 
+                key={domain.name} 
+                className="bg-card/50 backdrop-blur-sm border shadow-sm hover:shadow-md transition-all duration-200 rounded-xl p-6"
+              >
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                  {/* Domain Info */}
+                  <div className="flex items-center gap-3 flex-1 min-w-0">
+                    <div className="flex items-center gap-2 flex-1 min-w-0">
+                      <Globe className="h-5 w-5 text-primary flex-shrink-0" />
+                      <div className="flex items-center gap-1 flex-wrap">
+                        <span className="font-bold text-lg text-foreground truncate">
+                          {domainBase}
+                        </span>
+                        <Badge 
+                          variant="secondary" 
+                          className="text-xs px-2 py-1 bg-primary/10 text-primary border-primary/20"
+                        >
+                          .{tldExtension}
+                        </Badge>
+                      </div>
+                    </div>
+                    <Badge 
+                      variant="default" 
+                      className="bg-green-100 text-green-800 border-green-200 dark:bg-green-900/20 dark:text-green-400 dark:border-green-800 flex-shrink-0"
                     >
-                      Select
-                    </label>
+                      Available
+                    </Badge>
+                  </div>
+
+                  {/* Price and Actions */}
+                  <div className="flex items-center gap-4 flex-shrink-0">
+                    <div className="text-right">
+                      <p className="text-xl font-bold text-primary">
+                        ${domain.price.toFixed(2)}
+                      </p>
+                      <p className="text-sm text-muted-foreground">
+                        per year
+                      </p>
+                    </div>
+                    
+                    <div className="flex items-center space-x-2">
+                      <Checkbox
+                        id={domain.name}
+                        checked={selectedDomains.has(domain.name)}
+                        onCheckedChange={() => handleDomainToggle(domain.name)}
+                        className="data-[state=checked]:bg-primary data-[state=checked]:border-primary"
+                      />
+                      <label
+                        htmlFor={domain.name}
+                        className="text-sm font-medium leading-none cursor-pointer select-none"
+                      >
+                        Select
+                      </label>
+                    </div>
                   </div>
                 </div>
-              </CardContent>
-            </Card>
-          ))}
+              </Card>
+            );
+          })}
         </div>
 
         {availableDomains.length === 0 && (
