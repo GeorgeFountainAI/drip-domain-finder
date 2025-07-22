@@ -98,6 +98,9 @@ const LandingPage = () => {
           </div>
           
           <nav className="flex items-center gap-2 sm:gap-4">
+            <Link to="/dripapps" className="text-sm font-medium hover:text-primary transition-colors">
+              DripApps
+            </Link>
             <Button asChild variant="ghost" size="sm">
               <Link to="/auth">
                 <span className="hidden sm:inline">Sign In</span>
