@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
-import { ShoppingCart, Check, Globe, ArrowLeft } from "lucide-react";
+import { ShoppingCart, Check, Globe, ArrowLeft, Star, TrendingUp } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import RequireCredits from "@/components/RequireCredits";
 
@@ -13,6 +13,8 @@ interface Domain {
   available: boolean;
   price: number;
   tld: string;
+  flipScore?: number; // 1-100, brandability + resale potential
+  trendStrength?: number; // 1-5 stars, keyword trends
 }
 
 interface DomainResultsProps {
@@ -25,6 +27,42 @@ interface DomainResultsProps {
   onLoadMore?: () => void;
   isLoadingMore?: boolean;
 }
+
+// Helper component for displaying star rating
+const StarRating = ({ rating }: { rating: number }) => {
+  return (
+    <div className="flex items-center gap-1">
+      {[1, 2, 3, 4, 5].map((star) => (
+        <Star
+          key={star}
+          className={`h-3 w-3 ${
+            star <= rating 
+              ? 'fill-yellow-400 text-yellow-400' 
+              : 'fill-muted text-muted-foreground'
+          }`}
+        />
+      ))}
+    </div>
+  );
+};
+
+// Helper component for displaying flip score
+const FlipScore = ({ score }: { score: number }) => {
+  const getScoreColor = (score: number) => {
+    if (score >= 80) return 'text-green-600 dark:text-green-400';
+    if (score >= 60) return 'text-yellow-600 dark:text-yellow-400';
+    return 'text-orange-600 dark:text-orange-400';
+  };
+
+  return (
+    <div className="flex items-center gap-1">
+      <TrendingUp className="h-3 w-3 text-muted-foreground" />
+      <span className={`text-xs font-medium ${getScoreColor(score)}`}>
+        {score}/100
+      </span>
+    </div>
+  );
+};
 
 export const DomainResults = ({ 
   domains, 
@@ -163,31 +201,51 @@ export const DomainResults = ({
               >
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                   {/* Domain Info */}
-                  <div className="flex items-center gap-3 flex-1 min-w-0">
-                    <div className="flex items-center gap-2 flex-1 min-w-0">
-                      <Globe className={`h-5 w-5 flex-shrink-0 ${isSelected ? 'text-primary' : 'text-primary'}`} />
-                      <div className="flex items-center gap-1 flex-wrap">
-                        <span className={`font-bold text-lg truncate ${isSelected ? 'text-primary' : 'text-foreground'}`}>
-                          {domainBase}
-                        </span>
-                        <Badge 
-                          variant="secondary" 
-                          className={`text-xs px-2 py-1 ${
-                            isSelected 
-                              ? 'bg-primary/20 text-primary border-primary/30' 
-                              : 'bg-primary/10 text-primary border-primary/20'
-                          }`}
-                        >
-                          .{tldExtension}
-                        </Badge>
+                  <div className="flex flex-col gap-2 flex-1 min-w-0">
+                    <div className="flex items-center gap-3">
+                      <div className="flex items-center gap-2 flex-1 min-w-0">
+                        <Globe className={`h-5 w-5 flex-shrink-0 ${isSelected ? 'text-primary' : 'text-primary'}`} />
+                        <div className="flex items-center gap-1 flex-wrap">
+                          <span className={`font-bold text-lg truncate ${isSelected ? 'text-primary' : 'text-foreground'}`}>
+                            {domainBase}
+                          </span>
+                          <Badge 
+                            variant="secondary" 
+                            className={`text-xs px-2 py-1 ${
+                              isSelected 
+                                ? 'bg-primary/20 text-primary border-primary/30' 
+                                : 'bg-primary/10 text-primary border-primary/20'
+                            }`}
+                          >
+                            .{tldExtension}
+                          </Badge>
+                        </div>
                       </div>
+                      <Badge 
+                        variant="default" 
+                        className="bg-green-100 text-green-800 border-green-200 dark:bg-green-900/20 dark:text-green-400 dark:border-green-800 flex-shrink-0"
+                      >
+                        Available
+                      </Badge>
                     </div>
-                    <Badge 
-                      variant="default" 
-                      className="bg-green-100 text-green-800 border-green-200 dark:bg-green-900/20 dark:text-green-400 dark:border-green-800 flex-shrink-0"
-                    >
-                      Available
-                    </Badge>
+                    
+                    {/* Domain Scores */}
+                    {(domain.flipScore || domain.trendStrength) && (
+                      <div className="flex items-center gap-4 ml-7">
+                        {domain.flipScore && (
+                          <div className="flex items-center gap-1">
+                            <span className="text-xs text-muted-foreground">Flip Score:</span>
+                            <FlipScore score={domain.flipScore} />
+                          </div>
+                        )}
+                        {domain.trendStrength && (
+                          <div className="flex items-center gap-1">
+                            <span className="text-xs text-muted-foreground">Trend:</span>
+                            <StarRating rating={domain.trendStrength} />
+                          </div>
+                        )}
+                      </div>
+                    )}
                   </div>
 
                   {/* Price and Selection Indicator */}

@@ -4,7 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Loader2, Search, Check, X, AlertCircle } from "lucide-react";
+import { Loader2, Search, Check, X, AlertCircle, Star, TrendingUp } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useConsumeCredit } from "@/hooks/useConsumeCredit";
 import { useAdminBypass } from "@/hooks/useAdminBypass";
@@ -16,6 +16,8 @@ interface Domain {
   available: boolean;
   price: number;
   tld: string;
+  flipScore?: number; // 1-100, brandability + resale potential
+  trendStrength?: number; // 1-5 stars, keyword trends
 }
 
 interface DomainSearchFormProps {
@@ -26,6 +28,42 @@ export interface DomainSearchFormRef {
   searchKeyword: (keyword: string) => Promise<void>;
   focusOnResults: () => void;
 }
+
+// Helper component for displaying star rating
+const StarRating = ({ rating }: { rating: number }) => {
+  return (
+    <div className="flex items-center gap-1">
+      {[1, 2, 3, 4, 5].map((star) => (
+        <Star
+          key={star}
+          className={`h-3 w-3 ${
+            star <= rating 
+              ? 'fill-yellow-400 text-yellow-400' 
+              : 'fill-muted text-muted-foreground'
+          }`}
+        />
+      ))}
+    </div>
+  );
+};
+
+// Helper component for displaying flip score
+const FlipScore = ({ score }: { score: number }) => {
+  const getScoreColor = (score: number) => {
+    if (score >= 80) return 'text-green-600 dark:text-green-400';
+    if (score >= 60) return 'text-yellow-600 dark:text-yellow-400';
+    return 'text-orange-600 dark:text-orange-400';
+  };
+
+  return (
+    <div className="flex items-center gap-1">
+      <TrendingUp className="h-3 w-3 text-muted-foreground" />
+      <span className={`text-xs font-medium ${getScoreColor(score)}`}>
+        {score}/100
+      </span>
+    </div>
+  );
+};
 
 export const DomainSearchForm = forwardRef<DomainSearchFormRef, DomainSearchFormProps>(({ className = "" }, ref) => {
   const [keyword, setKeyword] = useState("");
@@ -231,7 +269,7 @@ export const DomainSearchForm = forwardRef<DomainSearchFormRef, DomainSearchForm
                           />
                           <div>
                             <div className="font-semibold text-lg">{domain.name}</div>
-                            <div className="flex items-center gap-2">
+                            <div className="flex items-center gap-2 mb-2">
                               {domain.available ? (
                                 <Badge variant="default" className="bg-green-100 text-green-800 hover:bg-green-200">
                                   <Check className="mr-1 h-3 w-3" />
@@ -244,6 +282,24 @@ export const DomainSearchForm = forwardRef<DomainSearchFormRef, DomainSearchForm
                                 </Badge>
                               )}
                             </div>
+                            
+                            {/* Domain Scores */}
+                            {domain.available && (domain.flipScore || domain.trendStrength) && (
+                              <div className="flex items-center gap-4">
+                                {domain.flipScore && (
+                                  <div className="flex items-center gap-1">
+                                    <span className="text-xs text-muted-foreground">Flip Score:</span>
+                                    <FlipScore score={domain.flipScore} />
+                                  </div>
+                                )}
+                                {domain.trendStrength && (
+                                  <div className="flex items-center gap-1">
+                                    <span className="text-xs text-muted-foreground">Trend:</span>
+                                    <StarRating rating={domain.trendStrength} />
+                                  </div>
+                                )}
+                              </div>
+                            )}
                           </div>
                         </div>
                         {domain.available && (

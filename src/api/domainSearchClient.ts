@@ -1,10 +1,13 @@
 import { supabase } from "@/integrations/supabase/client";
+import { domainScoringService } from "@/services/domainScoring";
 
 interface Domain {
   name: string;
   available: boolean;
   price: number;
   tld: string;
+  flipScore?: number; // 1-100, brandability + resale potential
+  trendStrength?: number; // 1-5 stars, keyword trends
 }
 
 interface SearchResponse {
@@ -109,6 +112,23 @@ export const searchDomains = async (keyword: string, forceDemoMode = false): Pro
       await new Promise(resolve => setTimeout(resolve, 800 + Math.random() * 700));
       
       const mockDomains = generateEnhancedMockDomains(cleanKeyword);
+      
+      // Add scores to available domains
+      const availableDomains = mockDomains.filter(d => d.available);
+      if (availableDomains.length > 0) {
+        const scores = await domainScoringService.getBatchScores(
+          availableDomains.map(d => d.name)
+        );
+        
+        mockDomains.forEach(domain => {
+          if (domain.available && scores.has(domain.name)) {
+            const domainScore = scores.get(domain.name)!;
+            domain.flipScore = domainScore.flipScore;
+            domain.trendStrength = domainScore.trendStrength;
+          }
+        });
+      }
+      
       await logSearchAttempt(cleanKeyword, true);
       
       return {

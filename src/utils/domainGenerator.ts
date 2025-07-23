@@ -5,6 +5,8 @@ interface Domain {
   available: boolean;
   price: number;
   tld: string;
+  flipScore?: number; // 1-100, brandability + resale potential
+  trendStrength?: number; // 1-5 stars, keyword trends
 }
 
 const commonTlds = [
