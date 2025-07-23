@@ -34,13 +34,13 @@ const LandingPage = () => {
   const features = [
     {
       icon: Crown,
-      title: "Curated Premium Domains",
-      description: "Hand-picked, brandable domains perfect for Black-owned businesses in beauty, tech, finance, and creative industries."
+      title: "Premium Domain Curation",
+      description: "Hand-picked, brandable domains perfect for startups, entrepreneurs, and businesses across all industries."
     },
     {
       icon: Brain,
-      title: "Cultural AI Intelligence",
-      description: "AI-powered suggestions trained to understand cultural nuances and generate authentic, resonant domain names."
+      title: "AI-Powered Intelligence",
+      description: "Advanced AI suggestions that understand market trends and generate high-value, brandable domain names."
     },
     {
       icon: BarChart3,
@@ -49,35 +49,35 @@ const LandingPage = () => {
     },
     {
       icon: Target,
-      title: "Niche Category Focus",
-      description: "Specialized search filters for beauty brands, tech startups, financial services, and creative portfolios."
+      title: "Smart Category Filters",
+      description: "Specialized search filters for tech startups, e-commerce, finance, creative agencies, and more."
     },
     {
       icon: Shield,
       title: "Verified Marketplace",
-      description: "Secure purchasing through trusted registrars with additional verification for premium domain authenticity."
+      description: "Secure purchasing through trusted registrars with verification for premium domain authenticity."
     },
     {
       icon: Globe,
       title: "Strategic Extensions",
-      description: "Access to .black, .beauty, .tech, .money domains plus traditional extensions perfect for your brand."
+      description: "Access to .com, .io, .ai, .tech domains plus emerging extensions perfect for your brand."
     }
   ];
 
   const featuredDrops = [
     {
-      category: "Beauty",
-      domains: ["MelaninGlow.com", "CrownBeauty.co", "GoldenMane.io"],
+      category: "Tech",
+      domains: ["CodeForge.ai", "TechVault.io", "DataStream.dev"],
       color: "from-primary to-primary-glow"
     },
     {
-      category: "Tech",
-      domains: ["CodeNoir.ai", "BlackTech.ventures", "InnovateMelanin.dev"],
+      category: "Finance",
+      domains: ["WealthBuilder.com", "FinanceFlow.co", "InvestSmart.io"],
       color: "from-secondary to-primary"
     },
     {
-      category: "Finance",
-      domains: ["WealthBuilders.black", "MoneyMoves.co", "CapitalNoir.finance"],
+      category: "Creative",
+      domains: ["StudioCraft.com", "DesignVault.io", "BrandForge.co"],
       color: "from-accent to-primary"
     }
   ];
@@ -90,11 +90,8 @@ const LandingPage = () => {
           <div className="flex items-center gap-2">
             <Droplets className="h-6 w-6 text-primary" />
             <span className="text-lg sm:text-xl font-bold bg-gradient-primary bg-clip-text text-transparent">
-              NoirDrip
+              DomainDrip
             </span>
-            <Badge variant="outline" className="hidden sm:inline-flex bg-primary/10 text-xs">
-              Black Edition
-            </Badge>
           </div>
           
           <nav className="flex items-center gap-2 sm:gap-4">
@@ -126,20 +123,20 @@ const LandingPage = () => {
         <div className="container mx-auto max-w-6xl">
           <div className="text-center mb-16 sm:mb-20">
             <Badge variant="outline" className="mb-6 bg-primary/15 border-primary/30 text-primary">
-              <Crown className="h-3 w-3 mr-1" />
-              Premium Domain Marketplace for Black Excellence
+              <Search className="h-3 w-3 mr-1" />
+              Discover, Buy & Flip Domain Names Powered by AI
             </Badge>
             
             <h1 className="text-5xl sm:text-6xl md:text-8xl font-bold mb-8 leading-tight">
-              Build Your
+              Find Your
               <span className="block bg-gradient-primary bg-clip-text text-transparent">
-                Digital Empire
+                Perfect Domain
               </span>
             </h1>
             
             <p className="text-xl sm:text-2xl text-muted-foreground mb-12 max-w-4xl mx-auto px-4 leading-relaxed">
-              Curated premium domain bundles and AI-powered search tools designed for Black entrepreneurs, 
-              creatives, and digital investors ready to dominate their markets.
+              Discover premium domains, get AI-powered suggestions, and build your digital presence with 
+              intelligent tools designed for entrepreneurs and digital investors.
             </p>
             
             <div className="flex flex-col sm:flex-row gap-4 justify-center px-4">
@@ -158,7 +155,7 @@ const LandingPage = () => {
             </div>
           </div>
 
-          {/* App Preview with NoirDrip branding */}
+          {/* App Preview with DomainDrip branding */}
           <div className="relative mx-auto max-w-5xl">
             <div className="relative group">
               <div className="absolute -inset-6 bg-gradient-to-r from-primary/25 via-secondary/25 to-primary/25 rounded-3xl blur-3xl opacity-60 group-hover:opacity-80 transition-opacity"></div>
@@ -168,17 +165,17 @@ const LandingPage = () => {
                   <div className="relative w-full h-auto">
                     <img 
                       src={demoFrame1}
-                      alt="NoirDrip Premium Access Demo" 
+                      alt="DomainDrip Premium Access Demo" 
                       className="w-full h-auto object-cover rounded-lg transition-opacity duration-500 group-hover:opacity-0"
                     />
                     <img 
                       src={demoFrame2}
-                      alt="NoirDrip Credit System Demo" 
+                      alt="DomainDrip Credit System Demo" 
                       className="absolute inset-0 w-full h-auto object-cover rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-500 delay-1000"
                     />
                     <img 
                       src={demoFrame3}
-                      alt="NoirDrip Cultural AI Search Demo" 
+                      alt="DomainDrip AI Search Demo" 
                       className="absolute inset-0 w-full h-auto object-cover rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-500 delay-2000"
                     />
                   </div>
@@ -201,7 +198,7 @@ const LandingPage = () => {
               </div>
             </div>
             
-            {/* Cultural stats */}
+            {/* Platform stats */}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mt-12 text-center">
               <div className="bg-card/70 rounded-xl p-6 border border-primary/20 shadow-card">
                 <div className="text-3xl font-bold text-primary">$2.5M+</div>
@@ -209,7 +206,7 @@ const LandingPage = () => {
               </div>
               <div className="bg-card/70 rounded-xl p-6 border border-primary/20 shadow-card">
                 <div className="text-3xl font-bold text-primary">15K+</div>
-                <div className="text-sm text-muted-foreground">Black Entrepreneurs Served</div>
+                <div className="text-sm text-muted-foreground">Entrepreneurs Served</div>
               </div>
               <div className="bg-card/70 rounded-xl p-6 border border-primary/20 shadow-card">
                 <div className="text-3xl font-bold text-primary">95%</div>
@@ -228,7 +225,7 @@ const LandingPage = () => {
               Latest Premium Drops
             </h2>
             <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
-              Handpicked domains across key industries where Black entrepreneurs are making their mark.
+              Handpicked domains across key industries where entrepreneurs are building their digital empires.
             </p>
           </div>
 
@@ -274,10 +271,10 @@ const LandingPage = () => {
         <div className="container mx-auto max-w-6xl">
           <div className="text-center mb-16">
             <h2 className="text-4xl sm:text-5xl font-bold mb-6">
-              Built for Black Excellence
+              Built for Success
             </h2>
             <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
-              Every feature designed with cultural intelligence and business success in mind.
+              Every feature designed with intelligence and business success in mind.
             </p>
           </div>
 
@@ -378,7 +375,7 @@ const LandingPage = () => {
       <section className="py-16 px-4 bg-gradient-to-r from-primary/10 to-secondary/10">
         <div className="container mx-auto max-w-4xl text-center">
           <h3 className="text-2xl sm:text-3xl font-bold mb-4">
-            Become a NoirDrip Partner
+            Become a DomainDrip Partner
           </h3>
           <p className="text-lg text-muted-foreground mb-6">
             Earn 30% commission promoting premium domains to your network of entrepreneurs.
@@ -399,14 +396,14 @@ const LandingPage = () => {
               <div className="flex items-center gap-2">
                 <Droplets className="h-6 w-6 text-primary" />
                 <span className="text-xl font-bold bg-gradient-primary bg-clip-text text-transparent">
-                  NoirDrip
+                  DomainDrip
                 </span>
               </div>
               <div className="space-y-2">
-                <h3 className="font-semibold">About NoirDrip</h3>
+                <h3 className="font-semibold">About DomainDrip</h3>
                 <p className="text-sm text-muted-foreground leading-relaxed">
-                  The premier domain marketplace for Black entrepreneurs and creatives. We curate premium domains 
-                  and provide AI-powered tools to help you build your digital empire with cultural intelligence and business acumen.
+                  The premier AI-powered domain marketplace for entrepreneurs and creatives. We curate premium domains 
+                  and provide intelligent tools to help you discover, buy, and flip domain names with precision and insight.
                 </p>
               </div>
             </div>
@@ -416,7 +413,7 @@ const LandingPage = () => {
               <h3 className="font-semibold">Contact</h3>
               <ul className="space-y-2 text-sm text-muted-foreground">
                 <li>
-                  <a href="mailto:support@noirdrip.com" className="hover:text-primary transition-colors flex items-center gap-2">
+                  <a href="mailto:support@domaindrip.com" className="hover:text-primary transition-colors flex items-center gap-2">
                     <Mail className="h-4 w-4" />
                     Support & Partnerships
                   </a>
@@ -459,8 +456,8 @@ const LandingPage = () => {
           </div>
 
           <div className="border-t border-primary/20 mt-12 pt-8 text-center text-sm text-muted-foreground">
-            <p>&copy; 2024 NoirDrip. Empowering Black excellence in digital spaces.</p>
-            <p className="mt-2 text-xs">Part of the Drip Editions • LatinoDrip • FaithDrip • Coming Soon</p>
+            <p>&copy; 2024 DomainDrip. Discover, Buy & Flip Domain Names Powered by AI.</p>
+            <p className="mt-2 text-xs">Built with intelligence for digital entrepreneurs worldwide.</p>
           </div>
         </div>
       </footer>
