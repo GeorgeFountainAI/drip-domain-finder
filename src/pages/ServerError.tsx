@@ -1,4 +1,3 @@
-import { Link } from "react-router-dom";
 import { useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -59,11 +58,13 @@ const ServerError = ({ error, resetError }: ServerErrorProps) => {
                   <RefreshCw className="h-4 w-4 mr-2" />
                   Try Again
                 </Button>
-                <Button asChild variant="outline" className="flex-1">
-                  <Link to="/">
-                    <Home className="h-4 w-4 mr-2" />
-                    Back to Home
-                  </Link>
+                <Button 
+                  variant="outline" 
+                  className="flex-1"
+                  onClick={() => window.location.href = '/'}
+                >
+                  <Home className="h-4 w-4 mr-2" />
+                  Back to Home
                 </Button>
               </div>
               
@@ -90,11 +91,19 @@ const ServerError = ({ error, resetError }: ServerErrorProps) => {
                 Contact Support
               </a>
             </Button>
-            <Button asChild variant="ghost" size="sm">
-              <Link to="/">Home</Link>
+            <Button 
+              variant="ghost" 
+              size="sm"
+              onClick={() => window.location.href = '/'}
+            >
+              Home
             </Button>
-            <Button asChild variant="ghost" size="sm">
-              <Link to="/auth">Sign In</Link>
+            <Button 
+              variant="ghost" 
+              size="sm"
+              onClick={() => window.location.href = '/auth'}
+            >
+              Sign In
             </Button>
           </div>
           
