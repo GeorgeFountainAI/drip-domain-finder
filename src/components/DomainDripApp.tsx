@@ -13,6 +13,7 @@ import { Label } from "@/components/ui/label";
 import { ShoppingCart, Sparkles, Wand2, Search } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
+import domainDripLogo from "/lovable-uploads/54151200-6cf6-4c1b-b88a-bc150fc097c8.png";
 
 interface Domain {
   name: string;
@@ -143,8 +144,17 @@ export const DomainDripApp = () => {
   }
 
   return (
-    <div className="min-h-screen">
-      <ModernHeader user={user} onCreditPurchase={handleCreditPurchase} />
+    <div className="min-h-screen relative overflow-hidden">
+      {/* Background Logo */}
+      <div className="fixed inset-0 z-0 flex items-center justify-center pointer-events-none">
+        <img 
+          src={domainDripLogo} 
+          alt="" 
+          className="w-[70vw] h-[70vh] object-contain opacity-[0.05] rotate-12 scale-125"
+        />
+      </div>
+      <div className="relative z-10">
+        <ModernHeader user={user} onCreditPurchase={handleCreditPurchase} />
       
       {currentState === 'search' && (
         <div className="bg-gradient-hero min-h-[calc(100vh-4rem)]">
@@ -220,7 +230,8 @@ export const DomainDripApp = () => {
         />
       )}
       
-      <CartButton />
+        <CartButton />
+      </div>
     </div>
   );
 };

@@ -29,6 +29,7 @@ import appPreviewImage from "@/assets/app-preview.jpg";
 import demoFrame1 from "@/assets/demo-frame-1-signin.jpg";
 import demoFrame2 from "@/assets/demo-frame-2-credits.jpg";
 import demoFrame3 from "@/assets/demo-frame-3-search.jpg";
+import domainDripLogo from "/lovable-uploads/54151200-6cf6-4c1b-b88a-bc150fc097c8.png";
 
 const LandingPage = () => {
   const features = [
@@ -83,7 +84,15 @@ const LandingPage = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-noir">
+    <div className="min-h-screen bg-gradient-noir relative overflow-hidden">
+      {/* Background Logo */}
+      <div className="fixed inset-0 z-0 flex items-center justify-center pointer-events-none">
+        <img 
+          src={domainDripLogo} 
+          alt="" 
+          className="w-[80vw] h-[80vh] object-contain opacity-[0.03] rotate-12 scale-150"
+        />
+      </div>
       {/* Header */}
       <header className="sticky top-0 z-40 w-full border-b border-primary/20 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <div className="container flex h-16 items-center justify-between px-4">
