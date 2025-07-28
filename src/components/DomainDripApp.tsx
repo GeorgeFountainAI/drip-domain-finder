@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { DomainSearchForm, DomainSearchFormRef } from "./DomainSearchForm";
 import { SearchHistoryViewer } from "./SearchHistoryViewer";
 import { AuthForm } from "./AuthForm";
-import { AppHeader } from "./AppHeader";
+import { ModernHeader } from "./ModernHeader";
 import { DomainResults } from "./DomainResults";
 import { DomainCart } from "./DomainCart";
 import { DomainCheckout } from "./DomainCheckout";
@@ -10,7 +10,7 @@ import WildcardExplorer from "./WildcardExplorer";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
-import { ShoppingCart, Sparkles, Wand2 } from "lucide-react";
+import { ShoppingCart, Sparkles, Wand2, Search } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 
@@ -32,6 +32,11 @@ export const DomainDripApp = () => {
   const [user, setUser] = useState<any>(null);
   const [showWildcard, setShowWildcard] = useState(false);
   const navigate = useNavigate();
+
+  const handleCreditPurchase = () => {
+    // Navigate to credit purchase page or open credit modal
+    navigate('/');
+  };
   
   // Ref for the DomainSearchForm
   const domainSearchFormRef = useRef<DomainSearchFormRef>(null);
@@ -139,20 +144,20 @@ export const DomainDripApp = () => {
 
   return (
     <div className="min-h-screen">
-      <AppHeader user={user} />
+      <ModernHeader user={user} onCreditPurchase={handleCreditPurchase} />
       
       {currentState === 'search' && (
-        <div className="bg-gradient-hero">
+        <div className="bg-gradient-hero min-h-[calc(100vh-4rem)]">
           {/* Main Content */}
-          <div className="min-h-screen flex items-center justify-center p-4">
-            <div className="max-w-4xl w-full">
-              <div className="text-center mb-12">
-                <div className="flex items-center justify-center gap-2 mb-6">
-                  <Sparkles className="h-8 w-8 text-primary" />
-                  <h1 className="text-5xl font-bold bg-gradient-primary bg-clip-text text-transparent">
-                    DomainDrip.AI
-                  </h1>
-                </div>
+          <div className="flex items-center justify-center p-4 pt-16">
+            <div className="max-w-3xl w-full">
+              <div className="text-center mb-16">
+                <h1 className="text-6xl font-bold bg-gradient-primary bg-clip-text text-transparent mb-4">
+                  Find Your Perfect Domain
+                </h1>
+                <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
+                  Discover available domains with our AI-powered search. Get flip scores, trend analysis, and instant availability checks.
+                </p>
               </div>
               
               {/* Unified Search Form */}

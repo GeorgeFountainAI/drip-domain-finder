@@ -4,7 +4,8 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
-import { ShoppingCart, Check, Globe, ArrowLeft, Star, TrendingUp } from "lucide-react";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { ShoppingCart, Check, Globe, ArrowLeft, Star, TrendingUp, ExternalLink, Info } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import RequireCredits from "@/components/RequireCredits";
 
@@ -46,21 +47,67 @@ const StarRating = ({ rating }: { rating: number }) => {
   );
 };
 
-// Helper component for displaying flip score
-const FlipScore = ({ score }: { score: number }) => {
+// Helper component for displaying flip score with tooltip
+const FlipScore = ({ score, domainName }: { score: number; domainName: string }) => {
   const getScoreColor = (score: number) => {
     if (score >= 80) return 'text-green-600 dark:text-green-400';
     if (score >= 60) return 'text-yellow-600 dark:text-yellow-400';
     return 'text-orange-600 dark:text-orange-400';
   };
 
+  const getScoreDescription = (score: number) => {
+    if (score >= 80) return 'Excellent flip potential';
+    if (score >= 60) return 'Good flip potential';
+    return 'Moderate flip potential';
+  };
+
+  const domainLength = domainName.split('.')[0].length;
+  const tld = domainName.split('.')[1];
+  
   return (
-    <div className="flex items-center gap-1">
-      <TrendingUp className="h-3 w-3 text-muted-foreground" />
-      <span className={`text-xs font-medium ${getScoreColor(score)}`}>
-        {score}/100
-      </span>
-    </div>
+    <TooltipProvider>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <div className="flex items-center gap-1 cursor-help">
+            <TrendingUp className="h-3 w-3 text-muted-foreground" />
+            <span className={`text-xs font-medium ${getScoreColor(score)}`}>
+              {score}/100
+            </span>
+            <Info className="h-3 w-3 text-muted-foreground" />
+          </div>
+        </TooltipTrigger>
+        <TooltipContent side="top" className="max-w-xs">
+          <div className="space-y-2">
+            <p className="font-semibold">{getScoreDescription(score)}</p>
+            <div className="text-xs space-y-1">
+              <p>• Domain length: {domainLength} characters</p>
+              <p>• TLD: .{tld} {tld === 'com' ? '(Premium)' : tld === 'io' || tld === 'ai' ? '(High value)' : '(Standard)'}</p>
+              <p>• Brandability and resale potential</p>
+            </div>
+          </div>
+        </TooltipContent>
+      </Tooltip>
+    </TooltipProvider>
+  );
+};
+
+// Helper component for buy button
+const BuyButton = ({ domain }: { domain: Domain }) => {
+  const handleBuyClick = (e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent card selection
+    window.open('https://spaceship.sjv.io/APQy0D', '_blank');
+  };
+
+  return (
+    <Button
+      onClick={handleBuyClick}
+      variant="outline"
+      size="sm"
+      className="flex items-center gap-1 text-xs px-3 py-1.5 h-auto border-primary/30 text-primary hover:bg-primary/10"
+    >
+      <ExternalLink className="h-3 w-3" />
+      Buy Now
+    </Button>
   );
 };
 
@@ -235,7 +282,7 @@ export const DomainResults = ({
                         {domain.flipScore && (
                           <div className="flex items-center gap-1">
                             <span className="text-xs text-muted-foreground">Flip Score:</span>
-                            <FlipScore score={domain.flipScore} />
+                            <FlipScore score={domain.flipScore} domainName={domain.name} />
                           </div>
                         )}
                         {domain.trendStrength && (
@@ -248,7 +295,7 @@ export const DomainResults = ({
                     )}
                   </div>
 
-                  {/* Price and Selection Indicator */}
+                  {/* Price, Buy Button and Selection Indicator */}
                   <div className="flex items-center gap-4 flex-shrink-0">
                     <div className="text-right">
                       <p className={`text-xl font-bold ${isSelected ? 'text-primary' : 'text-primary'}`}>
@@ -258,6 +305,8 @@ export const DomainResults = ({
                         per year
                       </p>
                     </div>
+                    
+                    <BuyButton domain={domain} />
                     
                     {isSelected && (
                       <div className="flex items-center text-primary">

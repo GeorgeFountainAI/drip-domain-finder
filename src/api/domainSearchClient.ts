@@ -95,7 +95,7 @@ const logSearchAttempt = async (keyword: string, success: boolean, error?: strin
   }
 };
 
-// Main domain search function with fallback
+// Main domain search function using Spaceship API
 export const searchDomains = async (keyword: string, forceDemoMode = false): Promise<SearchResponse> => {
   const cleanKeyword = keyword.trim();
   
@@ -103,8 +103,8 @@ export const searchDomains = async (keyword: string, forceDemoMode = false): Pro
     return { domains: [], error: 'Keyword is required' };
   }
   
-  // Always use demo mode for now since external API integration isn't ready
-  const demoMode = forceDemoMode || true;
+  // Use Spaceship API integration
+  const demoMode = forceDemoMode;
   
   try {
     if (demoMode) {
@@ -137,14 +137,20 @@ export const searchDomains = async (keyword: string, forceDemoMode = false): Pro
       };
     }
     
-    // Real API integration would go here
-    // For now, fallback to demo mode
-    const mockDomains = generateMockDomains(cleanKeyword);
+    // Use Spaceship API via edge function
+    const { data, error } = await supabase.functions.invoke('spaceship-domain-search', {
+      body: { keyword: cleanKeyword }
+    });
+    
+    if (error) {
+      throw new Error(error.message);
+    }
+    
     await logSearchAttempt(cleanKeyword, true);
     
     return {
-      domains: mockDomains,
-      isDemo: true
+      domains: data.domains || [],
+      isDemo: false
     };
     
   } catch (error) {
