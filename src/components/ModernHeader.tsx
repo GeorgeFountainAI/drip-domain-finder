@@ -5,7 +5,7 @@ import { User, LogOut, CreditCard, Settings, Menu } from "lucide-react";
 import { useCredits } from "@/hooks/useCredits";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import domainDripLogo from "@/assets/domaindrip-logo.png";
+import domainDripLogo from "/lovable-uploads/54151200-6cf6-4c1b-b88a-bc150fc097c8.png";
 
 interface ModernHeaderProps {
   user: any;
