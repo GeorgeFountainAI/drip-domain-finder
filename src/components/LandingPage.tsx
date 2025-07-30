@@ -1,3 +1,4 @@
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -26,14 +27,33 @@ import {
   HelpCircle
 } from "lucide-react";
 import { Link } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
 import appPreviewImage from "@/assets/app-preview.jpg";
 import demoFrame1 from "@/assets/demo-frame-1-signin.jpg";
 import demoFrame2 from "@/assets/demo-frame-2-credits.jpg";
 import demoFrame3 from "@/assets/demo-frame-3-search.jpg";
 import domainDripLogo from "/lovable-uploads/54151200-6cf6-4c1b-b88a-bc150fc097c8.png";
 import FAQPreview from "@/components/FAQPreview";
+import CreditBalance from "@/components/CreditBalance";
 
 const LandingPage = () => {
+  const [user, setUser] = useState(null);
+
+  // Check auth state
+  useEffect(() => {
+    const checkUser = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      setUser(user);
+    };
+
+    checkUser();
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      setUser(session?.user ?? null);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
   const features = [
     {
       icon: Crown,
@@ -113,6 +133,7 @@ const LandingPage = () => {
           </div>
           
           <nav className="flex items-center gap-2 sm:gap-4">
+            {user && <CreditBalance />}
             <Button asChild variant="ghost" size="sm">
               <Link to="/auth">
                 <span className="hidden sm:inline">Sign In</span>
