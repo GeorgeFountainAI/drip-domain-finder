@@ -80,13 +80,19 @@ serve(async (req) => {
     const domains: Domain[] = [];
 
     // Check availability using Spaceship API
-    const spaceshipApiKey = Deno.env.get("SPACESHIP_API_KEY") || "s1xU12At9XQ1legXxj5Q";
+    const spaceshipApiKey = Deno.env.get("SPACESHIP_API_KEY");
+    console.log("Spaceship API Key available:", !!spaceshipApiKey);
     
     for (const variation of variations.slice(0, 3)) { // Limit to avoid too many API calls
       for (const tld of tlds.slice(0, 8)) { // Limit TLDs
         const domainName = `${variation}.${tld}`;
         
         try {
+          // Skip API call if no API key available and use mock data instead
+          if (!spaceshipApiKey) {
+            throw new Error("No Spaceship API key configured, using mock data");
+          }
+          
           // Call Spaceship API for domain availability
           const response = await fetch(`https://api.spaceship.com/domain/check`, {
             method: 'POST',

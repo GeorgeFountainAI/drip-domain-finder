@@ -6,10 +6,32 @@ on:
   pull_request:
     types: [closed]
     branches: [main]
+  workflow_dispatch:
+    inputs:
+      deploy_to_production:
+        description: 'Deploy to production'
+        required: true
+        default: 'false'
+        type: choice
+        options:
+        - 'true'
+        - 'false'
+      commit_hash:
+        description: 'Commit hash'
+        required: false
+        type: string
+      commit_message:
+        description: 'Commit message'
+        required: false
+        type: string
+      deployed_by:
+        description: 'Deployed by'
+        required: false
+        type: string
 
 jobs:
   test-and-deploy-staging:
-    if: github.event_name == 'push' || (github.event.pull_request.merged == true)
+    if: github.event_name == 'push' || (github.event.pull_request.merged == true) || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     
     steps:
