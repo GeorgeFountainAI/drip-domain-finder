@@ -105,22 +105,20 @@ const FlipScore = ({ score, domainName }: { score: number; domainName: string })
 
 // Helper component for buy button
 const BuyButton = ({ domain }: { domain: Domain }) => {
-  console.log('BuyButton rendered for domain:', domain.name, 'available:', domain.available);
-  
   const handleBuyClick = (e: React.MouseEvent) => {
     e.stopPropagation(); // Prevent card selection
-    const affiliateId = import.meta.env.VITE_SPACESHIP_AFFILIATE_ID || 'YOUR_AFFILIATE_ID';
+    const affiliateId = import.meta.env.VITE_SPACESHIP_AFFILIATE_ID || 'NEXT_PUBLIC_SPACESHIP_AFFILIATE_ID';
     const buyUrl = `https://www.spaceship.com/domains/search?domain=${domain.name}&utm_source=affiliate&utm_medium=referral&utm_campaign=${affiliateId}`;
     window.open(buyUrl, '_blank');
   };
 
-  // Show buy button for all domains since we're filtering to available domains already
+  // Always render for available domains
   return (
     <Button
       onClick={handleBuyClick}
-      variant="outline"
+      variant="default"
       size="sm"
-      className="flex items-center gap-1 text-xs px-3 py-1.5 h-auto border-primary/30 text-primary hover:bg-primary/10"
+      className="flex items-center gap-1 text-xs px-3 py-1.5 h-auto bg-primary text-primary-foreground hover:bg-primary/90 border-0"
     >
       <ExternalLink className="h-3 w-3" />
       Buy Now
