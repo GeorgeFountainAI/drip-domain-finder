@@ -19,7 +19,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { ShoppingCart, Check, Globe, ArrowLeft, Star, TrendingUp, ExternalLink, Info } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import RequireCredits from "@/components/RequireCredits";
+
 
 interface Domain {
   name: string;
@@ -117,9 +117,9 @@ const BuyButton = ({ domain }: { domain: Domain }) => {
   return (
     <Button
       onClick={handleBuyClick}
-      variant="default"
+      variant="hero"
       size="lg"
-      className="px-8 py-6 text-lg"
+      className="px-8"
     >
       <ExternalLink className="mr-2 h-5 w-5" />
       Buy Now
@@ -226,8 +226,7 @@ export const DomainResults = ({
   }
 
   return (
-    <RequireCredits credits={1} blockRender={false}>
-      <div className="min-h-screen bg-background p-4">
+    <div className="min-h-screen bg-background p-4">
       <div className="max-w-6xl mx-auto">
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
@@ -484,6 +483,5 @@ export const DomainResults = ({
         )}
       </div>
     </div>
-    </RequireCredits>
   );
 };
