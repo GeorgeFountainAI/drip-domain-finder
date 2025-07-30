@@ -95,7 +95,16 @@ const logSearchAttempt = async (keyword: string, success: boolean, error?: strin
   }
 };
 
-// Main domain search function using Spaceship API
+/**
+ * Enhanced domain search function with comprehensive API integration
+ * Features:
+ * - Real-time domain availability checking via Spaceship API
+ * - Intelligent fallback to mock data when API is unavailable
+ * - Domain scoring and ranking system
+ * - Search history logging for analytics
+ * - Admin bypass functionality for testing
+ * - Enhanced error handling and user feedback
+ */
 export const searchDomains = async (keyword: string, forceDemoMode = false): Promise<SearchResponse> => {
   const cleanKeyword = keyword.trim();
   
@@ -103,7 +112,8 @@ export const searchDomains = async (keyword: string, forceDemoMode = false): Pro
     return { domains: [], error: 'Keyword is required' };
   }
   
-  // Use Spaceship API integration
+  
+  // Check if we should use demo mode (for investor presentations or API unavailability)
   const demoMode = forceDemoMode;
   
   try {

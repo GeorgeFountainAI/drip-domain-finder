@@ -1,9 +1,22 @@
+/**
+ * Enhanced Domain Search Form Component
+ * 
+ * Features:
+ * - Real-time domain search with Spaceship API integration
+ * - Advanced filtering by domain ranking (Pro, Trendy, Urban, etc.)
+ * - TLD-based filtering for targeted searches
+ * - Domain scoring with flip potential and trend analysis
+ * - Credit-based search system with admin bypass
+ * - Comprehensive error handling and user feedback
+ * - Responsive design with modern UI components
+ */
 import { useState, forwardRef, useImperativeHandle, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Loader2, Search, Check, X, AlertCircle, Star, TrendingUp } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useConsumeCredit } from "@/hooks/useConsumeCredit";
@@ -68,10 +81,13 @@ const FlipScore = ({ score }: { score: number }) => {
 export const DomainSearchForm = forwardRef<DomainSearchFormRef, DomainSearchFormProps>(({ className = "" }, ref) => {
   const [keyword, setKeyword] = useState("");
   const [domains, setDomains] = useState<Domain[]>([]);
+  const [filteredDomains, setFilteredDomains] = useState<Domain[]>([]);
   const [selectedDomains, setSelectedDomains] = useState<Set<string>>(new Set());
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [hasSearched, setHasSearched] = useState(false);
+  const [rankingFilter, setRankingFilter] = useState<string>("all");
+  const [tldFilter, setTldFilter] = useState<string>("all");
   
   const { toast } = useToast();
   const { consumeCredit, loading: creditLoading } = useConsumeCredit();
@@ -155,6 +171,43 @@ export const DomainSearchForm = forwardRef<DomainSearchFormRef, DomainSearchForm
     });
   };
 
+  // Filter and rank domains based on selected criteria
+  const getRankingLabel = (domain: Domain): string => {
+    const flipScore = domain.flipScore || 0;
+    const trendStrength = domain.trendStrength || 0;
+    
+    if (flipScore >= 80 && trendStrength >= 4) return "Pro";
+    if (flipScore >= 70 || trendStrength >= 4) return "Trendy";
+    if (flipScore >= 60) return "Urban";
+    if (domain.tld === 'com') return "Classic";
+    if (['io', 'ai', 'tech', 'app'].includes(domain.tld)) return "Modern";
+    return "Standard";
+  };
+
+  // Apply filters to domains
+  useEffect(() => {
+    let filtered = [...domains];
+    
+    // Apply ranking filter
+    if (rankingFilter !== "all") {
+      filtered = filtered.filter(domain => getRankingLabel(domain) === rankingFilter);
+    }
+    
+    // Apply TLD filter
+    if (tldFilter !== "all") {
+      filtered = filtered.filter(domain => domain.tld === tldFilter);
+    }
+    
+    // Sort by availability first, then by flip score descending
+    filtered.sort((a, b) => {
+      if (a.available && !b.available) return -1;
+      if (!a.available && b.available) return 1;
+      return (b.flipScore || 0) - (a.flipScore || 0);
+    });
+    
+    setFilteredDomains(filtered);
+  }, [domains, rankingFilter, tldFilter]);
+
   // Expose methods through ref
   useImperativeHandle(ref, () => ({
     searchKeyword: async (searchKeyword: string) => {
@@ -233,6 +286,67 @@ export const DomainSearchForm = forwardRef<DomainSearchFormRef, DomainSearchForm
                 <span>{error}</span>
               </div>
             )}
+
+            {/* Filters Section - Show only when we have results */}
+            {hasSearched && domains.length > 0 && !isLoading && (
+              <div className="mt-6 p-4 bg-muted/30 rounded-lg border">
+                <h3 className="text-sm font-medium mb-3">Filter Results</h3>
+                <div className="flex flex-wrap gap-4">
+                  <div className="flex-1 min-w-[200px]">
+                    <label className="text-xs text-muted-foreground mb-1 block">Domain Ranking</label>
+                    <Select value={rankingFilter} onValueChange={setRankingFilter}>
+                      <SelectTrigger className="h-9">
+                        <SelectValue placeholder="All Rankings" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All Rankings</SelectItem>
+                        <SelectItem value="Pro">🏆 Pro (Premium quality)</SelectItem>
+                        <SelectItem value="Trendy">🔥 Trendy (High demand)</SelectItem>
+                        <SelectItem value="Urban">🏙️ Urban (Modern appeal)</SelectItem>
+                        <SelectItem value="Classic">💎 Classic (.com domains)</SelectItem>
+                        <SelectItem value="Modern">⚡ Modern (Tech TLDs)</SelectItem>
+                        <SelectItem value="Standard">📝 Standard</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="flex-1 min-w-[150px]">
+                    <label className="text-xs text-muted-foreground mb-1 block">Domain Extension</label>
+                    <Select value={tldFilter} onValueChange={setTldFilter}>
+                      <SelectTrigger className="h-9">
+                        <SelectValue placeholder="All TLDs" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All Extensions</SelectItem>
+                        <SelectItem value="com">.com</SelectItem>
+                        <SelectItem value="net">.net</SelectItem>
+                        <SelectItem value="org">.org</SelectItem>
+                        <SelectItem value="io">.io</SelectItem>
+                        <SelectItem value="ai">.ai</SelectItem>
+                        <SelectItem value="app">.app</SelectItem>
+                        <SelectItem value="tech">.tech</SelectItem>
+                        <SelectItem value="dev">.dev</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="flex items-end">
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => {
+                        setRankingFilter("all");
+                        setTldFilter("all");
+                      }}
+                      className="h-9"
+                    >
+                      Clear Filters
+                    </Button>
+                  </div>
+                </div>
+                <div className="mt-2 text-xs text-muted-foreground">
+                  Showing {filteredDomains.length} of {domains.length} domains
+                </div>
+              </div>
+            )}
           </CardContent>
         </Card>
 
@@ -251,65 +365,84 @@ export const DomainSearchForm = forwardRef<DomainSearchFormRef, DomainSearchForm
             ) : domains.length > 0 ? (
               <Card>
                 <CardHeader>
-                  <CardTitle>Search Results ({domains.length} domains)</CardTitle>
+                  <CardTitle>Search Results ({filteredDomains.length} domains{filteredDomains.length !== domains.length ? ` of ${domains.length} total` : ''})</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-2">
-                    {domains.map((domain) => (
-                      <div
-                        key={domain.name}
-                        className="flex items-center justify-between p-4 border rounded-lg hover:bg-muted/50 transition-colors"
-                        data-testid="domain-result-item"
-                      >
-                        <div className="flex items-center gap-4">
-                          <Checkbox
-                            checked={selectedDomains.has(domain.name)}
-                            onCheckedChange={(checked) => handleDomainSelect(domain.name, checked as boolean)}
-                            disabled={!domain.available}
-                          />
-                          <div>
-                            <div className="font-semibold text-lg">{domain.name}</div>
-                            <div className="flex items-center gap-2 mb-2">
-                              {domain.available ? (
-                                <Badge variant="default" className="bg-green-100 text-green-800 hover:bg-green-200">
-                                  <Check className="mr-1 h-3 w-3" />
-                                  Available
+                    {filteredDomains.map((domain) => {
+                      const rankingLabel = getRankingLabel(domain);
+                      const getRankingColor = (label: string) => {
+                        switch (label) {
+                          case "Pro": return "bg-purple-100 text-purple-800 border-purple-200";
+                          case "Trendy": return "bg-orange-100 text-orange-800 border-orange-200";
+                          case "Urban": return "bg-blue-100 text-blue-800 border-blue-200";
+                          case "Classic": return "bg-green-100 text-green-800 border-green-200";
+                          case "Modern": return "bg-cyan-100 text-cyan-800 border-cyan-200";
+                          default: return "bg-gray-100 text-gray-800 border-gray-200";
+                        }
+                      };
+                      
+                      return (
+                        <div
+                          key={domain.name}
+                          className="flex items-center justify-between p-4 border rounded-lg hover:bg-muted/50 transition-colors"
+                          data-testid="domain-result-item"
+                        >
+                          <div className="flex items-center gap-4">
+                            <Checkbox
+                              checked={selectedDomains.has(domain.name)}
+                              onCheckedChange={(checked) => handleDomainSelect(domain.name, checked as boolean)}
+                              disabled={!domain.available}
+                            />
+                            <div>
+                              <div className="flex items-center gap-2 mb-1">
+                                <span className="font-semibold text-lg">{domain.name}</span>
+                                <Badge variant="outline" className={getRankingColor(rankingLabel)}>
+                                  {rankingLabel}
                                 </Badge>
-                              ) : (
-                                <Badge variant="secondary" className="bg-red-100 text-red-800">
-                                  <X className="mr-1 h-3 w-3" />
-                                  Unavailable
-                                </Badge>
-                              )}
-                            </div>
-                            
-                            {/* Domain Scores */}
-                            {domain.available && (domain.flipScore || domain.trendStrength) && (
-                              <div className="flex items-center gap-4">
-                                {domain.flipScore && (
-                                  <div className="flex items-center gap-1">
-                                    <span className="text-xs text-muted-foreground">Flip Score:</span>
-                                    <FlipScore score={domain.flipScore} />
-                                  </div>
-                                )}
-                                {domain.trendStrength && (
-                                  <div className="flex items-center gap-1">
-                                    <span className="text-xs text-muted-foreground">Trend:</span>
-                                    <StarRating rating={domain.trendStrength} />
-                                  </div>
+                              </div>
+                              <div className="flex items-center gap-2 mb-2">
+                                {domain.available ? (
+                                  <Badge variant="default" className="bg-green-100 text-green-800 hover:bg-green-200">
+                                    <Check className="mr-1 h-3 w-3" />
+                                    Available
+                                  </Badge>
+                                ) : (
+                                  <Badge variant="secondary" className="bg-red-100 text-red-800">
+                                    <X className="mr-1 h-3 w-3" />
+                                    Unavailable
+                                  </Badge>
                                 )}
                               </div>
-                            )}
+                              
+                              {/* Domain Scores */}
+                              {domain.available && (domain.flipScore || domain.trendStrength) && (
+                                <div className="flex items-center gap-4">
+                                  {domain.flipScore && (
+                                    <div className="flex items-center gap-1">
+                                      <span className="text-xs text-muted-foreground">Flip Score:</span>
+                                      <FlipScore score={domain.flipScore} />
+                                    </div>
+                                  )}
+                                  {domain.trendStrength && (
+                                    <div className="flex items-center gap-1">
+                                      <span className="text-xs text-muted-foreground">Trend:</span>
+                                      <StarRating rating={domain.trendStrength} />
+                                    </div>
+                                  )}
+                                </div>
+                              )}
+                            </div>
                           </div>
+                          {domain.available && (
+                            <div className="text-right">
+                              <div className="text-xl font-bold">${domain.price.toFixed(2)}</div>
+                              <div className="text-sm text-muted-foreground">/year</div>
+                            </div>
+                          )}
                         </div>
-                        {domain.available && (
-                          <div className="text-right">
-                            <div className="text-xl font-bold">${domain.price.toFixed(2)}</div>
-                            <div className="text-sm text-muted-foreground">/year</div>
-                          </div>
-                        )}
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 </CardContent>
               </Card>

@@ -1,3 +1,15 @@
+/**
+ * Enhanced Domain Results Component
+ * 
+ * Features:
+ * - Interactive domain selection with detailed information
+ * - Domain ranking badges (Pro, Trendy, Urban, Classic, Modern)
+ * - Flip score tooltips with detailed analysis
+ * - Trend strength visualization with star ratings
+ * - Buy now functionality with external partner integration
+ * - Responsive design optimized for all screen sizes
+ * - Comprehensive sorting and filtering support
+ */
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";

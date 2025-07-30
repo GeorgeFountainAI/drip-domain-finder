@@ -1,3 +1,14 @@
+/**
+ * Enhanced Credit Purchase Component
+ * 
+ * Features:
+ * - Stripe integration for secure payment processing
+ * - Demo mode toggle for investor presentations
+ * - Three-tier pricing structure ($5 = 10 credits)
+ * - Real-time authentication and session management
+ * - Comprehensive error handling and user feedback
+ * - Responsive design with modern UI components
+ */
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';

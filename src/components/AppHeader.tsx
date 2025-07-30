@@ -5,6 +5,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
 import { LogOut, User, Sparkles, Shield, CreditCard, Coins, Settings, Rocket, FileText, UserPlus, ChevronDown } from "lucide-react";
 import domainDripLogo from "/lovable-uploads/54151200-6cf6-4c1b-b88a-bc150fc097c8.png";
+import paintSplatterLogo from "@/assets/paint-splatter-logo.png";
 import { Link, useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -94,12 +95,14 @@ export const AppHeader = ({ user }: AppHeaderProps) => {
     <header className="sticky top-0 z-40 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container flex h-16 items-center justify-between">
         <div className="flex items-center gap-6">
-          <Link to="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
-            <img 
-              src={domainDripLogo} 
-              alt="DomainDrip Logo" 
-              className="h-8 w-8"
-            />
+          <Link to="/" className="flex items-center gap-3 hover:opacity-80 transition-opacity">
+            <div className="relative">
+              <img 
+                src={paintSplatterLogo} 
+                alt="DomainDrip Paint Splatter Logo" 
+                className="h-10 w-10"
+              />
+            </div>
             <span className="text-xl font-bold bg-gradient-primary bg-clip-text text-transparent">
               DomainDrip
             </span>
