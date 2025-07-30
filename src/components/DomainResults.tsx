@@ -107,8 +107,15 @@ const FlipScore = ({ score, domainName }: { score: number; domainName: string })
 const BuyButton = ({ domain }: { domain: Domain }) => {
   const handleBuyClick = (e: React.MouseEvent) => {
     e.stopPropagation(); // Prevent card selection
-    window.open('https://spaceship.sjv.io/APQy0D', '_blank');
+    const affiliateId = import.meta.env.VITE_SPACESHIP_AFFILIATE_ID || 'YOUR_AFFILIATE_ID';
+    const buyUrl = `https://www.spaceship.com/domains/search?domain=${domain.name}&utm_source=affiliate&utm_medium=referral&utm_campaign=${affiliateId}`;
+    window.open(buyUrl, '_blank');
   };
+
+  // Only show buy button for available domains
+  if (!domain.available) {
+    return null;
+  }
 
   return (
     <Button
