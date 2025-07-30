@@ -346,8 +346,13 @@ export const DomainResults = ({
                       return (
                         <Button
                           size="lg"
-                          className="bg-gradient-to-r from-yellow-400 via-pink-500 to-purple-500 px-4 py-2 rounded text-white font-bold"
-                          onClick={() => window.open(`https://www.spaceship.com/domains/search?query=${domain.name}&aff_id=MY_AFFILIATE_ID`, "_blank")}
+                          className="bg-gradient-to-r from-yellow-400 via-pink-500 to-purple-500 px-4 py-2 rounded text-white font-bold ml-4"
+                          onClick={() =>
+                            window.open(
+                              `https://www.spaceship.com/domains/search?query=${domain.name}&aff_id=MY_AFFILIATE_ID`,
+                              "_blank"
+                            )
+                          }
                         >
                           Buy Now
                         </Button>
