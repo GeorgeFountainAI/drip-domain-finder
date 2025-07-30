@@ -116,9 +116,9 @@ const BuyButton = ({ domain }: { domain: Domain }) => {
       onClick={handleBuyClick}
       variant="default"
       size="sm"
-      className="flex items-center gap-1 text-xs px-3 py-1.5 h-auto bg-primary text-primary-foreground hover:bg-primary/90 border-0 whitespace-nowrap"
+      className="flex items-center gap-2 px-4 py-2 text-sm font-medium bg-primary text-primary-foreground hover:bg-primary/90 whitespace-nowrap shadow-md"
     >
-      <ExternalLink className="h-3 w-3" />
+      <ExternalLink className="h-4 w-4" />
       Buy Now
     </Button>
   );
