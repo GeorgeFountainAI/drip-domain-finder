@@ -343,13 +343,14 @@ export const DomainResults = ({
                   <div className="flex items-center gap-4 flex-shrink-0">
                     <Button
                       size="lg"
-                      className="bg-gradient-to-r from-yellow-400 via-pink-500 to-purple-500 px-4 py-2 rounded text-white font-bold"
-                      onClick={() =>
+                      className="bg-gradient-to-r from-yellow-400 via-pink-500 to-purple-500 px-4 py-2 rounded text-white font-bold ml-4"
+                      onClick={() => {
+                        console.log("Rendering BuyButton for", domain.name);
                         window.open(
                           `https://www.spaceship.com/domains/search?query=${domain.name}&aff_id=MY_AFFILIATE_ID`,
                           "_blank"
-                        )
-                      }
+                        );
+                      }}
                     >
                       Buy Now
                     </Button>
