@@ -103,21 +103,6 @@ const FlipScore = ({ score, domainName }: { score: number; domainName: string })
   );
 };
 
-// BuyButton component - ALWAYS renders for every domain, NO dependencies
-const BuyButton = ({ domain }: { domain: Domain }) => {
-  console.log("Rendering BuyButton for", domain.name);
-  
-  return (
-    <Button
-      size="lg"
-      className="px-6 py-3 text-lg font-bold shadow-lg"
-      style={{ background: 'linear-gradient(135deg, hsl(45 100% 65%), hsl(340 75% 55%), hsl(280 100% 70%), hsl(200 100% 60%))' }}
-      onClick={() => window.open(`https://www.spaceship.com/domains/search?query=${domain.name}&aff_id=MY_AFFILIATE_ID`, "_blank")}
-    >
-      Buy Now
-    </Button>
-  );
-};
 
 export const DomainResults = ({ 
   domains, 
@@ -145,16 +130,6 @@ export const DomainResults = ({
     setSelectedDomainsForCart(newSelected);
   };
 
-  const handleDomainToggleForBulk = (domainName: string, e: React.MouseEvent) => {
-    e.stopPropagation();
-    const newSelected = new Set(selectedDomainsForBulk);
-    if (newSelected.has(domainName)) {
-      newSelected.delete(domainName);
-    } else {
-      newSelected.add(domainName);
-    }
-    setSelectedDomainsForBulk(newSelected);
-  };
 
   const handleDomainSelect = (domain: Domain) => {
     setSelectedDomain(selectedDomain?.name === domain.name ? null : domain);
@@ -289,8 +264,16 @@ export const DomainResults = ({
                       <div className="flex items-center gap-2">
                         <Checkbox
                           checked={selectedDomainsForBulk.has(domain.name)}
-                          onCheckedChange={() => handleDomainToggleForBulk(domain.name, {} as React.MouseEvent)}
-                          onClick={(e) => handleDomainToggleForBulk(domain.name, e)}
+                          onCheckedChange={(checked) => {
+                            const newSelected = new Set(selectedDomainsForBulk);
+                            if (checked) {
+                              newSelected.add(domain.name);
+                            } else {
+                              newSelected.delete(domain.name);
+                            }
+                            setSelectedDomainsForBulk(newSelected);
+                          }}
+                          onClick={(e) => e.stopPropagation()}
                           className="flex-shrink-0"
                         />
                       </div>
@@ -346,7 +329,7 @@ export const DomainResults = ({
                       className="bg-gradient-to-r from-yellow-400 via-pink-500 to-purple-500 px-4 py-2 rounded text-white font-bold ml-4 hover:shadow-lg transition-all"
                       onClick={() => {
                         window.open(
-                          `https://www.spaceship.com/domains/search?query=${domain.name}&aff_id=spaceship-affiliate`,
+                          `https://www.spaceship.com/domains/search?query=${domain.name}&aff_id=MY_AFFILIATE_ID`,
                           "_blank"
                         );
                       }}
