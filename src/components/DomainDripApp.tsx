@@ -6,7 +6,6 @@ import { ModernHeader } from "./ModernHeader";
 import { DomainResults } from "./DomainResults";
 import { DomainCart } from "./DomainCart";
 import { DomainCheckout } from "./DomainCheckout";
-import WildcardExplorer from "./WildcardExplorer";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
@@ -31,7 +30,7 @@ export const DomainDripApp = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [currentKeyword, setCurrentKeyword] = useState('');
   const [user, setUser] = useState<any>(null);
-  const [showWildcard, setShowWildcard] = useState(false);
+  
   const navigate = useNavigate();
 
   const handleCreditPurchase = () => {
@@ -176,25 +175,6 @@ export const DomainDripApp = () => {
               {/* Unified Search Form */}
               <DomainSearchForm ref={domainSearchFormRef} />
               
-              {/* Wildcard Explorer Toggle */}
-              <div className="mt-8 flex items-center justify-center gap-3 p-4 bg-card/50 rounded-lg border">
-                <Wand2 className="h-4 w-4 text-accent" />
-                <Label htmlFor="wildcard-toggle" className="text-sm font-medium">
-                  Enable Wildcard Explorer
-                </Label>
-                <Switch
-                  id="wildcard-toggle"
-                  checked={showWildcard}
-                  onCheckedChange={setShowWildcard}
-                />
-              </div>
-              
-              {/* Wildcard Explorer */}
-              {showWildcard && (
-                <div className="mt-6">
-                  <WildcardExplorer />
-                </div>
-              )}
               
               {/* Search History Viewer - Always visible when logged in */}
               {user && (

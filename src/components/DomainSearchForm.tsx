@@ -23,6 +23,7 @@ import { useConsumeCredit } from "@/hooks/useConsumeCredit";
 import { useAdminBypass } from "@/hooks/useAdminBypass";
 import RequireCredits from "@/components/RequireCredits";
 import searchDomains from "@/api/domainSearchClient";
+import { generateWildcardSuggestions } from "@/utils/domainGenerator";
 
 interface Domain {
   name: string;
@@ -118,24 +119,47 @@ export const DomainSearchForm = forwardRef<DomainSearchFormRef, DomainSearchForm
     }
 
     try {
-      const searchResult = await searchDomains(keyword.trim());
-      
-      if (searchResult.error) {
+      // Check if wildcard search
+      if (keyword.trim().includes('*')) {
+        // Handle wildcard search
+        const wildcardSuggestions = generateWildcardSuggestions(keyword.trim().replace(/\*/g, ''));
+        const wildcardDomains: Domain[] = wildcardSuggestions.map((suggestion, index) => ({
+          name: `${suggestion}.com`,
+          available: Math.random() > 0.3, // Mock availability
+          price: 12.99 + Math.random() * 20,
+          tld: 'com',
+          flipScore: 60 + Math.floor(Math.random() * 30),
+          trendStrength: Math.floor(Math.random() * 5) + 1
+        }));
+        
+        setDomains(wildcardDomains);
+        
         toast({
-          title: "Search Notice",
-          description: searchResult.error,
+          title: "Wildcard Search Complete",
+          description: `Found ${wildcardSuggestions.length} domain pattern suggestions`,
           variant: "default",
         });
-      }
+      } else {
+        // Regular domain search
+        const searchResult = await searchDomains(keyword.trim());
+        
+        if (searchResult.error) {
+          toast({
+            title: "Search Notice",
+            description: searchResult.error,
+            variant: "default",
+          });
+        }
 
-      setDomains(searchResult.domains);
-      
-      if (searchResult.isDemo) {
-        toast({
-          title: "Demo Mode",
-          description: "Showing sample domain results for demonstration.",
-          variant: "default",
-        });
+        setDomains(searchResult.domains);
+        
+        if (searchResult.isDemo) {
+          toast({
+            title: "Demo Mode",
+            description: "Showing sample domain results for demonstration.",
+            variant: "default",
+          });
+        }
       }
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : "Failed to search domains";
@@ -219,14 +243,37 @@ export const DomainSearchForm = forwardRef<DomainSearchFormRef, DomainSearchForm
       setSelectedDomains(new Set());
 
       try {
-        const searchResult = await searchDomains(searchKeyword.trim());
-        setDomains(searchResult.domains);
-        
-        if (searchResult.isDemo) {
+        // Check if wildcard search
+        if (searchKeyword.trim().includes('*')) {
+          // Handle wildcard search
+          const wildcardSuggestions = generateWildcardSuggestions(searchKeyword.trim().replace(/\*/g, ''));
+          const wildcardDomains: Domain[] = wildcardSuggestions.map((suggestion, index) => ({
+            name: `${suggestion}.com`,
+            available: Math.random() > 0.3, // Mock availability
+            price: 12.99 + Math.random() * 20,
+            tld: 'com',
+            flipScore: 60 + Math.floor(Math.random() * 30),
+            trendStrength: Math.floor(Math.random() * 5) + 1
+          }));
+          
+          setDomains(wildcardDomains);
+          
           toast({
-            title: "Demo Mode",
-            description: "Showing sample domain results for demonstration.",
+            title: "Wildcard Search Complete",
+            description: `Found ${wildcardSuggestions.length} domain pattern suggestions`,
+            variant: "default",
           });
+        } else {
+          // Regular domain search
+          const searchResult = await searchDomains(searchKeyword.trim());
+          setDomains(searchResult.domains);
+          
+          if (searchResult.isDemo) {
+            toast({
+              title: "Demo Mode",
+              description: "Showing sample domain results for demonstration.",
+            });
+          }
         }
       } catch (err) {
         setError(err instanceof Error ? err.message : "Failed to search domains");
@@ -262,6 +309,9 @@ export const DomainSearchForm = forwardRef<DomainSearchFormRef, DomainSearchForm
                   className="text-lg py-6"
                   disabled={isLoading}
                 />
+                <p className="text-sm text-muted-foreground mt-2">
+                  Tip: Use * as a wildcard. Example: ai* finds domains starting with 'ai'.
+                </p>
               </div>
               <Button 
                 type="submit" 
