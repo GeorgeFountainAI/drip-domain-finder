@@ -12,6 +12,7 @@ import FeaturedDomains from "./pages/FeaturedDomains";
 import FAQ from "./pages/FAQ";
 
 import Admin from "./pages/Admin";
+import AdminCredits from "./pages/AdminCredits";
 import AdminDeploy from "./pages/AdminDeploy";
 import AdminLogs from "./pages/AdminLogs";
 import AdminSetup from "./pages/AdminSetup";
@@ -46,6 +47,7 @@ const App = () => (
             {/* <Route path="/dripadps" element={<DripApps />} /> */}
             
             <Route path="/admin" element={<Admin />} />
+            <Route path="/admin/credits" element={<AdminCredits />} />
             <Route path="/admin/deploy" element={<AdminDeploy />} />
             <Route path="/admin/logs" element={<AdminLogs />} />
             <Route path="/admin/setup" element={<AdminSetup />} />
