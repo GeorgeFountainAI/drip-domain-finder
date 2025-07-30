@@ -21,11 +21,10 @@ export const useConsumeCredit = () => {
         return { success: false, error: 'User not authenticated' };
       }
 
-      // Admin bypass for internal testing and demo use
-      const isAdmin = user.email === 'gfountain257@gmail.com' || 
-                     user.user_metadata?.role === 'admin';
+      // Check if user is admin via database
+      const { data: isAdminResult, error: adminError } = await supabase.rpc('is_admin');
       
-      if (isAdmin) {
+      if (!adminError && isAdminResult) {
         // Admin users can search without consuming credits
         toast({
           title: "Admin Access",
