@@ -110,7 +110,8 @@ const BuyButton = ({ domain }: { domain: Domain }) => {
   return (
     <Button
       size="lg"
-      className="bg-gradient-primary px-6 py-3 text-lg font-bold shadow-lg"
+      className="px-6 py-3 text-lg font-bold shadow-lg"
+      style={{ background: 'linear-gradient(135deg, hsl(45 100% 65%), hsl(340 75% 55%), hsl(280 100% 70%), hsl(200 100% 60%))' }}
       onClick={() => window.open(`https://www.spaceship.com/domains/search?query=${domain.name}&aff_id=MY_AFFILIATE_ID`, "_blank")}
     >
       Buy Now
