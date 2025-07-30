@@ -98,14 +98,9 @@ export const AuthForm = ({ onAuthSuccess }: AuthFormProps) => {
     setIsLoading(true);
 
     try {
-      const redirectUrl = `${window.location.origin}/app`;
-      
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
-        options: {
-          emailRedirectTo: redirectUrl
-        }
       });
 
       if (error) {
@@ -117,8 +112,8 @@ export const AuthForm = ({ onAuthSuccess }: AuthFormProps) => {
         return;
       }
 
-      // If user was created successfully, ensure they get starter credits
-      if (data.user && !data.user.email_confirmed_at) {
+      // User should be automatically logged in after signup
+      if (data.user) {
         try {
           // Call the ensure starter credits function for new users
           await supabase.rpc('ensure_user_starter_credits', {
@@ -128,12 +123,19 @@ export const AuthForm = ({ onAuthSuccess }: AuthFormProps) => {
           console.error('Error granting starter credits:', creditError);
           // Don't block signup for credit errors, just log them
         }
-      }
 
-      toast({
-        title: "Account created!",
-        description: "Please check your email to verify your account. You'll receive 50 starter credits upon verification.",
-      });
+        toast({
+          title: "Account created!",
+          description: "Welcome! You've received 50 starter credits to begin searching for domains.",
+        });
+
+        // Navigate to app since user is now logged in
+        if (onAuthSuccess) {
+          onAuthSuccess();
+        } else {
+          navigate('/app');
+        }
+      }
 
       // Clear form
       setEmail("");

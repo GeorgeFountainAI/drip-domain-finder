@@ -1,5 +1,9 @@
 project_id = "nfzmnkpepfrubjpifnna"
 
+[auth]
+enable_signup = true
+enable_confirmations = false
+
 [functions.create-credit-checkout]
 verify_jwt = false
 
