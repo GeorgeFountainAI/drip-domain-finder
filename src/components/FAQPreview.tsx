@@ -1,32 +1,29 @@
-import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Badge } from "@/components/ui/badge";
 import { HelpCircle, Sparkles, TrendingUp, CreditCard, ChevronRight } from "lucide-react";
 import { Link } from "react-router-dom";
+import { useFAQ } from "@/hooks/useFAQ";
 
 const FAQPreview = () => {
-  const previewFaqs = [
-    {
-      id: "signup-credits",
-      question: "How many credits do I get when I sign up?",
-      answer: "Every new user gets 20 free credits when signing up. After that, credits can be purchased via Stripe.",
-      icon: <Sparkles className="h-4 w-4" />
-    },
-    {
-      id: "flip-score",
-      question: "What is a Flip Score?",
-      answer: "Our proprietary Flip Score algorithm analyzes multiple factors including domain length, TLD popularity, brandability, pronounceability, trending keywords, and market trends. Scores range from 0-100, with higher scores indicating better flip potential and investment value.",
-      icon: <TrendingUp className="h-4 w-4" />
-    },
-    {
-      id: "purchase-domain",
-      question: "How do I purchase a domain?",
-      answer: "When you find a domain you want, click the 'Buy Domain' button. This will redirect you to our trusted partner Spaceship.com where you can complete the purchase securely. We earn a small affiliate commission to keep DomainDrip running, but this doesn't affect your purchase price.",
-      icon: <CreditCard className="h-4 w-4" />
-    }
-  ];
+  const { faqData, loading } = useFAQ();
+
+  // Take first 3 FAQs for preview with icons
+  const previewFaqs = faqData.slice(0, 3).map((faq) => {
+    const iconMap: { [key: string]: React.ReactNode } = {
+      "signup-credits": <Sparkles className="h-4 w-4" />,
+      "flip-score": <TrendingUp className="h-4 w-4" />,
+      "purchase-domain": <CreditCard className="h-4 w-4" />,
+      "what-is-domaindrip": <Sparkles className="h-4 w-4" />,
+      "credits-search": <CreditCard className="h-4 w-4" />
+    };
+    
+    return {
+      ...faq,
+      icon: iconMap[faq.id] || <HelpCircle className="h-4 w-4" />
+    };
+  });
 
   return (
     <section className="py-16 px-4 bg-background/30">
@@ -46,23 +43,31 @@ const FAQPreview = () => {
 
         <Card className="border border-primary/20 bg-card/80 backdrop-blur shadow-elevated mb-8">
           <CardContent className="p-6">
-            <Accordion type="single" collapsible className="w-full">
-              {previewFaqs.map((faq) => (
-                <AccordionItem key={faq.id} value={faq.id} className="border-primary/10">
-                  <AccordionTrigger className="text-left hover:text-primary transition-colors">
-                    <div className="flex items-center gap-3">
-                      <div className="flex-shrink-0 w-8 h-8 rounded-full bg-primary/15 flex items-center justify-center text-primary">
-                        {faq.icon}
+            {loading ? (
+              <div className="space-y-4">
+                {Array(3).fill(0).map((_, i) => (
+                  <div key={i} className="h-12 bg-muted/50 rounded-lg animate-pulse" />
+                ))}
+              </div>
+            ) : (
+              <Accordion type="single" collapsible className="w-full">
+                {previewFaqs.map((faq) => (
+                  <AccordionItem key={faq.id} value={faq.id} className="border-primary/10">
+                    <AccordionTrigger className="text-left hover:text-primary transition-colors">
+                      <div className="flex items-center gap-3">
+                        <div className="flex-shrink-0 w-8 h-8 rounded-full bg-primary/15 flex items-center justify-center text-primary">
+                          {faq.icon}
+                        </div>
+                        <span className="font-medium">{faq.question}</span>
                       </div>
-                      <span className="font-medium">{faq.question}</span>
-                    </div>
-                  </AccordionTrigger>
-                  <AccordionContent className="pt-4 pb-6 text-muted-foreground leading-relaxed pl-11">
-                    {faq.answer}
-                  </AccordionContent>
-                </AccordionItem>
-              ))}
-            </Accordion>
+                    </AccordionTrigger>
+                    <AccordionContent className="pt-4 pb-6 text-muted-foreground leading-relaxed pl-11">
+                      {faq.answer}
+                    </AccordionContent>
+                  </AccordionItem>
+                ))}
+              </Accordion>
+            )}
           </CardContent>
         </Card>
 

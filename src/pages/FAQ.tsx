@@ -7,16 +7,23 @@ import { Link } from "react-router-dom";
 import { ModernHeader } from "@/components/ModernHeader";
 import { supabase } from "@/integrations/supabase/client";
 import { useState, useEffect } from "react";
+import { useFAQ } from "@/hooks/useFAQ";
 import domainDripLogo from "/lovable-uploads/54151200-6cf6-4c1b-b88a-bc150fc097c8.png";
 
 const FAQ = () => {
   const [user, setUser] = useState<any>(null);
+  const { faqData, loading: faqLoading } = useFAQ();
 
   useEffect(() => {
     // Check authentication status
     const getUser = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      setUser(user);
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        setUser(user);
+      } catch (error) {
+        console.warn('Error getting user, continuing with anonymous access:', error);
+        setUser(null);
+      }
     };
     getUser();
 
@@ -28,74 +35,27 @@ const FAQ = () => {
     return () => subscription.unsubscribe();
   }, []);
 
-  const faqData = [
-    {
-      id: "what-is-domaindrip",
-      question: "What is DomainDrip?",
-      answer: "DomainDrip is an AI-powered domain marketplace designed for entrepreneurs, investors, and creatives. We curate premium domains, provide intelligent search tools, and offer unique features like Flip Score analysis to help you discover, buy, and flip domain names with precision and insight.",
-      icon: <Sparkles className="h-4 w-4" />
-    },
-    {
-      id: "flip-score",
-      question: "How does the Flip Score work?",
-      answer: "Our proprietary Flip Score algorithm analyzes multiple factors including domain length, TLD popularity, brandability, pronounceability, trending keywords, and market trends. Scores range from 0-100, with higher scores indicating better flip potential and investment value. The score helps you make informed decisions about domain purchases.",
-      icon: <TrendingUp className="h-4 w-4" />
-    },
-    {
-      id: "purchase-domain",
-      question: "How do I purchase a domain I like?",
-      answer: "When you find a domain you want, click the 'Buy Domain' button. This will redirect you to our trusted partner Spaceship.com where you can complete the purchase securely. We earn a small affiliate commission to keep DomainDrip running, but this doesn't affect your purchase price.",
-      icon: <CreditCard className="h-4 w-4" />
-    },
-    {
-      id: "signup-credits",
-      question: "How many credits do I get when I sign up?",
-      answer: "Every new user gets 20 free credits when signing up. After that, credits can be purchased via Stripe.",
-      icon: <Globe className="h-4 w-4" />
-    },
-    {
-      id: "credits-search",
-      question: "How do credits work for domain searches?",
-      answer: "Domain searches consume credits to cover API costs and AI processing. Each search typically costs 1 credit. You can purchase additional credits through our secure Stripe-powered checkout system when needed.",
-      icon: <Globe className="h-4 w-4" />
-    },
-    {
-      id: "add-credits",
-      question: "How do I add credits?",
-      answer: "Click on your credit balance in the header or the 'Purchase Credits' button to access our credit store. We offer various credit packages at different price points. All payments are processed securely through Stripe for your protection.",
-      icon: <CreditCard className="h-4 w-4" />
-    },
-    {
-      id: "premium-featured",
-      question: "What are Premium Drops and Featured Domains?",
-      answer: "Premium Drops are hand-curated high-value domains (.com, .ai, .io) with exceptional flip potential and strong Flip Scores. Featured Domains are carefully selected across trending categories like tech, AI, digital, and apps. Both collections are accessible before and after login.",
-      icon: <Crown className="h-4 w-4" />
-    },
-    {
-      id: "no-account",
-      question: "Can I use DomainDrip without creating an account?",
-      answer: "You can browse our Premium Drops and Featured Domains without an account, but you'll need to sign up to access AI-powered search, view search history, and use credits. Creating an account is free and comes with trial credits.",
-      icon: <Users className="h-4 w-4" />
-    },
-    {
-      id: "domain-ownership",
-      question: "Do I own the domain after purchase?",
-      answer: "Yes! When you purchase a domain through our partner Spaceship.com, you become the full legal owner of that domain. DomainDrip simply helps you discover and evaluate domains - we don't hold or manage your purchased domains.",
-      icon: <Star className="h-4 w-4" />
-    },
-    {
-      id: "only-buyers",
-      question: "Is DomainDrip only for domain buyers?",
-      answer: "While our primary focus is helping people find and buy great domains, our tools are valuable for domain investors, entrepreneurs launching businesses, agencies serving clients, and anyone interested in the domain market and brandable names.",
-      icon: <Rocket className="h-4 w-4" />
-    },
-    {
-      id: "whats-next",
-      question: "What's next for DomainDrip?",
-      answer: "We're constantly improving our AI algorithms, expanding our domain partner network, and building new features. Upcoming enhancements include advanced filtering, market trend analysis, portfolio management tools, and enhanced Flip Score insights to make domain investing even smarter.",
-      icon: <HelpCircle className="h-4 w-4" />
-    }
-  ];
+  // Enhanced FAQ data with icons
+  const enhancedFaqData = faqData.map((faq) => {
+    const iconMap: { [key: string]: React.ReactNode } = {
+      "what-is-domaindrip": <Sparkles className="h-4 w-4" />,
+      "flip-score": <TrendingUp className="h-4 w-4" />,
+      "purchase-domain": <CreditCard className="h-4 w-4" />,
+      "signup-credits": <Globe className="h-4 w-4" />,
+      "credits-search": <Globe className="h-4 w-4" />,
+      "add-credits": <CreditCard className="h-4 w-4" />,
+      "premium-featured": <Crown className="h-4 w-4" />,
+      "no-account": <Users className="h-4 w-4" />,
+      "domain-ownership": <Star className="h-4 w-4" />,
+      "only-buyers": <Rocket className="h-4 w-4" />,
+      "whats-next": <HelpCircle className="h-4 w-4" />
+    };
+    
+    return {
+      ...faq,
+      icon: iconMap[faq.id] || <HelpCircle className="h-4 w-4" />
+    };
+  });
 
   return (
     <div className="min-h-screen relative overflow-hidden">
@@ -153,23 +113,31 @@ const FAQ = () => {
 
           <Card className="border border-primary/20 bg-card/80 backdrop-blur shadow-elevated">
             <CardContent className="p-6">
-              <Accordion type="single" collapsible className="w-full">
-                {faqData.map((faq, index) => (
-                  <AccordionItem key={faq.id} value={faq.id} className="border-primary/10">
-                    <AccordionTrigger className="text-left hover:text-primary transition-colors">
-                      <div className="flex items-center gap-3">
-                        <div className="flex-shrink-0 w-8 h-8 rounded-full bg-primary/15 flex items-center justify-center text-primary">
-                          {faq.icon}
+              {faqLoading ? (
+                <div className="space-y-4">
+                  {Array(6).fill(0).map((_, i) => (
+                    <div key={i} className="h-12 bg-muted/50 rounded-lg animate-pulse" />
+                  ))}
+                </div>
+              ) : (
+                <Accordion type="single" collapsible className="w-full">
+                  {enhancedFaqData.map((faq) => (
+                    <AccordionItem key={faq.id} value={faq.id} className="border-primary/10">
+                      <AccordionTrigger className="text-left hover:text-primary transition-colors">
+                        <div className="flex items-center gap-3">
+                          <div className="flex-shrink-0 w-8 h-8 rounded-full bg-primary/15 flex items-center justify-center text-primary">
+                            {faq.icon}
+                          </div>
+                          <span className="font-medium">{faq.question}</span>
                         </div>
-                        <span className="font-medium">{faq.question}</span>
-                      </div>
-                    </AccordionTrigger>
-                    <AccordionContent className="pt-4 pb-6 text-muted-foreground leading-relaxed pl-11">
-                      {faq.answer}
-                    </AccordionContent>
-                  </AccordionItem>
-                ))}
-              </Accordion>
+                      </AccordionTrigger>
+                      <AccordionContent className="pt-4 pb-6 text-muted-foreground leading-relaxed pl-11">
+                        {faq.answer}
+                      </AccordionContent>
+                    </AccordionItem>
+                  ))}
+                </Accordion>
+              )}
             </CardContent>
           </Card>
 
