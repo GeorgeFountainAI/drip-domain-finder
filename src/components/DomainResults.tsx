@@ -105,12 +105,12 @@ const FlipScore = ({ score, domainName }: { score: number; domainName: string })
 
 // Helper component for buy button
 const BuyButton = ({ domain }: { domain: Domain }) => {
-  console.log('BuyButton rendered for', domain.name);
+  console.log('Rendering BuyButton for', domain.name);
   
   const handleBuyClick = (e: React.MouseEvent) => {
     e.stopPropagation(); // Prevent card selection
     // Direct affiliate link - NO Supabase requests
-    const buyUrl = `https://www.spaceship.com/domains/search?domain=${domain.name}&utm_source=affiliate&utm_medium=referral&utm_campaign=NEXT_PUBLIC_SPACESHIP_AFFILIATE_ID`;
+    const buyUrl = `https://www.spaceship.com/domains/search?query=${domain.name}&aff_id=NEXT_PUBLIC_SPACESHIP_AFFILIATE_ID`;
     window.open(buyUrl, '_blank');
   };
   
@@ -184,7 +184,7 @@ export const DomainResults = ({
     if (selectedDomainsForBulk.size === 0) return;
     
     const selectedDomainNames = Array.from(selectedDomainsForBulk);
-    const bulkUrl = `https://www.spaceship.com/domains/search?domain=${selectedDomainNames.join(',')}&utm_source=affiliate&utm_medium=referral&utm_campaign=NEXT_PUBLIC_SPACESHIP_AFFILIATE_ID`;
+    const bulkUrl = `https://www.spaceship.com/domains/search?query=${selectedDomainNames.join(',')}&aff_id=NEXT_PUBLIC_SPACESHIP_AFFILIATE_ID`;
     
     window.open(bulkUrl, '_blank');
     
