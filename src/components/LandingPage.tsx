@@ -85,28 +85,29 @@ const LandingPage = () => {
 
   return (
     <div className="min-h-screen bg-gradient-noir relative overflow-hidden">
-      {/* Background Logo */}
+      {/* Background Logo Watermark */}
       <div className="fixed inset-0 z-0 flex items-center justify-center pointer-events-none">
         <img 
           src={domainDripLogo} 
           alt="" 
-          className="w-[80vw] h-[80vh] object-contain opacity-[0.03] rotate-12 scale-150"
+          className="w-[70vw] h-[70vh] object-contain opacity-[0.06] rotate-12 scale-150"
         />
       </div>
       {/* Header */}
       <header className="sticky top-0 z-40 w-full border-b border-primary/20 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <div className="container flex h-16 items-center justify-between px-4">
           <div className="flex items-center gap-2">
-            <Droplets className="h-6 w-6 text-primary" />
+            <img 
+              src={domainDripLogo} 
+              alt="DomainDrip Logo" 
+              className="h-8 w-8"
+            />
             <span className="text-lg sm:text-xl font-bold bg-gradient-primary bg-clip-text text-transparent">
               DomainDrip
             </span>
           </div>
           
           <nav className="flex items-center gap-2 sm:gap-4">
-            <Link to="/dripapps" className="text-sm font-medium hover:text-primary transition-colors">
-              DripApps
-            </Link>
             <Button asChild variant="ghost" size="sm">
               <Link to="/auth">
                 <span className="hidden sm:inline">Sign In</span>

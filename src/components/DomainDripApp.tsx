@@ -145,12 +145,12 @@ export const DomainDripApp = () => {
 
   return (
     <div className="min-h-screen relative overflow-hidden">
-      {/* Background Logo */}
+      {/* Background Logo Watermark */}
       <div className="fixed inset-0 z-0 flex items-center justify-center pointer-events-none">
         <img 
           src={domainDripLogo} 
           alt="" 
-          className="w-[70vw] h-[70vh] object-contain opacity-[0.05] rotate-12 scale-125"
+          className="w-[60vw] h-[60vh] object-contain opacity-[0.08] rotate-12 scale-150"
         />
       </div>
       <div className="relative z-10">

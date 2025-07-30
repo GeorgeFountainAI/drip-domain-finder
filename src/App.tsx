@@ -7,7 +7,7 @@ import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import AppPage from "./pages/AppPage";
 import Checkout from "./pages/Checkout";
-import DripApps from "./pages/DripApps";
+
 import Admin from "./pages/Admin";
 import AdminDeploy from "./pages/AdminDeploy";
 import AdminLogs from "./pages/AdminLogs";
@@ -34,7 +34,7 @@ const App = () => (
             <Route path="/app" element={<AppPage />} />
             <Route path="/search" element={<AppPage />} />
             <Route path="/checkout" element={<Checkout />} />
-            <Route path="/dripapps" element={<DripApps />} />
+            
             <Route path="/admin" element={<Admin />} />
             <Route path="/admin/deploy" element={<AdminDeploy />} />
             <Route path="/admin/logs" element={<AdminLogs />} />

@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { ArrowLeft, CreditCard, Globe, Check, Coins } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import domainDripLogo from "/lovable-uploads/54151200-6cf6-4c1b-b88a-bc150fc097c8.png";
 
 interface Domain {
   name: string;
@@ -67,8 +68,16 @@ export default function Checkout() {
 
   if (!domain) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-center">
+      <div className="min-h-screen bg-background flex items-center justify-center relative">
+        {/* Background Logo Watermark */}
+        <div className="fixed inset-0 z-0 flex items-center justify-center pointer-events-none">
+          <img 
+            src={domainDripLogo} 
+            alt="" 
+            className="w-[60vw] h-[60vh] object-contain opacity-[0.06] rotate-12 scale-150"
+          />
+        </div>
+        <div className="text-center relative z-10">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
           <p className="text-lg text-muted-foreground">Loading checkout...</p>
         </div>
@@ -78,8 +87,16 @@ export default function Checkout() {
 
   if (orderPlaced) {
     return (
-      <div className="min-h-screen bg-background p-4">
-        <div className="max-w-2xl mx-auto pt-12">
+      <div className="min-h-screen bg-background p-4 relative">
+        {/* Background Logo Watermark */}
+        <div className="fixed inset-0 z-0 flex items-center justify-center pointer-events-none">
+          <img 
+            src={domainDripLogo} 
+            alt="" 
+            className="w-[60vw] h-[60vh] object-contain opacity-[0.06] rotate-12 scale-150"
+          />
+        </div>
+        <div className="max-w-2xl mx-auto pt-12 relative z-10">
           <Card className="text-center bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 border-green-200 dark:border-green-800">
             <CardContent className="p-8">
               <div className="flex justify-center mb-6">
@@ -122,8 +139,16 @@ export default function Checkout() {
   const tldExtension = domainParts.slice(1).join('.');
 
   return (
-    <div className="min-h-screen bg-background p-4">
-      <div className="max-w-4xl mx-auto">
+    <div className="min-h-screen bg-background p-4 relative">
+      {/* Background Logo Watermark */}
+      <div className="fixed inset-0 z-0 flex items-center justify-center pointer-events-none">
+        <img 
+          src={domainDripLogo} 
+          alt="" 
+          className="w-[60vw] h-[60vh] object-contain opacity-[0.06] rotate-12 scale-150"
+        />
+      </div>
+      <div className="max-w-4xl mx-auto relative z-10">
         {/* Header */}
         <div className="mb-8">
           <Button

@@ -1,10 +1,12 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { User, LogOut, CreditCard, Settings, Menu } from "lucide-react";
+import { User, LogOut, CreditCard, Settings, Menu, ShieldCheck } from "lucide-react";
 import { useCredits } from "@/hooks/useCredits";
+import { useAdminBypass } from "@/hooks/useAdminBypass";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { Link } from "react-router-dom";
 import domainDripLogo from "/lovable-uploads/54151200-6cf6-4c1b-b88a-bc150fc097c8.png";
 
 interface ModernHeaderProps {
@@ -14,6 +16,7 @@ interface ModernHeaderProps {
 
 export const ModernHeader = ({ user, onCreditPurchase }: ModernHeaderProps) => {
   const { credits } = useCredits();
+  const { isAdmin } = useAdminBypass();
   const { toast } = useToast();
   const [showUserMenu, setShowUserMenu] = useState(false);
 
@@ -109,6 +112,17 @@ export const ModernHeader = ({ user, onCreditPurchase }: ModernHeaderProps) => {
                       <CreditCard className="h-4 w-4" />
                       Purchase Credits
                     </button>
+                  )}
+                  
+                  {isAdmin && (
+                    <Link
+                      to="/admin"
+                      onClick={() => setShowUserMenu(false)}
+                      className="flex w-full items-center gap-2 px-3 py-2 text-sm hover:bg-accent rounded-sm"
+                    >
+                      <ShieldCheck className="h-4 w-4" />
+                      Admin Dashboard
+                    </Link>
                   )}
                   
                   <button
