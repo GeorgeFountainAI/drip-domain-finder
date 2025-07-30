@@ -133,19 +133,31 @@ export const DomainResults = ({
   onLoadMore, 
   isLoadingMore = false 
 }: DomainResultsProps) => {
-  const [selectedDomains, setSelectedDomains] = useState<Set<string>>(new Set());
+  const [selectedDomainsForCart, setSelectedDomainsForCart] = useState<Set<string>>(new Set());
+  const [selectedDomainsForBulk, setSelectedDomainsForBulk] = useState<Set<string>>(new Set());
   const [selectedDomain, setSelectedDomain] = useState<Domain | null>(null);
   const { toast } = useToast();
   const navigate = useNavigate();
 
-  const handleDomainToggle = (domainName: string) => {
-    const newSelected = new Set(selectedDomains);
+  const handleDomainToggleForCart = (domainName: string) => {
+    const newSelected = new Set(selectedDomainsForCart);
     if (newSelected.has(domainName)) {
       newSelected.delete(domainName);
     } else {
       newSelected.add(domainName);
     }
-    setSelectedDomains(newSelected);
+    setSelectedDomainsForCart(newSelected);
+  };
+
+  const handleDomainToggleForBulk = (domainName: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    const newSelected = new Set(selectedDomainsForBulk);
+    if (newSelected.has(domainName)) {
+      newSelected.delete(domainName);
+    } else {
+      newSelected.add(domainName);
+    }
+    setSelectedDomainsForBulk(newSelected);
   };
 
   const handleDomainSelect = (domain: Domain) => {
@@ -153,15 +165,30 @@ export const DomainResults = ({
   };
 
   const handleAddToCart = () => {
-    const domainsToAdd = domains.filter(d => selectedDomains.has(d.name));
+    const domainsToAdd = domains.filter(d => selectedDomainsForCart.has(d.name));
     if (domainsToAdd.length > 0) {
       onAddToCart(domainsToAdd);
       toast({
         title: "Added to Cart",
         description: `${domainsToAdd.length} domain${domainsToAdd.length > 1 ? 's' : ''} added to cart`,
       });
-      setSelectedDomains(new Set());
+      setSelectedDomainsForCart(new Set());
     }
+  };
+
+  const handleBuySelectedDomains = () => {
+    if (selectedDomainsForBulk.size === 0) return;
+    
+    const selectedDomainNames = Array.from(selectedDomainsForBulk);
+    const affiliateId = import.meta.env.VITE_SPACESHIP_AFFILIATE_ID || 'YOUR_AFFILIATE_ID';
+    const bulkUrl = `https://www.spaceship.com/domains/search?domain=${selectedDomainNames.join(',')}&utm_source=affiliate&utm_medium=referral&utm_campaign=${affiliateId}`;
+    
+    window.open(bulkUrl, '_blank');
+    
+    toast({
+      title: "Redirecting to Spaceship",
+      description: `Opening bulk purchase for ${selectedDomainsForBulk.size} domains`,
+    });
   };
 
   const handleContinueToCheckout = () => {
@@ -177,8 +204,11 @@ export const DomainResults = ({
   };
 
   const availableDomains = domains.filter(d => d.available);
-  const totalPrice = availableDomains
-    .filter(d => selectedDomains.has(d.name))
+  const totalPriceForCart = availableDomains
+    .filter(d => selectedDomainsForCart.has(d.name))
+    .reduce((sum, d) => sum + d.price, 0);
+  const totalPriceForBulk = availableDomains
+    .filter(d => selectedDomainsForBulk.has(d.name))
     .reduce((sum, d) => sum + d.price, 0);
 
   if (isLoading) {
@@ -213,16 +243,16 @@ export const DomainResults = ({
             </p>
           </div>
           
-          {selectedDomains.size > 0 && (
+          {selectedDomainsForCart.size > 0 && (
             <Card className="bg-gradient-card shadow-card">
               <CardContent className="p-4">
                 <div className="flex items-center gap-4">
                   <div>
                     <p className="font-semibold">
-                      {selectedDomains.size} domain{selectedDomains.size > 1 ? 's' : ''} selected
+                      {selectedDomainsForCart.size} domain{selectedDomainsForCart.size > 1 ? 's' : ''} selected for cart
                     </p>
                     <p className="text-sm text-muted-foreground">
-                      Total: ${totalPrice.toFixed(2)}
+                      Total: ${totalPriceForCart.toFixed(2)}
                     </p>
                   </div>
                   <Button
@@ -262,6 +292,14 @@ export const DomainResults = ({
                   {/* Domain Info */}
                   <div className="flex flex-col gap-2 flex-1 min-w-0">
                     <div className="flex items-center gap-3">
+                      <div className="flex items-center gap-2">
+                        <Checkbox
+                          checked={selectedDomainsForBulk.has(domain.name)}
+                          onCheckedChange={() => handleDomainToggleForBulk(domain.name, {} as React.MouseEvent)}
+                          onClick={(e) => handleDomainToggleForBulk(domain.name, e)}
+                          className="flex-shrink-0"
+                        />
+                      </div>
                       <div className="flex items-center gap-2 flex-1 min-w-0">
                         <Globe className={`h-5 w-5 flex-shrink-0 ${isSelected ? 'text-primary' : 'text-primary'}`} />
                         <div className="flex items-center gap-1 flex-wrap">
@@ -331,6 +369,31 @@ export const DomainResults = ({
             );
           })}
         </div>
+
+        {/* Bulk Purchase Button */}
+        {selectedDomainsForBulk.size > 0 && (
+          <div className="mt-8 flex justify-center">
+            <Card className="bg-gradient-to-r from-primary/10 to-primary/5 border-primary/20 shadow-lg">
+              <CardContent className="p-6">
+                <div className="text-center">
+                  <h3 className="text-lg font-semibold mb-2">Buy Selected Domains</h3>
+                  <p className="text-muted-foreground mb-4">
+                    {selectedDomainsForBulk.size} domain{selectedDomainsForBulk.size > 1 ? 's' : ''} selected • Total: ${totalPriceForBulk.toFixed(2)}
+                  </p>
+                  <Button 
+                    onClick={handleBuySelectedDomains}
+                    size="lg"
+                    variant="hero"
+                    className="px-8"
+                  >
+                    <ExternalLink className="h-4 w-4 mr-2" />
+                    Buy Selected Domains
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        )}
 
         {/* Checkout Button */}
         {selectedDomain && (
