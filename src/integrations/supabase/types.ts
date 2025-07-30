@@ -122,6 +122,10 @@ export type Database = {
         Args: { stripe_session_id: string; user_id: string; credits: number }
         Returns: Json
       }
+      ensure_user_starter_credits: {
+        Args: { target_user_id: string }
+        Returns: Json
+      }
     }
     Enums: {
       [_ in never]: never
