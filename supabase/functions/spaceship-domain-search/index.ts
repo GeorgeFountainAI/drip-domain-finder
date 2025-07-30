@@ -80,7 +80,7 @@ serve(async (req) => {
     const domains: Domain[] = [];
 
     // Check availability using Spaceship API
-    const spaceshipApiKey = "s1xU12At9XQ1legXxj5Q";
+    const spaceshipApiKey = Deno.env.get("SPACESHIP_API_KEY") || "s1xU12At9XQ1legXxj5Q";
     
     for (const variation of variations.slice(0, 3)) { // Limit to avoid too many API calls
       for (const tld of tlds.slice(0, 8)) { // Limit TLDs
@@ -179,31 +179,43 @@ function calculateFlipScore(domainName: string): number {
   const name = domainName.split('.')[0];
   const tld = domainName.split('.')[1];
   
-  let score = 50; // Base score
+  let score = 30; // Base score
   
-  // Length factor (shorter is better)
-  if (name.length <= 4) score += 25;
-  else if (name.length <= 6) score += 15;
-  else if (name.length <= 8) score += 5;
-  else if (name.length > 12) score -= 15;
+  // Length factor (shorter is generally better for brandability)
+  if (name.length <= 4) score += 30;
+  else if (name.length <= 6) score += 25;
+  else if (name.length <= 8) score += 15;
+  else if (name.length <= 10) score += 5;
+  else if (name.length > 15) score -= 20;
   
-  // TLD popularity
+  // TLD popularity and market value
   const tldScores: { [key: string]: number } = {
-    'com': 20, 'net': 10, 'org': 8, 'io': 15, 'ai': 18,
-    'app': 12, 'dev': 10, 'tech': 8, 'co': 6, 'xyz': 2
+    'com': 30, 'net': 15, 'org': 12, 'io': 25, 'ai': 28,
+    'app': 20, 'dev': 18, 'tech': 15, 'co': 12, 'xyz': 5,
+    'online': 8, 'store': 10, 'shop': 12, 'biz': 6, 'info': 4
   };
-  score += tldScores[tld] || 0;
+  score += tldScores[tld] || 5;
   
-  // Brandability (avoid hyphens, numbers)
-  if (!/[-0-9]/.test(name)) score += 10;
+  // Brandability factors
+  if (!/[-0-9]/.test(name)) score += 15; // No hyphens or numbers
+  if (/^[a-z]+$/.test(name)) score += 5; // Only letters
   
-  // Common keywords boost
-  const trendKeywords = ['ai', 'app', 'tech', 'hub', 'pro', 'get', 'my', 'smart'];
-  const hasKeyword = trendKeywords.some(keyword => name.includes(keyword));
-  if (hasKeyword) score += 8;
+  // Pronounceable and memorable
+  const vowels = (name.match(/[aeiou]/g) || []).length;
+  const consonants = name.length - vowels;
+  if (vowels > 0 && consonants > 0 && vowels / name.length >= 0.2) score += 10;
+  
+  // Trending keywords boost
+  const trendKeywords = ['ai', 'app', 'tech', 'hub', 'pro', 'get', 'my', 'smart', 'digital', 'crypto', 'nft', 'meta'];
+  const keywordMatches = trendKeywords.filter(keyword => name.toLowerCase().includes(keyword)).length;
+  score += Math.min(15, keywordMatches * 5);
+  
+  // Common word penalty (too generic)
+  const commonWords = ['the', 'and', 'but', 'for', 'with', 'this', 'that', 'from', 'they', 'know', 'want'];
+  if (commonWords.some(word => name.toLowerCase().includes(word))) score -= 10;
   
   // Ensure score is within bounds
-  return Math.max(1, Math.min(100, score));
+  return Math.max(1, Math.min(100, Math.round(score)));
 }
 
 function calculateTrendStrength(keyword: string): number {
