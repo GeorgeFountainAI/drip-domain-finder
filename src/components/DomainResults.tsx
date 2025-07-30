@@ -107,18 +107,16 @@ const FlipScore = ({ score, domainName }: { score: number; domainName: string })
 const BuyButton = ({ domain }: { domain: Domain }) => {
   const handleBuyClick = (e: React.MouseEvent) => {
     e.stopPropagation(); // Prevent card selection
-    const affiliateId = import.meta.env.VITE_SPACESHIP_AFFILIATE_ID || 'NEXT_PUBLIC_SPACESHIP_AFFILIATE_ID';
-    const buyUrl = `https://www.spaceship.com/domains/search?domain=${domain.name}&utm_source=affiliate&utm_medium=referral&utm_campaign=${affiliateId}`;
+    const buyUrl = `https://www.spaceship.com/domains/search?domain=${domain.name}&utm_source=affiliate&utm_medium=referral&utm_campaign=NEXT_PUBLIC_SPACESHIP_AFFILIATE_ID`;
     window.open(buyUrl, '_blank');
   };
 
-  // Always render for available domains
   return (
     <Button
       onClick={handleBuyClick}
       variant="default"
       size="sm"
-      className="flex items-center gap-1 text-xs px-3 py-1.5 h-auto bg-primary text-primary-foreground hover:bg-primary/90 border-0"
+      className="flex items-center gap-1 text-xs px-3 py-1.5 h-auto bg-primary text-primary-foreground hover:bg-primary/90 border-0 whitespace-nowrap"
     >
       <ExternalLink className="h-3 w-3" />
       Buy Now
@@ -183,8 +181,7 @@ export const DomainResults = ({
     if (selectedDomainsForBulk.size === 0) return;
     
     const selectedDomainNames = Array.from(selectedDomainsForBulk);
-    const affiliateId = import.meta.env.VITE_SPACESHIP_AFFILIATE_ID || 'YOUR_AFFILIATE_ID';
-    const bulkUrl = `https://www.spaceship.com/domains/search?domain=${selectedDomainNames.join(',')}&utm_source=affiliate&utm_medium=referral&utm_campaign=${affiliateId}`;
+    const bulkUrl = `https://www.spaceship.com/domains/search?domain=${selectedDomainNames.join(',')}&utm_source=affiliate&utm_medium=referral&utm_campaign=NEXT_PUBLIC_SPACESHIP_AFFILIATE_ID`;
     
     window.open(bulkUrl, '_blank');
     
