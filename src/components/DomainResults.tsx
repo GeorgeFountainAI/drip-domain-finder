@@ -105,6 +105,8 @@ const FlipScore = ({ score, domainName }: { score: number; domainName: string })
 
 // Helper component for buy button
 const BuyButton = ({ domain }: { domain: Domain }) => {
+  console.log('BuyButton rendered for domain:', domain.name, 'available:', domain.available);
+  
   const handleBuyClick = (e: React.MouseEvent) => {
     e.stopPropagation(); // Prevent card selection
     const affiliateId = import.meta.env.VITE_SPACESHIP_AFFILIATE_ID || 'YOUR_AFFILIATE_ID';
@@ -112,11 +114,7 @@ const BuyButton = ({ domain }: { domain: Domain }) => {
     window.open(buyUrl, '_blank');
   };
 
-  // Only show buy button for available domains
-  if (!domain.available) {
-    return null;
-  }
-
+  // Show buy button for all domains since we're filtering to available domains already
   return (
     <Button
       onClick={handleBuyClick}
