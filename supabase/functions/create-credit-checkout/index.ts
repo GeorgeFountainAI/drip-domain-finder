@@ -35,11 +35,11 @@ serve(async (req) => {
     // Get request body
     const { creditPackage } = await req.json();
     
-    // Define credit packages
+    // Define credit packages - $5 = 10 credits
     const packages = {
-      starter: { credits: 100, price: 500, name: "100 Credits" }, // $5.00
-      popular: { credits: 250, price: 1000, name: "250 Credits" }, // $10.00
-      premium: { credits: 500, price: 1800, name: "500 Credits" }, // $18.00
+      basic: { credits: 10, price: 500, name: "10 Credits" }, // $5.00
+      value: { credits: 25, price: 1250, name: "25 Credits" }, // $12.50
+      premium: { credits: 50, price: 2500, name: "50 Credits" }, // $25.00
     };
 
     const selectedPackage = packages[creditPackage];
