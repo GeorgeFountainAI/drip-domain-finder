@@ -1,10 +1,15 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 
+interface CreditsData {
+  current_credits: number;
+  total_purchased_credits: number;
+}
+
 export const useCredits = () => {
-  const [credits, setCredits] = useState(null);
+  const [credits, setCredits] = useState<CreditsData | null>(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [error, setError] = useState<any>(null);
 
   useEffect(() => {
     fetchCredits();
@@ -32,6 +37,7 @@ export const useCredits = () => {
 
   const fetchCredits = async () => {
     try {
+      setLoading(true);
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
         setCredits(null);
@@ -39,11 +45,25 @@ export const useCredits = () => {
         return;
       }
 
+      // Use the new function to ensure starter credits
+      const { data: starterResult, error: starterError } = await supabase.rpc(
+        'ensure_user_starter_credits',
+        { target_user_id: user.id }
+      );
+
+      if (starterError) {
+        console.error('Error ensuring starter credits:', starterError);
+        setError(starterError);
+        setLoading(false);
+        return;
+      }
+
+      // Fetch the actual credits data
       const { data, error } = await supabase
         .from('user_credits')
         .select('current_credits, total_purchased_credits')
         .eq('user_id', user.id)
-        .maybeSingle();
+        .single();
 
       if (error) {
         console.error('Error fetching credits:', error);
@@ -51,29 +71,7 @@ export const useCredits = () => {
         return;
       }
 
-      // If no record exists, create one automatically
-      if (!data) {
-        console.log('No user_credits record found, creating one for user:', user.id);
-        const { data: newRecord, error: insertError } = await supabase
-          .from('user_credits')
-          .insert({
-            user_id: user.id,
-            current_credits: 0,
-            total_purchased_credits: 0
-          })
-          .select('current_credits, total_purchased_credits')
-          .single();
-
-        if (insertError) {
-          console.error('Error creating user_credits record:', insertError);
-          setError(insertError);
-          return;
-        }
-
-        setCredits(newRecord);
-      } else {
-        setCredits(data);
-      }
+      setCredits(data);
     } catch (err) {
       console.error('Error:', err);
       setError(err);

@@ -9,20 +9,20 @@ import { Link } from "react-router-dom";
 const FAQPreview = () => {
   const previewFaqs = [
     {
-      id: "what-is-domaindrip",
-      question: "What is DomainDrip?",
-      answer: "DomainDrip is an AI-powered domain marketplace designed for entrepreneurs, investors, and creatives. We curate premium domains, provide intelligent search tools, and offer unique features like Flip Score analysis to help you discover, buy, and flip domain names with precision and insight.",
+      id: "signup-credits",
+      question: "How many credits do I get when I sign up?",
+      answer: "Every new user gets 20 free credits when signing up. After that, credits can be purchased via Stripe.",
       icon: <Sparkles className="h-4 w-4" />
     },
     {
       id: "flip-score",
-      question: "How does the Flip Score work?",
+      question: "What is a Flip Score?",
       answer: "Our proprietary Flip Score algorithm analyzes multiple factors including domain length, TLD popularity, brandability, pronounceability, trending keywords, and market trends. Scores range from 0-100, with higher scores indicating better flip potential and investment value.",
       icon: <TrendingUp className="h-4 w-4" />
     },
     {
       id: "purchase-domain",
-      question: "How do I purchase a domain I like?",
+      question: "How do I purchase a domain?",
       answer: "When you find a domain you want, click the 'Buy Domain' button. This will redirect you to our trusted partner Spaceship.com where you can complete the purchase securely. We earn a small affiliate commission to keep DomainDrip running, but this doesn't affect your purchase price.",
       icon: <CreditCard className="h-4 w-4" />
     }

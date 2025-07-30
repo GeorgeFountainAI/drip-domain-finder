@@ -48,9 +48,15 @@ const FAQ = () => {
       icon: <CreditCard className="h-4 w-4" />
     },
     {
+      id: "signup-credits",
+      question: "How many credits do I get when I sign up?",
+      answer: "Every new user gets 20 free credits when signing up. After that, credits can be purchased via Stripe.",
+      icon: <Globe className="h-4 w-4" />
+    },
+    {
       id: "credits-search",
-      question: "Do I need credits to search for domains?",
-      answer: "Yes, domain searches consume credits to cover API costs and AI processing. New users receive free trial credits to get started. You can purchase additional credits through our secure Stripe-powered checkout system when needed.",
+      question: "How do credits work for domain searches?",
+      answer: "Domain searches consume credits to cover API costs and AI processing. Each search typically costs 1 credit. You can purchase additional credits through our secure Stripe-powered checkout system when needed.",
       icon: <Globe className="h-4 w-4" />
     },
     {

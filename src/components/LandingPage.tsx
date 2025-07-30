@@ -471,7 +471,7 @@ const LandingPage = () => {
                   </Link>
                 </li>
                 <li>
-                  <Link to="/cookies" className="hover:text-primary transition-colors">
+                  <Link to="/cookie" className="hover:text-primary transition-colors">
                     Cookie Policy
                   </Link>
                 </li>
