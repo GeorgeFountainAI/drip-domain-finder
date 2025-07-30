@@ -119,7 +119,7 @@ const LandingPage = () => {
             </Button>
             <Button asChild size="sm" className="bg-primary hover:bg-primary/90 text-primary-foreground">
               <Link to="/auth">
-                <span className="hidden sm:inline">Start Building</span>
+                <span className="hidden sm:inline">Get Started</span>
                 <span className="sm:hidden">Start</span>
               </Link>
             </Button>
@@ -154,13 +154,13 @@ const LandingPage = () => {
             
             <div className="flex flex-col sm:flex-row gap-4 justify-center px-4">
               <Button asChild size="lg" className="text-lg px-8 py-6 bg-primary hover:bg-primary/90 text-primary-foreground shadow-primary">
-                <Link to="/auth">
+                <Link to="/premium-domains">
                   Explore Premium Drops
                   <Crown className="ml-2 h-5 w-5" />
                 </Link>
               </Button>
               <Button asChild variant="outline" size="lg" className="text-lg px-8 py-6 border-primary/30 hover:bg-primary/10">
-                <Link to="#featured-drops">
+                <Link to="/featured-domains">
                   See Featured Domains
                   <ChevronRight className="ml-2 h-5 w-5" />
                 </Link>

@@ -7,6 +7,8 @@ import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import AppPage from "./pages/AppPage";
 import Checkout from "./pages/Checkout";
+import PremiumDomains from "./pages/PremiumDomains";
+import FeaturedDomains from "./pages/FeaturedDomains";
 
 import Admin from "./pages/Admin";
 import AdminDeploy from "./pages/AdminDeploy";
@@ -18,6 +20,8 @@ import Cookie from "./pages/Cookie";
 import ServerError from "./pages/ServerError";
 import NotFound from "./pages/NotFound";
 import ErrorBoundary from "./components/ErrorBoundary";
+// DripApps route commented out to hide the feature but keep the code
+// import DripApps from "./pages/DripApps";
 
 const queryClient = new QueryClient();
 
@@ -34,6 +38,10 @@ const App = () => (
             <Route path="/app" element={<AppPage />} />
             <Route path="/search" element={<AppPage />} />
             <Route path="/checkout" element={<Checkout />} />
+            <Route path="/premium-domains" element={<PremiumDomains />} />
+            <Route path="/featured-domains" element={<FeaturedDomains />} />
+            {/* DripApps route commented out to hide the feature but keep the code */}
+            {/* <Route path="/dripadps" element={<DripApps />} /> */}
             
             <Route path="/admin" element={<Admin />} />
             <Route path="/admin/deploy" element={<AdminDeploy />} />
