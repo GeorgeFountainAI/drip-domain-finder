@@ -71,6 +71,30 @@ export type Database = {
         }
         Relationships: []
       }
+      profiles: {
+        Row: {
+          created_at: string
+          email: string | null
+          id: string
+          is_admin: boolean
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          email?: string | null
+          id: string
+          is_admin?: boolean
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          email?: string | null
+          id?: string
+          is_admin?: boolean
+          updated_at?: string
+        }
+        Relationships: []
+      }
       search_history: {
         Row: {
           created_at: string
@@ -139,6 +163,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      admin_update_user_credits: {
+        Args: { target_user_id: string; credit_change: number }
+        Returns: Json
+      }
       complete_credit_purchase: {
         Args: { stripe_session_id: string; user_id: string; credits: number }
         Returns: Json
@@ -146,6 +174,21 @@ export type Database = {
       ensure_user_starter_credits: {
         Args: { target_user_id: string }
         Returns: Json
+      }
+      get_all_users_with_credits: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          user_id: string
+          email: string
+          current_credits: number
+          total_purchased_credits: number
+          is_admin: boolean
+          created_at: string
+        }[]
+      }
+      is_admin: {
+        Args: { user_id?: string }
+        Returns: boolean
       }
     }
     Enums: {
