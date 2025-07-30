@@ -111,14 +111,16 @@ const BuyButton = ({ domain }: { domain: Domain }) => {
     window.open(buyUrl, '_blank');
   };
 
+  console.log('Rendering BuyButton', domain.name);
+  
   return (
     <Button
       onClick={handleBuyClick}
       variant="default"
-      size="sm"
-      className="flex items-center gap-2 px-4 py-2 text-sm font-medium bg-primary text-primary-foreground hover:bg-primary/90 whitespace-nowrap shadow-md"
+      size="lg"
+      className="px-8 py-6 text-lg"
     >
-      <ExternalLink className="h-4 w-4" />
+      <ExternalLink className="mr-2 h-5 w-5" />
       Buy Now
     </Button>
   );
