@@ -103,13 +103,14 @@ const FlipScore = ({ score, domainName }: { score: number; domainName: string })
   );
 };
 
-// Helper component for buy button - Always renders for every domain
+// BuyButton component - ALWAYS renders for every domain, NO dependencies
 const BuyButton = ({ domain }: { domain: Domain }) => {
-  console.log('Rendering BuyButton for', domain.name);
+  console.log('✅ Rendering BuyButton for', domain.name);
   
   const handleBuyClick = (e: React.MouseEvent) => {
     e.stopPropagation(); // Prevent card selection
     const buyUrl = `https://www.spaceship.com/domains/search?query=${domain.name}&aff_id=MY_AFFILIATE_ID`;
+    console.log('🔗 Opening buy URL:', buyUrl);
     window.open(buyUrl, '_blank');
   };
   
@@ -118,7 +119,7 @@ const BuyButton = ({ domain }: { domain: Domain }) => {
       onClick={handleBuyClick}
       variant="hero"
       size="lg"
-      className="px-8"
+      className="px-8 min-w-[120px] bg-gradient-primary hover:shadow-primary transform hover:scale-105 transition-smooth font-semibold"
     >
       <ExternalLink className="mr-2 h-5 w-5" />
       Buy Now
