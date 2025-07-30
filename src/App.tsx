@@ -9,6 +9,7 @@ import AppPage from "./pages/AppPage";
 import Checkout from "./pages/Checkout";
 import PremiumDomains from "./pages/PremiumDomains";
 import FeaturedDomains from "./pages/FeaturedDomains";
+import FAQ from "./pages/FAQ";
 
 import Admin from "./pages/Admin";
 import AdminDeploy from "./pages/AdminDeploy";
@@ -40,6 +41,7 @@ const App = () => (
             <Route path="/checkout" element={<Checkout />} />
             <Route path="/premium-domains" element={<PremiumDomains />} />
             <Route path="/featured-domains" element={<FeaturedDomains />} />
+            <Route path="/faq" element={<FAQ />} />
             {/* DripApps route commented out to hide the feature but keep the code */}
             {/* <Route path="/dripadps" element={<DripApps />} /> */}
             

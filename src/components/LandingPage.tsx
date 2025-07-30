@@ -22,7 +22,8 @@ import {
   ChevronRight,
   Play,
   BarChart3,
-  Handshake
+  Handshake,
+  HelpCircle
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import appPreviewImage from "@/assets/app-preview.jpg";
@@ -30,6 +31,7 @@ import demoFrame1 from "@/assets/demo-frame-1-signin.jpg";
 import demoFrame2 from "@/assets/demo-frame-2-credits.jpg";
 import demoFrame3 from "@/assets/demo-frame-3-search.jpg";
 import domainDripLogo from "/lovable-uploads/54151200-6cf6-4c1b-b88a-bc150fc097c8.png";
+import FAQPreview from "@/components/FAQPreview";
 
 const LandingPage = () => {
   const features = [
@@ -384,6 +386,9 @@ const LandingPage = () => {
         </div>
       </section>
 
+      {/* FAQ Preview Section */}
+      <FAQPreview />
+
       {/* Affiliate Partner CTA */}
       <section className="py-16 px-4 bg-gradient-to-r from-primary/10 to-secondary/10">
         <div className="container mx-auto max-w-4xl text-center">
@@ -448,6 +453,12 @@ const LandingPage = () => {
             <div className="space-y-4">
               <h3 className="font-semibold">Legal</h3>
               <ul className="space-y-2 text-sm text-muted-foreground">
+                <li>
+                  <Link to="/faq" className="hover:text-primary transition-colors flex items-center gap-2">
+                    <HelpCircle className="h-4 w-4" />
+                    FAQ
+                  </Link>
+                </li>
                 <li>
                   <Link to="/privacy" className="hover:text-primary transition-colors flex items-center gap-2">
                     <FileText className="h-4 w-4" />
