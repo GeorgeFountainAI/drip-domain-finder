@@ -87,41 +87,49 @@ export const DomainResults = ({
       </Button>
 
       <div className="space-y-4">
-        {domains.map((domain) => (
-          <Card key={domain.name} className="p-6 flex flex-col sm:flex-row sm:items-center justify-between bg-white border border-gray-200 shadow-sm">
-            <div className="flex items-center gap-3 mb-4 sm:mb-0">
-              <Checkbox
-                checked={selectedDomains.has(domain.name)}
-                onCheckedChange={(checked) => {
-                  const newSet = new Set(selectedDomains);
-                  checked ? newSet.add(domain.name) : newSet.delete(domain.name);
-                  setSelectedDomains(newSet);
-                }}
-              />
-              <Globe className="h-5 w-5 text-blue-600" />
-              <span className="font-bold text-lg text-gray-900">{domain.name}</span>
-              <Badge variant="default" className="bg-green-100 text-green-800 border-green-200">
-                Available
-              </Badge>
-              <FlipScore score={getFlipScore(domain.flipScore)} domainName={domain.name} />
-            </div>
+        {domains.map((domain) => {
+          console.log('Rendering domain:', domain.name);
+          return (
+            <Card key={domain.name} className="p-6 bg-white border border-gray-200 shadow-sm">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                <div className="flex items-center gap-3">
+                  <Checkbox
+                    checked={selectedDomains.has(domain.name)}
+                    onCheckedChange={(checked) => {
+                      const newSet = new Set(selectedDomains);
+                      checked ? newSet.add(domain.name) : newSet.delete(domain.name);
+                      setSelectedDomains(newSet);
+                    }}
+                  />
+                  <Globe className="h-5 w-5 text-blue-600" />
+                  <span className="font-bold text-lg text-gray-900">{domain.name}</span>
+                  <Badge variant="default" className="bg-green-100 text-green-800 border-green-200">
+                    Available
+                  </Badge>
+                  <FlipScore score={getFlipScore(domain.flipScore)} domainName={domain.name} />
+                </div>
 
-            <div className="flex items-center gap-4">
-              <div className="text-right">
-                <p className="text-xl font-bold text-gray-900">${domain.price.toFixed(2)}</p>
-                <p className="text-sm text-gray-600">per year</p>
+                <div className="flex items-center gap-4 sm:flex-shrink-0">
+                  <div className="text-right">
+                    <p className="text-xl font-bold text-gray-900">${domain.price.toFixed(2)}</p>
+                    <p className="text-sm text-gray-600">per year</p>
+                  </div>
+
+                  <button
+                    onClick={() => {
+                      console.log('Buy Now clicked for:', domain.name);
+                      handleBuyNow(domain.name);
+                    }}
+                    className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-md shadow-md transition-colors duration-200"
+                    style={{ backgroundColor: '#2563eb', color: 'white' }}
+                  >
+                    Buy Now
+                  </button>
+                </div>
               </div>
-
-              <Button
-                size="lg"
-                onClick={() => handleBuyNow(domain.name)}
-                className="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-6 py-3 shadow-md"
-              >
-                Buy Now
-              </Button>
-            </div>
-          </Card>
-        ))}
+            </Card>
+          );
+        })}
       </div>
     </div>
   );
