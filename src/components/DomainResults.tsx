@@ -322,21 +322,8 @@ export const DomainResults = ({
                     )}
                   </div>
 
-                  {/* Price, Buy Button and Selection Indicator */}
+                  {/* Price and Buy Button */}
                   <div className="flex items-center gap-4 flex-shrink-0">
-                    <Button
-                      size="lg"
-                      className="bg-gradient-to-r from-yellow-400 via-pink-500 to-purple-500 px-4 py-2 rounded text-white font-bold ml-4 hover:shadow-lg transition-all"
-                      onClick={() => {
-                        window.open(
-                          `https://www.spaceship.com/domains/search?query=${domain.name}&aff_id=MY_AFFILIATE_ID`,
-                          "_blank"
-                        );
-                      }}
-                    >
-                      Buy Now
-                    </Button>
-                    
                     <div className="text-right">
                       <p className={`text-xl font-bold ${isSelected ? 'text-primary' : 'text-primary'}`}>
                         ${domain.price.toFixed(2)}
@@ -345,6 +332,20 @@ export const DomainResults = ({
                         per year
                       </p>
                     </div>
+                    
+                    <Button
+                      variant="hero"
+                      size="lg"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        window.open(
+                          `https://www.spaceship.com/domains/search?query=${domain.name}&aff_id=MY_AFFILIATE_ID`,
+                          "_blank"
+                        );
+                      }}
+                    >
+                      Buy Now
+                    </Button>
                     
                     {isSelected && (
                       <div className="flex items-center text-primary">
