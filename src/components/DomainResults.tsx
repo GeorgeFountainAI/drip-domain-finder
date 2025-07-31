@@ -88,7 +88,7 @@ export const DomainResults = ({
 
       <div className="space-y-4">
         {domains.map((domain) => (
-          <Card key={domain.name} className="p-6 flex flex-col sm:flex-row sm:items-center justify-between">
+          <Card key={domain.name} className="p-6 flex flex-col sm:flex-row sm:items-center justify-between bg-white dark:bg-gray-100 border border-gray-200">
             <div className="flex items-center gap-3">
               <Checkbox
                 checked={selectedDomains.has(domain.name)}
