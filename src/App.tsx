@@ -1,4 +1,4 @@
-import { Toaster } from "@/components/ui/toaster";
+ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -22,8 +22,7 @@ import Cookie from "./pages/Cookie";
 import ServerError from "./pages/ServerError";
 import NotFound from "./pages/NotFound";
 import ErrorBoundary from "./components/ErrorBoundary";
-// DripApps route commented out to hide the feature but keep the code
-// import DripApps from "./pages/DripApps";
+import { Helmet } from "react-helmet";
 
 const queryClient = new QueryClient();
 
@@ -33,6 +32,9 @@ const App = () => (
       <Toaster />
       <Sonner />
       <ErrorBoundary>
+        <Helmet>
+          <title>DomainDrip - Premium Domain Finder</title>
+        </Helmet>
         <BrowserRouter>
           <Routes>
             <Route path="/" element={<Index />} />
@@ -43,9 +45,7 @@ const App = () => (
             <Route path="/premium-domains" element={<PremiumDomains />} />
             <Route path="/featured-domains" element={<FeaturedDomains />} />
             <Route path="/faq" element={<FAQ />} />
-            {/* DripApps route commented out to hide the feature but keep the code */}
-            {/* <Route path="/dripadps" element={<DripApps />} /> */}
-            
+            {/* <Route path="/dripapps" element={<DripApps />} /> */}
             <Route path="/admin" element={<Admin />} />
             <Route path="/admin/credits" element={<AdminCredits />} />
             <Route path="/admin/deploy" element={<AdminDeploy />} />
@@ -55,7 +55,6 @@ const App = () => (
             <Route path="/terms" element={<Terms />} />
             <Route path="/cookie" element={<Cookie />} />
             <Route path="/error" element={<ServerError />} />
-            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
