@@ -1,4 +1,8 @@
 import React from "react";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
+import { ArrowLeft, ExternalLink } from "lucide-react";
 
 interface Domain {
   name: string;
@@ -31,93 +35,90 @@ export const DomainResults: React.FC<DomainResultsProps> = ({
   };
 
   if (isLoading) {
-    return <div>Loading...</div>;
+    return (
+      <div className="min-h-screen bg-background p-6">
+        <div className="max-w-6xl mx-auto">
+          <Skeleton className="h-10 w-40 mb-6" />
+          <Skeleton className="h-8 w-64 mb-8" />
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <Card key={i} className="p-6">
+                <Skeleton className="h-6 w-full mb-2" />
+                <Skeleton className="h-4 w-32 mb-4" />
+                <Skeleton className="h-10 w-24" />
+              </Card>
+            ))}
+          </div>
+        </div>
+      </div>
+    );
   }
 
   console.log('🚀 DomainResults rendering with', domains?.length, 'domains');
 
   return (
-    <div style={{ 
-      backgroundColor: 'white', 
-      minHeight: '100vh', 
-      padding: '20px',
-      color: 'black'
-    }}>
-      <button 
-        onClick={onBack}
-        style={{
-          padding: '10px 20px',
-          marginBottom: '20px',
-          backgroundColor: '#f3f4f6',
-          border: '1px solid #d1d5db',
-          borderRadius: '5px',
-          cursor: 'pointer'
-        }}
-      >
-        ← Back to Search
-      </button>
-      
-      <h1 style={{ color: 'black', marginBottom: '20px' }}>
-        Domain Results ({domains?.length || 0} found)
-      </h1>
-      
-      {domains && domains.map((domain, index) => (
-        <div 
-          key={domain.name} 
-          style={{
-            border: '2px solid #000',
-            padding: '20px',
-            marginBottom: '15px',
-            backgroundColor: '#f9f9f9',
-            borderRadius: '8px'
-          }}
+    <div className="min-h-screen bg-background p-6">
+      <div className="max-w-6xl mx-auto">
+        {/* Back Button */}
+        <Button 
+          variant="outline"
+          onClick={onBack}
+          className="mb-6 gap-2"
         >
-          <div style={{ 
-            display: 'flex', 
-            justifyContent: 'space-between', 
-            alignItems: 'center',
-            flexWrap: 'wrap',
-            gap: '10px'
-          }}>
-            <div>
-              <h3 style={{ color: 'black', margin: '0 0 5px 0', fontSize: '18px' }}>
-                {domain.name}
-              </h3>
-              <p style={{ color: 'green', margin: '0', fontWeight: 'bold' }}>
-                Available - ${domain.price.toFixed(2)}/year
-              </p>
-            </div>
-            
-            <button
-              onClick={() => handleBuyNow(domain.name)}
-              style={{
-                backgroundColor: '#ff6b35',
-                color: 'white',
-                border: 'none',
-                padding: '15px 30px',
-                fontSize: '16px',
-                fontWeight: 'bold',
-                borderRadius: '5px',
-                cursor: 'pointer',
-                minWidth: '120px',
-                height: '50px'
-              }}
-              onMouseOver={(e) => {
-                e.currentTarget.style.backgroundColor = '#e55a2b';
-              }}
-              onMouseOut={(e) => {
-                e.currentTarget.style.backgroundColor = '#ff6b35';
-              }}
-            >
-              BUY NOW
-            </button>
+          <ArrowLeft className="h-4 w-4" />
+          Back to Search
+        </Button>
+        
+        {/* Header */}
+        <h1 className="text-3xl font-bold text-foreground mb-8">
+          Domain Results ({domains?.length || 0} found)
+        </h1>
+        
+        {/* Results Grid */}
+        {domains && domains.length > 0 ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {domains.map((domain) => (
+              <Card 
+                key={domain.name}
+                className="group hover:shadow-lg transition-all duration-300 hover:scale-105 border-border"
+              >
+                <CardContent className="p-6">
+                  <div className="space-y-4">
+                    {/* Domain Name */}
+                    <h3 className="text-xl font-bold text-foreground group-hover:text-primary transition-colors">
+                      {domain.name}
+                    </h3>
+                    
+                    {/* Availability & Price */}
+                    <div className="space-y-1">
+                      <p className="text-sm font-medium text-green-600 dark:text-green-400">
+                        ✓ Available
+                      </p>
+                      <p className="text-sm text-muted-foreground">
+                        ${domain.price.toFixed(2)}/year
+                      </p>
+                    </div>
+                    
+                    {/* Buy Button */}
+                    <Button
+                      onClick={() => handleBuyNow(domain.name)}
+                      className="w-full bg-orange-500 hover:bg-orange-600 text-white font-semibold rounded-lg transition-all duration-200 gap-2"
+                      size="lg"
+                    >
+                      BUY NOW
+                      <ExternalLink className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
           </div>
-        </div>
-      ))}
-      
-      {(!domains || domains.length === 0) && (
-        <p style={{ color: 'red', fontSize: '18px' }}>No domains to display</p>
-      )}
+        ) : (
+          <div className="text-center py-12">
+            <p className="text-lg text-destructive">No domains to display</p>
+          </div>
+        )}
+      </div>
     </div>
   );
 };
