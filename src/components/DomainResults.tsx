@@ -203,7 +203,7 @@ export const DomainResults = ({
                     </p>
                   </div>
                   <Button
-                    variant="hero"
+                    variant="default"
                     onClick={handleAddToCart}
                   >
                     <ShoppingCart className="h-4 w-4 mr-2" />
@@ -296,7 +296,7 @@ export const DomainResults = ({
                     )}
                   </div>
 
-                  {/* Price and Buy Button */}
+                  {/* Price and Buy Button - ALWAYS VISIBLE */}
                   <div className="flex items-center gap-4 flex-shrink-0">
                     <div className="text-right">
                       <p className="text-xl font-bold text-primary">
@@ -307,14 +307,14 @@ export const DomainResults = ({
                       </p>
                     </div>
                     
+                    {/* BUY NOW BUTTON - ALWAYS RENDERED AND VISIBLE */}
                     <Button
-                      variant="default"
                       size="lg"
                       onClick={(e) => {
                         e.stopPropagation();
                         handleBuyNow(domain.name);
                       }}
-                      className="bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 text-primary-foreground font-semibold shadow-primary"
+                      className="bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 text-primary-foreground font-semibold"
                     >
                       Buy Now
                     </Button>
@@ -344,8 +344,7 @@ export const DomainResults = ({
                   <Button 
                     onClick={handleBuySelectedDomains}
                     size="lg"
-                    variant="hero"
-                    className="px-8"
+                    className="px-8 bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 text-primary-foreground font-semibold"
                   >
                     <ExternalLink className="h-4 w-4 mr-2" />
                     Buy Selected Domains
