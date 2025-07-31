@@ -308,13 +308,13 @@ export const DomainResults = ({
                     </div>
                     
                     <Button
-                      variant="hero"
+                      variant="default"
                       size="lg"
                       onClick={(e) => {
                         e.stopPropagation();
                         handleBuyNow(domain.name);
                       }}
-                      className="bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 text-primary-foreground font-semibold"
+                      className="bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 text-primary-foreground font-semibold shadow-primary"
                     >
                       Buy Now
                     </Button>
