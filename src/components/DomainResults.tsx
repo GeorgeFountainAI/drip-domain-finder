@@ -88,7 +88,6 @@ const FlipScore = ({ score, domainName }: { score: number; domainName: string })
   );
 };
 
-
 export const DomainResults = ({ 
   domains, 
   onAddToCart, 
@@ -105,17 +104,6 @@ export const DomainResults = ({
   const { toast } = useToast();
   const navigate = useNavigate();
 
-  const handleDomainToggleForCart = (domainName: string) => {
-    const newSelected = new Set(selectedDomainsForCart);
-    if (newSelected.has(domainName)) {
-      newSelected.delete(domainName);
-    } else {
-      newSelected.add(domainName);
-    }
-    setSelectedDomainsForCart(newSelected);
-  };
-
-
   const handleDomainSelect = (domain: Domain) => {
     setSelectedDomain(selectedDomain?.name === domain.name ? null : domain);
   };
@@ -130,6 +118,11 @@ export const DomainResults = ({
       });
       setSelectedDomainsForCart(new Set());
     }
+  };
+
+  const handleBuyNow = (domainName: string) => {
+    const url = `https://www.spaceship.com/search?query=${domainName}&aff=MY_AFFILIATE_ID`;
+    window.open(url, '_blank');
   };
 
   const handleBuySelectedDomains = () => {
@@ -263,18 +256,14 @@ export const DomainResults = ({
                         />
                       </div>
                       <div className="flex items-center gap-2 flex-1 min-w-0">
-                        <Globe className={`h-5 w-5 flex-shrink-0 ${isSelected ? 'text-primary' : 'text-primary'}`} />
+                        <Globe className="h-5 w-5 flex-shrink-0 text-primary" />
                         <div className="flex items-center gap-1 flex-wrap">
-                          <span className={`font-bold text-lg truncate ${isSelected ? 'text-primary' : 'text-foreground'}`}>
+                          <span className="font-bold text-lg truncate text-foreground">
                             {domainBase}
                           </span>
                           <Badge 
                             variant="secondary" 
-                            className={`text-xs px-2 py-1 ${
-                              isSelected 
-                                ? 'bg-primary/20 text-primary border-primary/30' 
-                                : 'bg-primary/10 text-primary border-primary/20'
-                            }`}
+                            className="text-xs px-2 py-1 bg-primary/10 text-primary border-primary/20"
                           >
                             .{tldExtension}
                           </Badge>
@@ -310,7 +299,7 @@ export const DomainResults = ({
                   {/* Price and Buy Button */}
                   <div className="flex items-center gap-4 flex-shrink-0">
                     <div className="text-right">
-                      <p className={`text-xl font-bold ${isSelected ? 'text-primary' : 'text-primary'}`}>
+                      <p className="text-xl font-bold text-primary">
                         ${domain.price.toFixed(2)}
                       </p>
                       <p className="text-sm text-muted-foreground">
@@ -323,11 +312,9 @@ export const DomainResults = ({
                       size="lg"
                       onClick={(e) => {
                         e.stopPropagation();
-                        window.open(
-                          `https://www.spaceship.com/domains/search?query=${domain.name}&aff_id=MY_AFFILIATE_ID`,
-                          "_blank"
-                        );
+                        handleBuyNow(domain.name);
                       }}
+                      className="bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 text-primary-foreground font-semibold"
                     >
                       Buy Now
                     </Button>
@@ -442,6 +429,7 @@ export const DomainResults = ({
             )}
           </div>
         )}
+        
         {availableDomains.length === 0 && (
           <Card className="bg-gradient-card border-border/50 shadow-card">
             <CardContent className="p-8 text-center">
