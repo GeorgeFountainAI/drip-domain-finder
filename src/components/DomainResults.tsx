@@ -1,33 +1,20 @@
-/**
- * Enhanced Domain Results Component
- * 
- * Features:
- * - Interactive domain selection with detailed information
- * - Domain ranking badges (Pro, Trendy, Urban, Classic, Modern)
- * - Flip score tooltips with detailed analysis
- * - Trend strength visualization with star ratings
- * - Buy now functionality with external partner integration
- * - Responsive design optimized for all screen sizes
- * - Comprehensive sorting and filtering support
- */
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { ShoppingCart, Check, Globe, ArrowLeft, Star, TrendingUp, ExternalLink, Info } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
-
 interface Domain {
   name: string;
   available: boolean;
   price: number;
   tld: string;
-  flipScore?: number; // 1-100, brandability + resale potential
-  trendStrength?: number; // 1-5 stars, keyword trends
+  flipScore?: number;
+  trendStrength?: number;
 }
 
 interface DomainResultsProps {
@@ -41,7 +28,6 @@ interface DomainResultsProps {
   isLoadingMore?: boolean;
 }
 
-// Helper component for displaying star rating
 const StarRating = ({ rating }: { rating: number }) => {
   return (
     <div className="flex items-center gap-1">
@@ -59,7 +45,6 @@ const StarRating = ({ rating }: { rating: number }) => {
   );
 };
 
-// Helper component for displaying flip score with tooltip
 const FlipScore = ({ score, domainName }: { score: number; domainName: string }) => {
   const getScoreColor = (score: number) => {
     if (score >= 80) return 'text-green-600 dark:text-green-400';
