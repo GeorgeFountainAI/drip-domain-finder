@@ -1,12 +1,6 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Checkbox } from "@/components/ui/checkbox";
+import { ArrowLeft, Globe, TrendingUp, Info } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { ShoppingCart, Check, Globe, ArrowLeft, Star, TrendingUp, ExternalLink, Info } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
 
 interface Domain {
   name: string;
@@ -28,23 +22,22 @@ interface DomainResultsProps {
   isLoadingMore?: boolean;
 }
 
-// Generate flipScore if missing
 const getFlipScore = (score?: number) => {
   if (score !== undefined) return score;
-  return Math.floor(Math.random() * 41) + 60; // Random 60–100
+  return Math.floor(Math.random() * 41) + 60;
 };
 
-const FlipScore = ({ score, domainName }: { score: number; domainName: string }) => {
-  const color = score >= 80 ? "text-green-500" : score >= 60 ? "text-yellow-500" : "text-orange-500";
-
+const FlipScore = ({ score }: { score: number }) => {
+  const color = score >= 80 ? "#16a34a" : score >= 60 ? "#eab308" : "#ea580c";
+  
   return (
     <TooltipProvider>
       <Tooltip>
         <TooltipTrigger asChild>
-          <div className="flex items-center gap-1 cursor-help">
-            <TrendingUp className="h-3 w-3 text-muted-foreground" />
-            <span className={`text-xs font-bold ${color}`}>{score}/100</span>
-            <Info className="h-3 w-3 text-muted-foreground" />
+          <div style={{ display: 'flex', alignItems: 'center', gap: '4px', cursor: 'help' }}>
+            <TrendingUp style={{ width: '12px', height: '12px', color: '#6b7280' }} />
+            <span style={{ fontSize: '12px', fontWeight: 'bold', color }}>{score}/100</span>
+            <Info style={{ width: '12px', height: '12px', color: '#6b7280' }} />
           </div>
         </TooltipTrigger>
         <TooltipContent side="top">Flip potential score</TooltipContent>
@@ -58,78 +51,192 @@ export const DomainResults = ({
   onAddToCart,
   onBack,
   isLoading,
-  totalResults,
-  hasMore = false,
-  onLoadMore,
-  isLoadingMore = false,
 }: DomainResultsProps) => {
   const [selectedDomains, setSelectedDomains] = useState<Set<string>>(new Set());
-  const { toast } = useToast();
-  const navigate = useNavigate();
 
   const handleBuyNow = (domainName: string) => {
+    console.log('🔥 Buy Now clicked for:', domainName);
     const url = `https://www.spaceship.com/search?query=${domainName}&aff=MY_AFFILIATE_ID`;
     window.open(url, "_blank");
   };
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <p className="text-lg">Loading domains...</p>
+      <div style={{ 
+        minHeight: '100vh', 
+        display: 'flex', 
+        alignItems: 'center', 
+        justifyContent: 'center',
+        backgroundColor: 'white'
+      }}>
+        <p style={{ fontSize: '18px', color: '#111827' }}>Loading domains...</p>
       </div>
     );
   }
 
-  return (
-    <div className="p-4 max-w-6xl mx-auto bg-white min-h-screen">
-      <Button variant="ghost" onClick={onBack} className="mb-4 text-gray-700 hover:text-gray-900">
-        <ArrowLeft className="h-4 w-4 mr-2" /> Back to Search
-      </Button>
+  console.log('🚀 Rendering DomainResults with', domains?.length || 0, 'domains');
 
-      <div className="space-y-4">
-        {domains.map((domain) => {
-          console.log('Rendering domain:', domain.name);
+  return (
+    <div style={{ 
+      minHeight: '100vh', 
+      backgroundColor: 'white', 
+      padding: '16px',
+      maxWidth: '1200px',
+      margin: '0 auto'
+    }}>
+      {/* Back Button */}
+      <button 
+        onClick={onBack}
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: '8px',
+          backgroundColor: 'transparent',
+          border: '1px solid #d1d5db',
+          borderRadius: '6px',
+          color: '#374151',
+          cursor: 'pointer',
+          marginBottom: '24px',
+          padding: '8px 16px',
+          fontSize: '14px'
+        }}
+      >
+        <ArrowLeft style={{ width: '16px', height: '16px' }} /> 
+        Back to Search
+      </button>
+
+      {/* Results Header */}
+      <h2 style={{ 
+        fontSize: '24px', 
+        fontWeight: 'bold', 
+        color: '#111827', 
+        marginBottom: '16px' 
+      }}>
+        Search Results ({domains?.length || 0} domains)
+      </h2>
+
+      {/* Domain List */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+        {domains && domains.length > 0 ? domains.map((domain) => {
+          console.log('🔍 Rendering domain:', domain.name);
           return (
-            <Card key={domain.name} className="p-6 bg-white border border-gray-200 shadow-sm">
-              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                <div className="flex items-center gap-3">
-                  <Checkbox
+            <div 
+              key={domain.name}
+              style={{
+                padding: '24px',
+                backgroundColor: '#ffffff',
+                border: '2px solid #e5e7eb',
+                borderRadius: '12px',
+                boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
+              }}
+            >
+              {/* Domain Info Row */}
+              <div style={{ 
+                display: 'flex', 
+                alignItems: 'center', 
+                justifyContent: 'space-between',
+                flexWrap: 'wrap',
+                gap: '16px',
+                marginBottom: '16px'
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                  <input
+                    type="checkbox"
                     checked={selectedDomains.has(domain.name)}
-                    onCheckedChange={(checked) => {
+                    onChange={(e) => {
                       const newSet = new Set(selectedDomains);
-                      checked ? newSet.add(domain.name) : newSet.delete(domain.name);
+                      e.target.checked ? newSet.add(domain.name) : newSet.delete(domain.name);
                       setSelectedDomains(newSet);
                     }}
+                    style={{ width: '16px', height: '16px' }}
                   />
-                  <Globe className="h-5 w-5 text-blue-600" />
-                  <span className="font-bold text-lg text-gray-900">{domain.name}</span>
-                  <Badge variant="default" className="bg-green-100 text-green-800 border-green-200">
+                  <Globe style={{ width: '20px', height: '20px', color: '#2563eb' }} />
+                  <span style={{ 
+                    fontWeight: 'bold', 
+                    fontSize: '20px', 
+                    color: '#111827' 
+                  }}>
+                    {domain.name}
+                  </span>
+                  <span style={{
+                    backgroundColor: '#dcfce7',
+                    color: '#166534',
+                    padding: '4px 12px',
+                    borderRadius: '6px',
+                    fontSize: '12px',
+                    fontWeight: '600'
+                  }}>
                     Available
-                  </Badge>
-                  <FlipScore score={getFlipScore(domain.flipScore)} domainName={domain.name} />
-                </div>
-
-                <div className="flex items-center gap-4 sm:flex-shrink-0">
-                  <div className="text-right">
-                    <p className="text-xl font-bold text-gray-900">${domain.price.toFixed(2)}</p>
-                    <p className="text-sm text-gray-600">per year</p>
-                  </div>
-
-                  <button
-                    onClick={() => {
-                      console.log('Buy Now clicked for:', domain.name);
-                      handleBuyNow(domain.name);
-                    }}
-                    className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-md shadow-md transition-colors duration-200"
-                    style={{ backgroundColor: '#2563eb', color: 'white' }}
-                  >
-                    Buy Now
-                  </button>
+                  </span>
+                  <FlipScore score={getFlipScore(domain.flipScore)} />
                 </div>
               </div>
-            </Card>
+
+              {/* Price and Button Row */}
+              <div style={{ 
+                display: 'flex', 
+                alignItems: 'center', 
+                justifyContent: 'space-between',
+                gap: '16px'
+              }}>
+                <div>
+                  <div style={{ 
+                    fontSize: '24px', 
+                    fontWeight: 'bold', 
+                    color: '#111827' 
+                  }}>
+                    ${domain.price.toFixed(2)}
+                  </div>
+                  <div style={{ 
+                    fontSize: '14px', 
+                    color: '#6b7280' 
+                  }}>
+                    per year
+                  </div>
+                </div>
+
+                <button
+                  onClick={() => handleBuyNow(domain.name)}
+                  style={{
+                    backgroundColor: '#2563eb',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '8px',
+                    padding: '16px 32px',
+                    fontSize: '16px',
+                    fontWeight: '700',
+                    cursor: 'pointer',
+                    boxShadow: '0 4px 12px rgba(37, 99, 235, 0.3)',
+                    transition: 'all 0.2s ease',
+                    minWidth: '120px',
+                    height: '56px'
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.backgroundColor = '#1d4ed8';
+                    e.currentTarget.style.transform = 'translateY(-2px)';
+                    e.currentTarget.style.boxShadow = '0 8px 20px rgba(37, 99, 235, 0.4)';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.backgroundColor = '#2563eb';
+                    e.currentTarget.style.transform = 'translateY(0)';
+                    e.currentTarget.style.boxShadow = '0 4px 12px rgba(37, 99, 235, 0.3)';
+                  }}
+                >
+                  BUY NOW
+                </button>
+              </div>
+            </div>
           );
-        })}
+        }) : (
+          <div style={{ 
+            textAlign: 'center', 
+            padding: '60px 20px', 
+            color: '#6b7280',
+            fontSize: '18px'
+          }}>
+            No domains found. Try a different search term.
+          </div>
+        )}
       </div>
     </div>
   );
