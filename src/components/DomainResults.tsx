@@ -81,7 +81,7 @@ export const DomainResults = ({
   }
 
   return (
-    <div className="p-4 max-w-6xl mx-auto">
+    <div className="p-4 max-w-6xl mx-auto bg-white min-h-screen">
       <Button variant="ghost" onClick={onBack} className="mb-4">
         <ArrowLeft className="h-4 w-4 mr-2" /> Back to Search
       </Button>
