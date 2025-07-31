@@ -175,7 +175,17 @@ export const DomainDripApp = () => {
               </div>
               
               {/* Unified Search Form */}
-              <DomainSearchForm ref={domainSearchFormRef} />
+              <DomainSearchForm 
+                ref={domainSearchFormRef} 
+                onResults={(domains) => {
+                  console.log('🎯 Received domains from search:', domains.length);
+                  setDomains(domains);
+                }}
+                onStateChange={(state) => {
+                  console.log('🔄 State change requested:', state);
+                  setCurrentState(state);
+                }}
+              />
               
               
               {/* Search History Viewer - Always visible when logged in */}

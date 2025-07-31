@@ -36,6 +36,8 @@ interface Domain {
 
 interface DomainSearchFormProps {
   className?: string;
+  onResults?: (domains: Domain[]) => void;
+  onStateChange?: (state: 'search' | 'results') => void;
 }
 
 export interface DomainSearchFormRef {
@@ -79,7 +81,7 @@ const FlipScore = ({ score }: { score: number }) => {
   );
 };
 
-export const DomainSearchForm = forwardRef<DomainSearchFormRef, DomainSearchFormProps>(({ className = "" }, ref) => {
+export const DomainSearchForm = forwardRef<DomainSearchFormRef, DomainSearchFormProps>(({ className = "", onResults, onStateChange }, ref) => {
   const [keyword, setKeyword] = useState("");
   const [domains, setDomains] = useState<Domain[]>([]);
   const [filteredDomains, setFilteredDomains] = useState<Domain[]>([]);
@@ -134,6 +136,14 @@ export const DomainSearchForm = forwardRef<DomainSearchFormRef, DomainSearchForm
         
         setDomains(wildcardDomains);
         
+        // Notify parent with results
+        if (onResults) {
+          onResults(wildcardDomains);
+        }
+        if (onStateChange) {
+          onStateChange('results');
+        }
+        
         toast({
           title: "Wildcard Search Complete",
           description: `Found ${wildcardSuggestions.length} domain pattern suggestions`,
@@ -152,6 +162,14 @@ export const DomainSearchForm = forwardRef<DomainSearchFormRef, DomainSearchForm
         }
 
         setDomains(searchResult.domains);
+        
+        // Notify parent with results
+        if (onResults) {
+          onResults(searchResult.domains);
+        }
+        if (onStateChange) {
+          onStateChange('results');
+        }
         
         if (searchResult.isDemo) {
           toast({
@@ -258,6 +276,14 @@ export const DomainSearchForm = forwardRef<DomainSearchFormRef, DomainSearchForm
           
           setDomains(wildcardDomains);
           
+          // Notify parent with results
+          if (onResults) {
+            onResults(wildcardDomains);
+          }
+          if (onStateChange) {
+            onStateChange('results');
+          }
+          
           toast({
             title: "Wildcard Search Complete",
             description: `Found ${wildcardSuggestions.length} domain pattern suggestions`,
@@ -267,6 +293,14 @@ export const DomainSearchForm = forwardRef<DomainSearchFormRef, DomainSearchForm
           // Regular domain search
           const searchResult = await searchDomains(searchKeyword.trim());
           setDomains(searchResult.domains);
+          
+          // Notify parent with results
+          if (onResults) {
+            onResults(searchResult.domains);
+          }
+          if (onStateChange) {
+            onStateChange('results');
+          }
           
           if (searchResult.isDemo) {
             toast({
@@ -285,7 +319,7 @@ export const DomainSearchForm = forwardRef<DomainSearchFormRef, DomainSearchForm
     focusOnResults: () => {
       // Implement focus logic if needed
     }
-  }), [toast]);
+  }), [toast, onResults, onStateChange]);
 
   return (
     <RequireCredits credits={isAdmin ? 0 : 1} action="search domains" showAlert={hasSearched && !isAdmin}>
