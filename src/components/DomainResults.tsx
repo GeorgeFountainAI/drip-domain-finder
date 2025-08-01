@@ -79,7 +79,7 @@ export const DomainResults: React.FC<DomainResultsProps> = ({
   };
 
   const handleBuySelected = () => {
-    console.log(`🛒 Buying multiple via affiliate: ${selectedDomains.join(', ')}`);
+    console.log(`🛒 Bulk buying: ${selectedDomains.join(', ')}`);
     
     // Try to open all selected domains in Spaceship (one tab per domain for now)
     // You can modify this to use a bulk API if Spaceship supports it
