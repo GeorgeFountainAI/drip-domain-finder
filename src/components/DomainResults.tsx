@@ -40,11 +40,11 @@ export const DomainResults: React.FC<DomainResultsProps> = ({
   const [feedback, setFeedback] = useState<Record<string, FeedbackType>>({});
   const [sortBy, setSortBy] = useState<SortOption>('rank');
 
-  // Spaceship affiliate link (replace with your actual affiliate ID)
-  const SPACESHIP_AFFILIATE_BASE = "https://www.spaceship.com/search?query=";
+  // Spaceship affiliate link
+  const SPACESHIP_AFFILIATE_BASE = "https://spaceship.sjv.io/APQy0D/domain/search?query=";
 
   const handleBuyNow = (domainName: string) => {
-    console.log('🎯 BUY NOW CLICKED:', domainName);
+    console.log(`🛒 Buying ${domainName} via affiliate`);
     const affiliateUrl = `${SPACESHIP_AFFILIATE_BASE}${encodeURIComponent(domainName)}`;
     window.open(affiliateUrl, "_blank");
   };
@@ -79,7 +79,7 @@ export const DomainResults: React.FC<DomainResultsProps> = ({
   };
 
   const handleBuySelected = () => {
-    console.log('🛒 Buy selected domains:', selectedDomains);
+    console.log(`🛒 Buying multiple via affiliate: ${selectedDomains.join(', ')}`);
     
     // Try to open all selected domains in Spaceship (one tab per domain for now)
     // You can modify this to use a bulk API if Spaceship supports it
