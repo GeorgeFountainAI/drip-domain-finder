@@ -22,6 +22,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useConsumeCredit } from "@/hooks/useConsumeCredit";
 import { useAdminBypass } from "@/hooks/useAdminBypass";
 import RequireCredits from "@/components/RequireCredits";
+import { SearchHistory } from "@/components/SearchHistory";
 import searchDomains from "@/api/domainSearchClient";
 import { generateWildcardSuggestions } from "@/utils/domainGenerator";
 
@@ -91,6 +92,7 @@ export const DomainSearchForm = forwardRef<DomainSearchFormRef, DomainSearchForm
   const [hasSearched, setHasSearched] = useState(false);
   const [rankingFilter, setRankingFilter] = useState<string>("all");
   const [tldFilter, setTldFilter] = useState<string>("all");
+  const [lastSearchedKeyword, setLastSearchedKeyword] = useState<string>("");
   
   const { toast } = useToast();
   const { consumeCredit, loading: creditLoading } = useConsumeCredit();
@@ -135,6 +137,7 @@ export const DomainSearchForm = forwardRef<DomainSearchFormRef, DomainSearchForm
         }));
         
         setDomains(wildcardDomains);
+        setLastSearchedKeyword(keyword.trim());
         
         // Notify parent with results
         if (onResults) {
@@ -162,6 +165,7 @@ export const DomainSearchForm = forwardRef<DomainSearchFormRef, DomainSearchForm
         }
 
         setDomains(searchResult.domains);
+        setLastSearchedKeyword(keyword.trim());
         
         // Notify parent with results
         if (onResults) {
@@ -211,6 +215,104 @@ export const DomainSearchForm = forwardRef<DomainSearchFormRef, DomainSearchForm
       }
       return newSet;
     });
+  };
+
+  // Handle search again from history
+  const handleSearchAgain = async (searchKeyword: string) => {
+    setKeyword(searchKeyword);
+    
+    // Create a synthetic form event and trigger search
+    const syntheticEvent = {
+      preventDefault: () => {},
+    } as React.FormEvent;
+    
+    // Use the same search logic as handleSubmit but with the history keyword
+    setIsLoading(true);
+    setError(null);
+    setHasSearched(true);
+
+    // Admin users bypass credit checks
+    if (!isAdmin) {
+      const creditResult = await consumeCredit(1);
+      if (!creditResult.success) {
+        setIsLoading(false);
+        setError("Unable to deduct credit for search");
+        return;
+      }
+    }
+
+    try {
+      // Check if wildcard search
+      if (searchKeyword.trim().includes('*')) {
+        // Handle wildcard search
+        const wildcardSuggestions = generateWildcardSuggestions(searchKeyword.trim().replace(/\*/g, ''));
+        const wildcardDomains: Domain[] = wildcardSuggestions.map((suggestion, index) => ({
+          name: `${suggestion}.com`,
+          available: Math.random() > 0.3,
+          price: 12.99 + Math.random() * 20,
+          tld: 'com',
+          flipScore: 60 + Math.floor(Math.random() * 30),
+          trendStrength: Math.floor(Math.random() * 5) + 1
+        }));
+        
+        setDomains(wildcardDomains);
+        setLastSearchedKeyword(searchKeyword.trim());
+        
+        if (onResults) {
+          onResults(wildcardDomains);
+        }
+        if (onStateChange) {
+          onStateChange('results');
+        }
+        
+        toast({
+          title: "Wildcard Search Complete",
+          description: `Found ${wildcardSuggestions.length} domain pattern suggestions`,
+          variant: "default",
+        });
+      } else {
+        // Regular domain search
+        const searchResult = await searchDomains(searchKeyword.trim());
+        
+        if (searchResult.error) {
+          toast({
+            title: "Search Notice",
+            description: searchResult.error,
+            variant: "default",
+          });
+        }
+
+        setDomains(searchResult.domains);
+        setLastSearchedKeyword(searchKeyword.trim());
+        
+        if (onResults) {
+          onResults(searchResult.domains);
+        }
+        if (onStateChange) {
+          onStateChange('results');
+        }
+        
+        if (searchResult.isDemo) {
+          toast({
+            title: "Demo Mode",
+            description: "Showing sample domain results for demonstration.",
+            variant: "default",
+          });
+        }
+      }
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : "Failed to search domains";
+      setError(errorMessage);
+      setDomains([]);
+      
+      toast({
+        title: "Search Failed",
+        description: errorMessage,
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   // Filter and rank domains based on selected criteria
@@ -433,6 +535,12 @@ export const DomainSearchForm = forwardRef<DomainSearchFormRef, DomainSearchForm
             )}
           </CardContent>
         </Card>
+
+        {/* Search History Section */}
+        <SearchHistory 
+          onSearchAgain={handleSearchAgain} 
+          currentKeyword={lastSearchedKeyword}
+        />
 
         {/* Results Section */}
         {hasSearched && (
