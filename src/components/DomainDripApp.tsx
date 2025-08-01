@@ -6,6 +6,8 @@ import { ModernHeader } from "./ModernHeader";
 import { DomainResults } from "./DomainResults";
 import { DomainCart } from "./DomainCart";
 import { DomainCheckout } from "./DomainCheckout";
+import FAQPreview from "./FAQPreview";
+import Footer from "./Footer";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
@@ -161,7 +163,7 @@ export const DomainDripApp = () => {
         <ModernHeader user={user} onCreditPurchase={handleCreditPurchase} />
       
       {currentState === 'search' && (
-        <div className="bg-gradient-hero min-h-[calc(100vh-4rem)]">
+        <div className="bg-gradient-hero">
           {/* Main Content */}
           <div className="flex items-center justify-center p-4 pt-16">
             <div className="max-w-3xl w-full">
@@ -196,6 +198,12 @@ export const DomainDripApp = () => {
               )}
             </div>
           </div>
+          
+          {/* FAQ Section */}
+          <FAQPreview />
+          
+          {/* Footer */}
+          <Footer />
         </div>
       )}
       
