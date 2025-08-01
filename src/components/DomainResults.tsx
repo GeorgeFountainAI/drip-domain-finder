@@ -300,7 +300,7 @@ export const DomainResults: React.FC<DomainResultsProps> = ({
                 <Button
                   onClick={handleBuySelected}
                   size="lg"
-                  className="bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg gap-2"
+                  className="bg-orange-500 hover:bg-orange-600 text-white shadow-lg gap-2"
                 >
                   <ShoppingCart className="h-5 w-5" />
                   Buy Selected Domains ({selectedDomains.length})
