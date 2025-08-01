@@ -1,9 +1,10 @@
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ArrowLeft, ExternalLink, ThumbsUp, ThumbsDown, ShoppingCart } from "lucide-react";
 
 interface Domain {
@@ -27,6 +28,7 @@ interface DomainResultsProps {
 }
 
 type FeedbackType = 'like' | 'dislike' | null;
+type SortOption = 'rank' | 'price' | 'name';
 
 export const DomainResults: React.FC<DomainResultsProps> = ({
   domains,
@@ -36,10 +38,15 @@ export const DomainResults: React.FC<DomainResultsProps> = ({
 }) => {
   const [selectedDomains, setSelectedDomains] = useState<string[]>([]);
   const [feedback, setFeedback] = useState<Record<string, FeedbackType>>({});
+  const [sortBy, setSortBy] = useState<SortOption>('rank');
+
+  // Spaceship affiliate link (replace with your actual affiliate ID)
+  const SPACESHIP_AFFILIATE_BASE = "https://www.spaceship.com/search?query=";
 
   const handleBuyNow = (domainName: string) => {
     console.log('🎯 BUY NOW CLICKED:', domainName);
-    window.open(`https://www.spaceship.com/search?query=${domainName}`, "_blank");
+    const affiliateUrl = `${SPACESHIP_AFFILIATE_BASE}${encodeURIComponent(domainName)}`;
+    window.open(affiliateUrl, "_blank");
   };
 
   const handleDomainSelection = (domainName: string, checked: boolean) => {
@@ -52,7 +59,7 @@ export const DomainResults: React.FC<DomainResultsProps> = ({
 
   const handleSelectAll = (checked: boolean) => {
     if (checked) {
-      setSelectedDomains(domains.map(domain => domain.name));
+      setSelectedDomains(sortedDomains.map(domain => domain.name));
     } else {
       setSelectedDomains([]);
     }
@@ -72,14 +79,51 @@ export const DomainResults: React.FC<DomainResultsProps> = ({
   };
 
   const handleBuySelected = () => {
-    const selectedDomainObjects = domains.filter(domain => selectedDomains.includes(domain.name));
-    onAddToCart(selectedDomainObjects);
     console.log('🛒 Buy selected domains:', selectedDomains);
+    
+    // Try to open all selected domains in Spaceship (one tab per domain for now)
+    // You can modify this to use a bulk API if Spaceship supports it
+    selectedDomains.forEach((domainName, index) => {
+      setTimeout(() => {
+        const affiliateUrl = `${SPACESHIP_AFFILIATE_BASE}${encodeURIComponent(domainName)}`;
+        window.open(affiliateUrl, "_blank");
+      }, index * 500); // Stagger the tab openings by 500ms to avoid browser blocking
+    });
+    
+    // Clear selection after purchase
+    setSelectedDomains([]);
+  };
+
+  const handleSortChange = (value: SortOption) => {
+    setSortBy(value);
+    console.log('📊 Sort changed to:', value);
   };
 
   const getRankingScore = (domain: Domain) => {
     return domain.flipScore || domain.trendStrength || Math.floor(Math.random() * 10) + 1;
   };
+
+  // Memoized sorted domains
+  const sortedDomains = useMemo(() => {
+    if (!domains) return [];
+    
+    const sorted = [...domains].sort((a, b) => {
+      switch (sortBy) {
+        case 'rank':
+          const rankA = getRankingScore(a);
+          const rankB = getRankingScore(b);
+          return rankB - rankA; // Highest to lowest
+        case 'price':
+          return a.price - b.price; // Low to high
+        case 'name':
+          return a.name.localeCompare(b.name); // A-Z
+        default:
+          return 0;
+      }
+    });
+    
+    return sorted;
+  }, [domains, sortBy]);
 
   if (isLoading) {
     return (
@@ -116,31 +160,51 @@ export const DomainResults: React.FC<DomainResultsProps> = ({
           Back to Search
         </Button>
         
-        {/* Header with Select All */}
-        <div className="flex justify-between items-center mb-8">
+        {/* Header with Sort and Select All */}
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
           <h1 className="text-3xl font-bold text-foreground">
-            Domain Results ({domains?.length || 0} found)
+            Domain Results ({sortedDomains?.length || 0} found)
           </h1>
           
-          {domains && domains.length > 0 && (
-            <div className="flex items-center gap-2">
-              <Checkbox
-                id="select-all"
-                checked={selectedDomains.length === domains.length}
-                onCheckedChange={handleSelectAll}
-              />
-              <label htmlFor="select-all" className="text-sm font-medium">
-                Select All
-              </label>
-            </div>
-          )}
+          <div className="flex items-center gap-4">
+            {/* Sorting Dropdown */}
+            {sortedDomains && sortedDomains.length > 0 && (
+              <div className="flex items-center gap-2">
+                <label className="text-sm font-medium text-muted-foreground">Sort by:</label>
+                <Select value={sortBy} onValueChange={handleSortChange}>
+                  <SelectTrigger className="w-[180px] bg-background">
+                    <SelectValue placeholder="Sort by..." />
+                  </SelectTrigger>
+                  <SelectContent className="bg-background border z-50">
+                    <SelectItem value="rank">Rank (High to Low)</SelectItem>
+                    <SelectItem value="price">Price (Low to High)</SelectItem>
+                    <SelectItem value="name">Name (A-Z)</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+            
+            {/* Select All */}
+            {sortedDomains && sortedDomains.length > 0 && (
+              <div className="flex items-center gap-2">
+                <Checkbox
+                  id="select-all"
+                  checked={selectedDomains.length === sortedDomains.length}
+                  onCheckedChange={handleSelectAll}
+                />
+                <label htmlFor="select-all" className="text-sm font-medium">
+                  Select All
+                </label>
+              </div>
+            )}
+          </div>
         </div>
         
         {/* Results Grid */}
-        {domains && domains.length > 0 ? (
+        {sortedDomains && sortedDomains.length > 0 ? (
           <>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-              {domains.map((domain) => {
+              {sortedDomains.map((domain) => {
                 const domainFeedback = feedback[domain.name];
                 const isSelected = selectedDomains.includes(domain.name);
                 const rankingScore = getRankingScore(domain);
