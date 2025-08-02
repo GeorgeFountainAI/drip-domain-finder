@@ -1,11 +1,13 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ArrowLeft, ExternalLink, ThumbsUp, ThumbsDown, ShoppingCart } from "lucide-react";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { ArrowLeft, ExternalLink, ThumbsUp, ThumbsDown, ShoppingCart, ChevronDown } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 
 interface Domain {
   name: string;
@@ -25,6 +27,14 @@ interface DomainResultsProps {
   hasMore?: boolean;
   onLoadMore?: () => void;
   isLoadingMore?: boolean;
+  query?: string;
+  onSearchAgain?: (keyword: string) => void;
+}
+
+interface SearchHistoryItem {
+  id: string;
+  keyword: string;
+  created_at: string;
 }
 
 type FeedbackType = 'like' | 'dislike' | null;
@@ -35,10 +45,15 @@ export const DomainResults: React.FC<DomainResultsProps> = ({
   onAddToCart,
   onBack,
   isLoading,
+  query,
+  onSearchAgain,
 }) => {
   const [selectedDomains, setSelectedDomains] = useState<string[]>([]);
   const [feedback, setFeedback] = useState<Record<string, FeedbackType>>({});
   const [sortBy, setSortBy] = useState<SortOption>('rank');
+  const [searchHistory, setSearchHistory] = useState<SearchHistoryItem[]>([]);
+  const [isHistoryOpen, setIsHistoryOpen] = useState(false);
+  const [user, setUser] = useState<any>(null);
 
   // Impact deep link base URL
   const IMPACT_DEEP_LINK_BASE = "https://spaceship.sjv.io/c/6354443/2873271/21274?u=";
@@ -70,6 +85,26 @@ export const DomainResults: React.FC<DomainResultsProps> = ({
     }
   };
 
+  // Save feedback to Supabase
+  const saveFeedbackToSupabase = async (domainName: string, feedbackType: 'like' | 'dislike') => {
+    try {
+      const { error } = await supabase
+        .from('feedback')
+        .upsert({
+          domain_name: domainName,
+          user_id: user?.id || null,
+          feedback_type: feedbackType,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        });
+
+      if (error) throw error;
+      console.log("✅ Feedback saved");
+    } catch (error) {
+      console.error("❌ Supabase error", error);
+    }
+  };
+
   const handleFeedback = (domainName: string, feedbackType: FeedbackType) => {
     setFeedback(prev => ({
       ...prev,
@@ -78,8 +113,10 @@ export const DomainResults: React.FC<DomainResultsProps> = ({
     
     if (feedbackType === 'like') {
       console.log(`👍 Liked ${domainName}`);
+      saveFeedbackToSupabase(domainName, 'like');
     } else if (feedbackType === 'dislike') {
       console.log(`👎 Disliked ${domainName}`);
+      saveFeedbackToSupabase(domainName, 'dislike');
     }
   };
 
@@ -102,6 +139,92 @@ export const DomainResults: React.FC<DomainResultsProps> = ({
     setSortBy(value);
     console.log('📊 Sort changed to:', value);
   };
+
+  // Save search to history
+  const saveSearchToHistory = async (searchQuery: string) => {
+    if (!searchQuery?.trim()) return;
+    
+    try {
+      const { error } = await supabase
+        .from('search_history')
+        .insert({
+          keyword: searchQuery,
+          user_id: user?.id || null,
+          created_at: new Date().toISOString()
+        });
+
+      if (error) throw error;
+    } catch (error) {
+      console.error("❌ Supabase error", error);
+    }
+  };
+
+  // Load search history
+  const loadSearchHistory = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('search_history')
+        .select('id, keyword, created_at')
+        .eq('user_id', user?.id || null)
+        .order('created_at', { ascending: false })
+        .limit(5);
+
+      if (error) throw error;
+      setSearchHistory(data || []);
+    } catch (error) {
+      console.error("❌ Supabase error", error);
+      setSearchHistory([]);
+    }
+  };
+
+  const handleSearchAgain = (keyword: string) => {
+    if (onSearchAgain) {
+      onSearchAgain(keyword);
+    }
+  };
+
+  const formatRelativeTime = (timestamp: string): string => {
+    const now = new Date();
+    const time = new Date(timestamp);
+    const diffInSeconds = Math.floor((now.getTime() - time.getTime()) / 1000);
+
+    if (diffInSeconds < 60) return 'Just now';
+    if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)} minutes ago`;
+    if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)} hours ago`;
+    return `${Math.floor(diffInSeconds / 86400)} days ago`;
+  };
+
+  // Effects
+  useEffect(() => {
+    // Get current user
+    const getUser = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      setUser(user);
+    };
+    
+    getUser();
+
+    // Listen for auth changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      setUser(session?.user || null);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  useEffect(() => {
+    // Save search to history when component renders with a query
+    if (query && !isLoading) {
+      saveSearchToHistory(query);
+    }
+  }, [query, isLoading, user]);
+
+  useEffect(() => {
+    // Load search history when user changes
+    if (user !== null) { // Check for both logged in and anonymous users
+      loadSearchHistory();
+    }
+  }, [user]);
 
   const getRankingScore = (domain: Domain) => {
     return domain.flipScore || domain.trendStrength || Math.floor(Math.random() * 10) + 1;
@@ -203,6 +326,40 @@ export const DomainResults: React.FC<DomainResultsProps> = ({
             )}
           </div>
         </div>
+        
+        {/* Recent Searches */}
+        {searchHistory && searchHistory.length > 0 && (
+          <div className="mb-6">
+            <Collapsible open={isHistoryOpen} onOpenChange={setIsHistoryOpen}>
+              <CollapsibleTrigger asChild>
+                <Button variant="outline" className="w-full justify-between">
+                  🔍 Recent Searches ({searchHistory.length})
+                  <ChevronDown className={`h-4 w-4 transition-transform ${isHistoryOpen ? 'rotate-180' : ''}`} />
+                </Button>
+              </CollapsibleTrigger>
+              <CollapsibleContent className="mt-3">
+                <Card className="p-4">
+                  <div className="space-y-2">
+                    {searchHistory.map((item) => (
+                      <div key={item.id} className="flex items-center justify-between p-2 rounded-lg hover:bg-muted/50 transition-colors">
+                        <Button
+                          variant="ghost"
+                          className="flex-1 justify-start text-left h-auto p-2"
+                          onClick={() => handleSearchAgain(item.keyword)}
+                        >
+                          <span className="font-medium">{item.keyword}</span>
+                        </Button>
+                        <span className="text-xs text-muted-foreground">
+                          {formatRelativeTime(item.created_at)}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </Card>
+              </CollapsibleContent>
+            </Collapsible>
+          </div>
+        )}
         
         {/* Results Grid */}
         {sortedDomains && sortedDomains.length > 0 ? (
