@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Crown, Search, TrendingUp, Shield, Gem, Brain, Target, Mail, FileText, Users, Star, Zap, DollarSign, Calendar, Award, Droplets, Globe, ChevronRight, Play, BarChart3, Handshake, HelpCircle } from "lucide-react";
+import { Crown, Search, TrendingUp, Shield, Gem, Brain, Target, Mail, FileText, Users, Star, Zap, DollarSign, Calendar, Award, Droplets, Globe, ChevronRight, Play, BarChart3, HelpCircle } from "lucide-react";
 import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import appPreviewImage from "@/assets/app-preview.jpg";
@@ -12,6 +12,7 @@ import demoFrame3 from "@/assets/demo-frame-3-search.jpg";
 import domainDripLogo from "/lovable-uploads/54151200-6cf6-4c1b-b88a-bc150fc097c8.png";
 import FAQPreview from "@/components/FAQPreview";
 import CreditBalance from "@/components/CreditBalance";
+
 const LandingPage = () => {
   const [user, setUser] = useState(null);
 
@@ -35,6 +36,7 @@ const LandingPage = () => {
     });
     return () => subscription.unsubscribe();
   }, []);
+
   const features = [{
     icon: Crown,
     title: "Premium Domain Curation",
@@ -60,6 +62,7 @@ const LandingPage = () => {
     title: "Strategic Extensions",
     description: "Access to .com, .io, .ai, .tech domains plus emerging extensions perfect for your brand."
   }];
+
   const featuredDrops = [{
     category: "Tech",
     domains: ["CodeForge.ai", "TechVault.io", "DataStream.dev"],
@@ -73,6 +76,7 @@ const LandingPage = () => {
     domains: ["StudioCraft.com", "DesignVault.io", "BrandForge.co"],
     color: "from-accent to-primary"
   }];
+
   return <div className="min-h-screen bg-gradient-noir relative overflow-hidden">
       {/* Subtle background for watermark visibility */}
       <div className="fixed inset-0 z-0 bg-gradient-to-br from-background via-muted/30 to-background" />
@@ -351,22 +355,6 @@ const LandingPage = () => {
       {/* FAQ Preview Section */}
       <FAQPreview />
 
-      {/* Affiliate Partner CTA */}
-      <section className="py-16 px-4 bg-gradient-to-r from-primary/10 to-secondary/10">
-        <div className="container mx-auto max-w-4xl text-center">
-          <h3 className="text-2xl sm:text-3xl font-bold mb-4">
-            Become a DomainDrip Partner
-          </h3>
-          <p className="text-lg text-muted-foreground mb-6">
-            Earn 30% commission promoting premium domains to your network of entrepreneurs.
-          </p>
-          <Button size="lg" variant="outline" className="border-primary/30 hover:bg-primary/10">
-            <Handshake className="mr-2 h-5 w-5" />
-            Join Partner Program
-          </Button>
-        </div>
-      </section>
-
       {/* Footer */}
       <footer className="border-t border-primary/20 bg-background/80 backdrop-blur py-12 px-4">
         <div className="container mx-auto max-w-6xl">
@@ -432,4 +420,5 @@ const LandingPage = () => {
       </footer>
     </div>;
 };
+
 export default LandingPage;
