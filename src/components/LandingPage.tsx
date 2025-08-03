@@ -2,30 +2,7 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { 
-  Crown, 
-  Search, 
-  TrendingUp, 
-  Shield, 
-  Gem, 
-  Brain,
-  Target,
-  Mail,
-  FileText,
-  Users,
-  Star,
-  Zap,
-  DollarSign,
-  Calendar,
-  Award,
-  Droplets,
-  Globe,
-  ChevronRight,
-  Play,
-  BarChart3,
-  Handshake,
-  HelpCircle
-} from "lucide-react";
+import { Crown, Search, TrendingUp, Shield, Gem, Brain, Target, Mail, FileText, Users, Star, Zap, DollarSign, Calendar, Award, Droplets, Globe, ChevronRight, Play, BarChart3, Handshake, HelpCircle } from "lucide-react";
 import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import appPreviewImage from "@/assets/app-preview.jpg";
@@ -35,98 +12,80 @@ import demoFrame3 from "@/assets/demo-frame-3-search.jpg";
 import domainDripLogo from "/lovable-uploads/54151200-6cf6-4c1b-b88a-bc150fc097c8.png";
 import FAQPreview from "@/components/FAQPreview";
 import CreditBalance from "@/components/CreditBalance";
-
 const LandingPage = () => {
   const [user, setUser] = useState(null);
 
   // Check auth state
   useEffect(() => {
     const checkUser = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
+      const {
+        data: {
+          user
+        }
+      } = await supabase.auth.getUser();
       setUser(user);
     };
-
     checkUser();
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+    const {
+      data: {
+        subscription
+      }
+    } = supabase.auth.onAuthStateChange((event, session) => {
       setUser(session?.user ?? null);
     });
-
     return () => subscription.unsubscribe();
   }, []);
-  const features = [
-    {
-      icon: Crown,
-      title: "Premium Domain Curation",
-      description: "Hand-picked, brandable domains perfect for startups, entrepreneurs, and businesses across all industries."
-    },
-    {
-      icon: Brain,
-      title: "AI-Powered Intelligence",
-      description: "Advanced AI suggestions that understand market trends and generate high-value, brandable domain names."
-    },
-    {
-      icon: BarChart3,
-      title: "Flip Score & Valuation",
-      description: "Get instant domain valuations and flip potential scores to maximize your digital investment returns."
-    },
-    {
-      icon: Target,
-      title: "Smart Category Filters",
-      description: "Specialized search filters for tech startups, e-commerce, finance, creative agencies, and more."
-    },
-    {
-      icon: Shield,
-      title: "Verified Marketplace",
-      description: "Secure purchasing through trusted registrars with verification for premium domain authenticity."
-    },
-    {
-      icon: Globe,
-      title: "Strategic Extensions",
-      description: "Access to .com, .io, .ai, .tech domains plus emerging extensions perfect for your brand."
-    }
-  ];
-
-  const featuredDrops = [
-    {
-      category: "Tech",
-      domains: ["CodeForge.ai", "TechVault.io", "DataStream.dev"],
-      color: "from-primary to-primary-glow"
-    },
-    {
-      category: "Finance",
-      domains: ["WealthBuilder.com", "FinanceFlow.co", "InvestSmart.io"],
-      color: "from-secondary to-primary"
-    },
-    {
-      category: "Creative",
-      domains: ["StudioCraft.com", "DesignVault.io", "BrandForge.co"],
-      color: "from-accent to-primary"
-    }
-  ];
-
-  return (
-    <div className="min-h-screen bg-gradient-noir relative overflow-hidden">
+  const features = [{
+    icon: Crown,
+    title: "Premium Domain Curation",
+    description: "Hand-picked, brandable domains perfect for startups, entrepreneurs, and businesses across all industries."
+  }, {
+    icon: Brain,
+    title: "AI-Powered Intelligence",
+    description: "Advanced AI suggestions that understand market trends and generate high-value, brandable domain names."
+  }, {
+    icon: BarChart3,
+    title: "Flip Score & Valuation",
+    description: "Get instant domain valuations and flip potential scores to maximize your digital investment returns."
+  }, {
+    icon: Target,
+    title: "Smart Category Filters",
+    description: "Specialized search filters for tech startups, e-commerce, finance, creative agencies, and more."
+  }, {
+    icon: Shield,
+    title: "Verified Marketplace",
+    description: "Secure purchasing through trusted registrars with verification for premium domain authenticity."
+  }, {
+    icon: Globe,
+    title: "Strategic Extensions",
+    description: "Access to .com, .io, .ai, .tech domains plus emerging extensions perfect for your brand."
+  }];
+  const featuredDrops = [{
+    category: "Tech",
+    domains: ["CodeForge.ai", "TechVault.io", "DataStream.dev"],
+    color: "from-primary to-primary-glow"
+  }, {
+    category: "Finance",
+    domains: ["WealthBuilder.com", "FinanceFlow.co", "InvestSmart.io"],
+    color: "from-secondary to-primary"
+  }, {
+    category: "Creative",
+    domains: ["StudioCraft.com", "DesignVault.io", "BrandForge.co"],
+    color: "from-accent to-primary"
+  }];
+  return <div className="min-h-screen bg-gradient-noir relative overflow-hidden">
       {/* Subtle background for watermark visibility */}
       <div className="fixed inset-0 z-0 bg-gradient-to-br from-background via-muted/30 to-background" />
       
       {/* Background Logo Watermark - Now clearly visible */}
       <div className="fixed inset-0 z-0 flex items-center justify-center pointer-events-none">
-        <img 
-          src={domainDripLogo} 
-          alt="" 
-          className="w-[70vw] h-[70vh] object-contain opacity-[0.25] rotate-12 scale-150 mix-blend-overlay"
-        />
+        <img src={domainDripLogo} alt="" className="w-[70vw] h-[70vh] object-contain opacity-[0.25] rotate-12 scale-150 mix-blend-overlay" />
       </div>
       {/* Header */}
       <header className="sticky top-0 z-40 w-full border-b border-primary/20 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <div className="container flex h-16 items-center justify-between px-4">
           <div className="flex items-center gap-2">
-            <img 
-              src={domainDripLogo} 
-              alt="DomainDrip Logo" 
-              className="h-8 w-8"
-            />
+            <img src={domainDripLogo} alt="DomainDrip Logo" className="h-8 w-8" />
             <span className="text-lg sm:text-xl font-bold bg-gradient-primary bg-clip-text text-transparent">
               DomainDrip
             </span>
@@ -199,21 +158,9 @@ const LandingPage = () => {
                 <div className="relative rounded-xl overflow-hidden bg-gradient-card">
                   {/* Demo Slideshow */}
                   <div className="relative w-full h-auto">
-                    <img 
-                      src={demoFrame1}
-                      alt="DomainDrip Premium Access Demo" 
-                      className="w-full h-auto object-cover rounded-lg transition-opacity duration-500 group-hover:opacity-0"
-                    />
-                    <img 
-                      src={demoFrame2}
-                      alt="DomainDrip Credit System Demo" 
-                      className="absolute inset-0 w-full h-auto object-cover rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-500 delay-1000"
-                    />
-                    <img 
-                      src={demoFrame3}
-                      alt="DomainDrip AI Search Demo" 
-                      className="absolute inset-0 w-full h-auto object-cover rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-500 delay-2000"
-                    />
+                    <img src={demoFrame1} alt="DomainDrip Premium Access Demo" className="w-full h-auto object-cover rounded-lg transition-opacity duration-500 group-hover:opacity-0" />
+                    <img src={demoFrame2} alt="DomainDrip Credit System Demo" className="absolute inset-0 w-full h-auto object-cover rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-500 delay-1000" />
+                    <img src={demoFrame3} alt="DomainDrip AI Search Demo" className="absolute inset-0 w-full h-auto object-cover rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-500 delay-2000" />
                   </div>
                   
                   {/* Enhanced indicators with gold accents */}
@@ -266,8 +213,7 @@ const LandingPage = () => {
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-12">
-            {featuredDrops.map((drop, index) => (
-              <Card key={index} className="border border-primary/20 bg-card/80 backdrop-blur hover:shadow-elevated transition-all duration-300 group">
+            {featuredDrops.map((drop, index) => <Card key={index} className="border border-primary/20 bg-card/80 backdrop-blur hover:shadow-elevated transition-all duration-300 group">
                 <CardHeader>
                   <div className={`h-12 w-12 rounded-lg bg-gradient-to-r ${drop.color} flex items-center justify-center mb-4 group-hover:scale-110 transition-transform`}>
                     <Gem className="h-6 w-6 text-white" />
@@ -276,19 +222,16 @@ const LandingPage = () => {
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-3">
-                    {drop.domains.map((domain, domainIndex) => (
-                      <div key={domainIndex} className="flex items-center justify-between p-3 rounded-lg bg-background/50 border border-primary/10">
+                    {drop.domains.map((domain, domainIndex) => <div key={domainIndex} className="flex items-center justify-between p-3 rounded-lg bg-background/50 border border-primary/10">
                         <span className="font-mono text-sm">{domain}</span>
                         <Badge variant="outline" className="text-xs bg-primary/10">Available</Badge>
-                      </div>
-                    ))}
+                      </div>)}
                   </div>
                   <Button className="w-full mt-4 bg-primary/10 hover:bg-primary/20 text-primary border border-primary/30">
                     View All {drop.category} Domains
                   </Button>
                 </CardContent>
-              </Card>
-            ))}
+              </Card>)}
           </div>
 
           <div className="text-center">
@@ -315,8 +258,7 @@ const LandingPage = () => {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {features.map((feature, index) => (
-              <Card key={index} className="border border-primary/20 bg-card/80 backdrop-blur hover:bg-card/90 transition-all duration-300 group">
+            {features.map((feature, index) => <Card key={index} className="border border-primary/20 bg-card/80 backdrop-blur hover:bg-card/90 transition-all duration-300 group">
                 <CardHeader>
                   <div className="h-14 w-14 rounded-xl bg-primary/15 flex items-center justify-center mb-4 group-hover:bg-primary/25 transition-colors">
                     <feature.icon className="h-7 w-7 text-primary" />
@@ -328,8 +270,7 @@ const LandingPage = () => {
                     {feature.description}
                   </CardDescription>
                 </CardContent>
-              </Card>
-            ))}
+              </Card>)}
           </div>
         </div>
       </section>
@@ -501,13 +442,11 @@ const LandingPage = () => {
           </div>
 
           <div className="border-t border-primary/20 mt-12 pt-8 text-center text-sm text-muted-foreground">
-            <p>&copy; 2024 DomainDrip. Discover, Buy & Flip Domain Names Powered by AI.</p>
+            <p>© 2025 DomainDrip. Discover, Buy & Flip Domain Names Powered by AI.</p>
             <p className="mt-2 text-xs">Built with intelligence for digital entrepreneurs worldwide.</p>
           </div>
         </div>
       </footer>
-    </div>
-  );
+    </div>;
 };
-
 export default LandingPage;
