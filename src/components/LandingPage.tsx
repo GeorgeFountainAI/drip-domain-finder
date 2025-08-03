@@ -315,9 +315,6 @@ const LandingPage = () => {
       {/* Strategy Session CTA */}
       <section className="py-20 px-4 bg-background/30">
         <div className="container mx-auto max-w-4xl text-center">
-          <h2 className="text-4xl sm:text-5xl font-bold mb-6">
-            Ready to Build Your Empire?
-          </h2>
           <p className="text-xl text-muted-foreground mb-8">
             Book a 1-on-1 strategy session with our domain experts to plan your digital expansion.
           </p>
