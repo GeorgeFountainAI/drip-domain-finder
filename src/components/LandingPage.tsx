@@ -390,25 +390,8 @@ const LandingPage = () => {
 
             {/* Contact */}
             <div className="space-y-4">
-              <h3 className="font-semibold">Contact</h3>
-              <ul className="space-y-2 text-sm text-muted-foreground">
-                <li>
-                  <a href="mailto:support@domaindrip.com" className="hover:text-primary transition-colors flex items-center gap-2">
-                    <Mail className="h-4 w-4" />
-                    Support & Partnerships
-                  </a>
-                </li>
-                <li>
-                  <Link to="/strategy" className="hover:text-primary transition-colors">
-                    Strategy Sessions
-                  </Link>
-                </li>
-                <li>
-                  <Link to="/partner" className="hover:text-primary transition-colors">
-                    Partner Program
-                  </Link>
-                </li>
-              </ul>
+              <h3 className="font-semibold">Contact Us</h3>
+              
             </div>
 
             {/* Legal */}
