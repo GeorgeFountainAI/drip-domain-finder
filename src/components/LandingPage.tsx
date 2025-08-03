@@ -304,31 +304,18 @@ const LandingPage = () => {
               <span>• Premium extension</span>
             </div>
           </div>
-
-          <Button size="lg" variant="outline" className="border-secondary/30 hover:bg-secondary/10 text-secondary">
-            Join Early Access Waitlist
-            <Star className="ml-2 h-5 w-5" />
-          </Button>
         </div>
       </section>
 
       {/* Strategy Session CTA */}
       <section className="py-20 px-4 bg-background/30">
         <div className="container mx-auto max-w-4xl text-center">
-          <p className="text-xl text-muted-foreground mb-8">
-            Book a 1-on-1 strategy session with our domain experts to plan your digital expansion.
-          </p>
-          
           <div className="flex flex-col sm:flex-row gap-4 justify-center mb-12">
             <Button asChild size="lg" className="text-lg px-8 py-6 bg-primary hover:bg-primary/90 text-primary-foreground">
               <Link to="/auth">
                 Start Searching Domains
                 <Search className="ml-2 h-5 w-5" />
               </Link>
-            </Button>
-            <Button size="lg" variant="outline" className="text-lg px-8 py-6 border-primary/30 hover:bg-primary/10">
-              Book Strategy Session
-              <Calendar className="ml-2 h-5 w-5" />
             </Button>
           </div>
           
