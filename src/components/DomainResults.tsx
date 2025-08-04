@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { ArrowLeft, ExternalLink, ThumbsUp, ThumbsDown, ShoppingCart, ChevronDown } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -226,6 +227,47 @@ export const DomainResults: React.FC<DomainResultsProps> = ({
     }
   }, [user]);
 
+  // Normalize flip score to 1-10 scale
+  const normalizeFlipScore = (rawScore: number): number => {
+    if (rawScore <= 10) return rawScore; // Already on 1-10 scale
+    return Math.round(rawScore / 10); // Normalize from 1-100 to 1-10
+  };
+
+  // Get flip score badge properties
+  const getFlipScoreBadge = (domain: Domain) => {
+    if (!domain.flipScore) return null;
+    
+    const normalizedScore = normalizeFlipScore(domain.flipScore);
+    
+    if (normalizedScore >= 1 && normalizedScore <= 3) {
+      return {
+        score: normalizedScore,
+        className: "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300",
+        tooltip: "Low resale potential"
+      };
+    } else if (normalizedScore >= 4 && normalizedScore <= 6) {
+      return {
+        score: normalizedScore,
+        className: "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-300",
+        tooltip: "Moderate resale potential"
+      };
+    } else if (normalizedScore >= 7 && normalizedScore <= 8) {
+      return {
+        score: normalizedScore,
+        className: "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300",
+        tooltip: "High resale potential"
+      };
+    } else if (normalizedScore >= 9 && normalizedScore <= 10) {
+      return {
+        score: normalizedScore,
+        className: "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300",
+        tooltip: "Premium flip candidate"
+      };
+    }
+    
+    return null;
+  };
+
   const getRankingScore = (domain: Domain) => {
     return domain.flipScore || domain.trendStrength || Math.floor(Math.random() * 10) + 1;
   };
@@ -364,96 +406,112 @@ export const DomainResults: React.FC<DomainResultsProps> = ({
         {/* Results Grid */}
         {sortedDomains && sortedDomains.length > 0 ? (
           <>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-              {sortedDomains.map((domain) => {
-                const domainFeedback = feedback[domain.name];
-                const isSelected = selectedDomains.includes(domain.name);
-                const rankingScore = getRankingScore(domain);
-                
-                return (
-                  <Card 
-                    key={domain.name}
-                    className={`group hover:shadow-lg transition-all duration-300 hover:scale-105 border-border ${
-                      isSelected ? 'ring-2 ring-primary bg-muted/50' : ''
-                    }`}
-                  >
-                    <CardContent className="p-6">
-                      <div className="space-y-4">
-                        {/* Selection Checkbox */}
-                        <div className="flex items-start justify-between">
-                          <Checkbox
-                            id={`select-${domain.name}`}
-                            checked={isSelected}
-                            onCheckedChange={(checked) => handleDomainSelection(domain.name, checked as boolean)}
-                          />
-                        </div>
-                        
-                        {/* Domain Name & Ranking */}
-                        <div className="space-y-2">
-                          <div className="flex items-center gap-2 flex-wrap">
-                            <h3 className="text-xl font-bold text-foreground group-hover:text-primary transition-colors">
-                              {domain.name}
-                            </h3>
-                            <Badge variant="secondary" className="text-xs">
-                              {domain.flipScore ? `Flip Score: ${rankingScore}` : `Rank: ${rankingScore}/10`}
-                            </Badge>
+            <TooltipProvider>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+                {sortedDomains.map((domain) => {
+                  const domainFeedback = feedback[domain.name];
+                  const isSelected = selectedDomains.includes(domain.name);
+                  const rankingScore = getRankingScore(domain);
+                  const flipScoreBadge = getFlipScoreBadge(domain);
+                  
+                  return (
+                    <Card 
+                      key={domain.name}
+                      className={`group hover:shadow-lg transition-all duration-300 hover:scale-105 border-border ${
+                        isSelected ? 'ring-2 ring-primary bg-muted/50' : ''
+                      }`}
+                    >
+                      <CardContent className="p-6">
+                        <div className="space-y-4">
+                          {/* Selection Checkbox */}
+                          <div className="flex items-start justify-between">
+                            <Checkbox
+                              id={`select-${domain.name}`}
+                              checked={isSelected}
+                              onCheckedChange={(checked) => handleDomainSelection(domain.name, checked as boolean)}
+                            />
                           </div>
-                        </div>
-                        
-                        {/* Availability & Price */}
-                        <div className="space-y-1">
-                          <p className="text-sm font-medium text-green-600">
-                            ✓ Available
-                          </p>
-                          <p className="text-sm text-muted-foreground">
-                            ${domain.price.toFixed(2)}/year
-                          </p>
-                        </div>
-                        
-                        {/* Feedback Buttons */}
-                        <div className="flex items-center gap-2">
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleFeedback(domain.name, 'like')}
-                            className={`p-2 h-8 w-8 ${
-                              domainFeedback === 'like' 
-                                ? 'bg-green-100 text-green-600 hover:bg-green-200' 
-                                : 'text-muted-foreground hover:text-green-600'
-                            }`}
-                          >
-                            <ThumbsUp className="h-4 w-4" fill={domainFeedback === 'like' ? 'currentColor' : 'none'} />
-                          </Button>
                           
+                          {/* Domain Name & Badges */}
+                          <div className="space-y-2">
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <h3 className="text-xl font-bold text-foreground group-hover:text-primary transition-colors">
+                                {domain.name}
+                              </h3>
+                              {flipScoreBadge ? (
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <Badge className={`text-xs cursor-help ${flipScoreBadge.className}`}>
+                                      Flip Score: {flipScoreBadge.score}/10
+                                    </Badge>
+                                  </TooltipTrigger>
+                                  <TooltipContent>
+                                    <p>{flipScoreBadge.tooltip}</p>
+                                  </TooltipContent>
+                                </Tooltip>
+                              ) : (
+                                <Badge variant="secondary" className="text-xs">
+                                  Rank: {rankingScore}/10
+                                </Badge>
+                              )}
+                            </div>
+                          </div>
+                          
+                          {/* Availability & Price */}
+                          <div className="space-y-1">
+                            <p className="text-sm font-medium text-green-600">
+                              ✓ Available
+                            </p>
+                            <p className="text-sm text-muted-foreground">
+                              ${domain.price.toFixed(2)}/year
+                            </p>
+                          </div>
+                          
+                          {/* Feedback Buttons */}
+                          <div className="flex items-center gap-2">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleFeedback(domain.name, 'like')}
+                              className={`p-2 h-8 w-8 ${
+                                domainFeedback === 'like' 
+                                  ? 'bg-green-100 text-green-600 hover:bg-green-200' 
+                                  : 'text-muted-foreground hover:text-green-600'
+                              }`}
+                            >
+                              <ThumbsUp className="h-4 w-4" fill={domainFeedback === 'like' ? 'currentColor' : 'none'} />
+                            </Button>
+                            
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleFeedback(domain.name, 'dislike')}
+                              className={`p-2 h-8 w-8 ${
+                                domainFeedback === 'dislike' 
+                                  ? 'bg-red-100 text-red-600 hover:bg-red-200' 
+                                  : 'text-muted-foreground hover:text-red-600'
+                              }`}
+                            >
+                              <ThumbsDown className="h-4 w-4" fill={domainFeedback === 'dislike' ? 'currentColor' : 'none'} />
+                            </Button>
+                          </div>
+                          
+                          {/* Buy Button */}
                           <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleFeedback(domain.name, 'dislike')}
-                            className={`p-2 h-8 w-8 ${
-                              domainFeedback === 'dislike' 
-                                ? 'bg-red-100 text-red-600 hover:bg-red-200' 
-                                : 'text-muted-foreground hover:text-red-600'
-                            }`}
+                            onClick={() => handleBuyNow(domain.name)}
+                            className="w-full bg-primary text-primary-foreground hover:bg-primary/90 font-semibold rounded-lg transition-all duration-200 gap-2"
+                            size="lg"
                           >
-                            <ThumbsDown className="h-4 w-4" fill={domainFeedback === 'dislike' ? 'currentColor' : 'none'} />
+                            BUY NOW
+                            <ExternalLink className="h-4 w-4" />
                           </Button>
                         </div>
-                        
-                        {/* Buy Button */}
-                        <Button
-                          onClick={() => handleBuyNow(domain.name)}
-                          className="w-full bg-primary text-primary-foreground hover:bg-primary/90 font-semibold rounded-lg transition-all duration-200 gap-2"
-                          size="lg"
-                        >
-                          BUY NOW
-                          <ExternalLink className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </CardContent>
-                  </Card>
-                );
-              })}
-            </div>
+                      </CardContent>
+                    </Card>
+                  );
+                })}
+              </div>
+            </TooltipProvider>
             
             {/* Buy Selected Domains Button */}
             {selectedDomains.length > 0 && (
