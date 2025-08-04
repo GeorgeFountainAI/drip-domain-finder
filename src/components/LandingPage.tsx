@@ -2,7 +2,8 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Crown, Search, TrendingUp, Shield, Gem, Brain, Target, Mail, FileText, Users, Star, Zap, DollarSign, Calendar, Award, Droplets, Globe, ChevronRight, Play, BarChart3, HelpCircle } from "lucide-react";
+import { Crown, Search, TrendingUp, Shield, Gem, Brain, Target, Mail, FileText, Users, Star, Zap, DollarSign, Calendar, Award, Droplets, Globe, ChevronRight, Play, BarChart3, HelpCircle, Info } from "lucide-react";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import appPreviewImage from "@/assets/app-preview.jpg";
@@ -15,6 +16,52 @@ import CreditBalance from "@/components/CreditBalance";
 
 const LandingPage = () => {
   const [user, setUser] = useState(null);
+
+  // FlipScore utility functions
+  const normalizeFlipScore = (rawScore: number): number => {
+    if (rawScore <= 10) return rawScore; // Already on 1-10 scale
+    return Math.round(rawScore / 10); // Normalize from 1-100 to 1-10
+  };
+
+  const getFlipScoreBadge = (score: number) => {
+    const normalizedScore = normalizeFlipScore(score);
+    
+    if (normalizedScore >= 1 && normalizedScore <= 3) {
+      return {
+        score: normalizedScore,
+        className: "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300",
+        tooltip: "This domain has limited resale or branding value. Best for personal use only.",
+        label: "Low Potential",
+        emoji: "🔴"
+      };
+    } else if (normalizedScore >= 4 && normalizedScore <= 6) {
+      return {
+        score: normalizedScore,
+        className: "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-300",
+        tooltip: "Some value in niche markets. Could grow with the right brand or audience.",
+        label: "Moderate",
+        emoji: "🟠"
+      };
+    } else if (normalizedScore >= 7 && normalizedScore <= 8) {
+      return {
+        score: normalizedScore,
+        className: "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300",
+        tooltip: "Strong brandability and market appeal. Good flip or investment candidate.",
+        label: "High Potential",
+        emoji: "🟢"
+      };
+    } else if (normalizedScore >= 9 && normalizedScore <= 10) {
+      return {
+        score: normalizedScore,
+        className: "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300",
+        tooltip: "Top-tier potential. Ideal for resale, premium branding, or long-term value.",
+        label: "Premium",
+        emoji: "🔵"
+      };
+    }
+    
+    return null;
+  };
 
   // Check auth state
   useEffect(() => {
@@ -282,28 +329,49 @@ const LandingPage = () => {
       {/* Flip Score Preview */}
       <section className="py-20 px-4">
         <div className="container mx-auto max-w-4xl text-center">
-          <Badge variant="outline" className="mb-6 bg-secondary/15 border-secondary/30 text-secondary">
-            <BarChart3 className="h-3 w-3 mr-1" />
-            Coming Soon
-          </Badge>
-          
-          <h2 className="text-4xl sm:text-5xl font-bold mb-6">
-            Flip Score & Valuation Tool
-          </h2>
-          <p className="text-xl text-muted-foreground mb-8 max-w-3xl mx-auto">
-            Get instant ROI projections and market analysis for any domain. Know exactly what you're buying 
-            and its potential before you invest.
-          </p>
-          
-          <div className="bg-card/60 rounded-2xl border border-primary/20 p-8 mb-8">
-            <div className="text-4xl font-bold text-primary mb-2">FlipScore: 94/100</div>
-            <div className="text-lg text-muted-foreground mb-4">Projected 6-month value: $12,500 - $25,000</div>
-            <div className="flex justify-center gap-4 text-sm text-muted-foreground">
-              <span>• High brandability</span>
-              <span>• Growing market trend</span>
-              <span>• Premium extension</span>
+          <TooltipProvider>
+            <h2 className="text-4xl sm:text-5xl font-bold mb-6 text-foreground">
+              Flip Score & Valuation Tool
+            </h2>
+            <p className="text-xl text-foreground/80 mb-8 max-w-3xl mx-auto">
+              Get instant ROI projections and market analysis for any domain. Know exactly what you're buying 
+              and its potential before you invest.
+            </p>
+            
+            <div className="bg-card/60 rounded-2xl border border-primary/20 p-8 mb-8">
+              {(() => {
+                const flipScoreBadge = getFlipScoreBadge(94); // Using example score of 94 (which normalizes to 9)
+                return (
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-center gap-3">
+                      <div className="text-4xl font-bold text-foreground">FlipScore:</div>
+                      {flipScoreBadge && (
+                        <div className="flex items-center gap-2">
+                          <Badge className={`text-lg px-4 py-2 ${flipScoreBadge.className}`}>
+                            {flipScoreBadge.emoji} {flipScoreBadge.score}/10 - {flipScoreBadge.label}
+                          </Badge>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Info className="h-5 w-5 text-muted-foreground cursor-help hover:text-foreground transition-colors" />
+                            </TooltipTrigger>
+                            <TooltipContent className="max-w-xs">
+                              <p>{flipScoreBadge.tooltip}</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        </div>
+                      )}
+                    </div>
+                    <div className="text-lg text-foreground/70 mb-4">Projected 6-month value: $12,500 - $25,000</div>
+                    <div className="flex justify-center gap-4 text-sm text-foreground/60">
+                      <span>• High brandability</span>
+                      <span>• Growing market trend</span>
+                      <span>• Premium extension</span>
+                    </div>
+                  </div>
+                );
+              })()}
             </div>
-          </div>
+          </TooltipProvider>
         </div>
       </section>
 
