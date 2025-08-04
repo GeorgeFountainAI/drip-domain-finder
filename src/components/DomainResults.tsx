@@ -302,7 +302,7 @@ export const DomainResults: React.FC<DomainResultsProps> = ({
                   <SelectTrigger className="w-[180px] bg-background">
                     <SelectValue placeholder="Sort by..." />
                   </SelectTrigger>
-                  <SelectContent className="bg-background border z-50">
+                  <SelectContent className="bg-popover border z-50">
                     <SelectItem value="rank">Rank (High to Low)</SelectItem>
                     <SelectItem value="price">Price (Low to High)</SelectItem>
                     <SelectItem value="name">Name (A-Z)</SelectItem>
@@ -402,7 +402,7 @@ export const DomainResults: React.FC<DomainResultsProps> = ({
                         
                         {/* Availability & Price */}
                         <div className="space-y-1">
-                          <p className="text-sm font-medium text-green-600 dark:text-green-400">
+                          <p className="text-sm font-medium text-green-600">
                             ✓ Available
                           </p>
                           <p className="text-sm text-muted-foreground">
@@ -418,7 +418,7 @@ export const DomainResults: React.FC<DomainResultsProps> = ({
                             onClick={() => handleFeedback(domain.name, 'like')}
                             className={`p-2 h-8 w-8 ${
                               domainFeedback === 'like' 
-                                ? 'bg-green-100 text-green-600 hover:bg-green-200 dark:bg-green-900 dark:text-green-400' 
+                                ? 'bg-green-100 text-green-600 hover:bg-green-200' 
                                 : 'text-muted-foreground hover:text-green-600'
                             }`}
                           >
@@ -431,7 +431,7 @@ export const DomainResults: React.FC<DomainResultsProps> = ({
                             onClick={() => handleFeedback(domain.name, 'dislike')}
                             className={`p-2 h-8 w-8 ${
                               domainFeedback === 'dislike' 
-                                ? 'bg-red-100 text-red-600 hover:bg-red-200 dark:bg-red-900 dark:text-red-400' 
+                                ? 'bg-red-100 text-red-600 hover:bg-red-200' 
                                 : 'text-muted-foreground hover:text-red-600'
                             }`}
                           >
@@ -442,7 +442,7 @@ export const DomainResults: React.FC<DomainResultsProps> = ({
                         {/* Buy Button */}
                         <Button
                           onClick={() => handleBuyNow(domain.name)}
-                          className="w-full bg-orange-500 hover:bg-orange-600 text-white font-semibold rounded-lg transition-all duration-200 gap-2"
+                          className="w-full bg-primary text-primary-foreground hover:bg-primary/90 font-semibold rounded-lg transition-all duration-200 gap-2"
                           size="lg"
                         >
                           BUY NOW
@@ -461,7 +461,7 @@ export const DomainResults: React.FC<DomainResultsProps> = ({
                 <Button
                   onClick={handleBuySelected}
                   size="lg"
-                  className="bg-orange-500 hover:bg-orange-600 text-white shadow-lg gap-2"
+                  className="bg-primary text-primary-foreground hover:bg-primary/90 shadow-lg gap-2"
                 >
                   <ShoppingCart className="h-5 w-5" />
                   Buy Selected Domains ({selectedDomains.length})
