@@ -333,10 +333,10 @@ const LandingPage = () => {
       <section className="py-20 px-4">
         <div className="container mx-auto max-w-4xl text-center">
           <TooltipProvider>
-            <h2 className="text-4xl sm:text-5xl font-bold mb-6 text-foreground">
+            <h2 className="text-4xl sm:text-5xl font-bold mb-6" style={{color: '#222'}}>
               Flip Score & Valuation Tool
             </h2>
-            <p className="text-xl text-foreground/80 mb-8 max-w-3xl mx-auto">
+            <p className="text-xl mb-8 max-w-3xl mx-auto" style={{color: '#333'}}>
               Get instant ROI projections and market analysis for any domain. Know exactly what you're buying 
               and its potential before you invest.
             </p>
@@ -364,8 +364,8 @@ const LandingPage = () => {
                         </div>
                       )}
                     </div>
-                    <div className="text-lg text-foreground/70 mb-4">Projected 6-month value: $12,500 - $25,000</div>
-                    <div className="flex justify-center gap-4 text-sm text-foreground/60">
+                    <div className="text-lg mb-4" style={{color: '#333'}}>Projected 6-month value: $12,500 - $25,000</div>
+                    <div className="flex justify-center gap-4 text-sm" style={{color: '#444'}}>
                       <span>• High brandability</span>
                       <span>• Growing market trend</span>
                       <span>• Premium extension</span>
