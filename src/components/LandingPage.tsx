@@ -347,7 +347,7 @@ const LandingPage = () => {
                 return (
                   <div className="space-y-4">
                     <div className="flex items-center justify-center gap-3">
-                      <div className="text-4xl font-bold text-foreground">FlipScore:</div>
+                      <div className="text-4xl font-bold" style={{color: '#222'}}>FlipScore:</div>
                       {flipScoreBadge && (
                         <div className="flex items-center gap-2">
                           <Badge className={`text-lg px-4 py-2 ${flipScoreBadge.className}`}>
