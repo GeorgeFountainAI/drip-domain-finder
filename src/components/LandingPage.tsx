@@ -252,33 +252,36 @@ const LandingPage = () => {
       </section>
 
       {/* Featured Drops Section */}
-      <section id="featured-drops" className="py-20 px-4 bg-background/30">
-        <div className="container mx-auto max-w-6xl">
+      <section id="featured-drops" className="py-20 px-4 bg-background/30 relative">
+        {/* Semi-transparent overlay for better text contrast */}
+        <div className="absolute inset-0 bg-gradient-to-br from-background/90 via-background/60 to-background/80 z-0"></div>
+        
+        <div className="container mx-auto max-w-6xl relative z-10">
           <div className="text-center mb-16">
-            <h2 className="text-4xl sm:text-5xl font-bold mb-6">
+            <h2 className="text-4xl sm:text-5xl font-bold mb-6 text-foreground" style={{color: '#222'}}>
               Latest Premium Drops
             </h2>
-            <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
+            <p className="text-xl max-w-3xl mx-auto" style={{color: '#333'}}>
               Handpicked domains across key industries where entrepreneurs are building their digital empires.
             </p>
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-12">
-            {featuredDrops.map((drop, index) => <Card key={index} className="border border-primary/20 bg-card/80 backdrop-blur hover:shadow-elevated transition-all duration-300 group">
+            {featuredDrops.map((drop, index) => <Card key={index} className="border border-primary/30 bg-card/95 backdrop-blur hover:shadow-xl transition-all duration-300 group shadow-md">
                 <CardHeader>
-                  <div className={`h-12 w-12 rounded-lg bg-gradient-to-r ${drop.color} flex items-center justify-center mb-4 group-hover:scale-110 transition-transform`}>
+                  <div className={`h-12 w-12 rounded-lg bg-gradient-to-r ${drop.color} flex items-center justify-center mb-4 group-hover:scale-110 transition-transform shadow-lg`}>
                     <Gem className="h-6 w-6 text-white" />
                   </div>
-                  <CardTitle className="text-2xl text-primary">{drop.category}</CardTitle>
+                  <CardTitle className="text-2xl text-primary" style={{color: '#222'}}>{drop.category}</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-3">
-                    {drop.domains.map((domain, domainIndex) => <div key={domainIndex} className="flex items-center justify-between p-3 rounded-lg bg-background/50 border border-primary/10">
-                        <span className="font-mono text-sm">{domain}</span>
-                        <Badge variant="outline" className="text-xs bg-primary/10">Available</Badge>
+                    {drop.domains.map((domain, domainIndex) => <div key={domainIndex} className="flex items-center justify-between p-3 rounded-lg bg-background/80 border border-primary/20 shadow-sm">
+                        <span className="font-mono text-sm" style={{color: '#333'}}>{domain}</span>
+                        <Badge variant="outline" className="text-xs bg-primary/20 border-primary/40" style={{color: '#222'}}>Available</Badge>
                       </div>)}
                   </div>
-                  <Button className="w-full mt-4 bg-primary/10 hover:bg-primary/20 text-primary border border-primary/30">
+                  <Button className="w-full mt-4 bg-primary/20 hover:bg-primary/30 border border-primary/40 shadow-md" style={{color: '#222'}}>
                     View All {drop.category} Domains
                   </Button>
                 </CardContent>
@@ -286,7 +289,7 @@ const LandingPage = () => {
           </div>
 
           <div className="text-center">
-            <Button asChild size="lg" className="bg-primary hover:bg-primary/90 text-primary-foreground px-8 py-6">
+            <Button asChild size="lg" className="bg-primary hover:bg-primary/90 text-primary-foreground px-8 py-6 shadow-lg">
               <Link to="/auth">
                 Access Full Premium Catalog
                 <ChevronRight className="ml-2 h-5 w-5" />

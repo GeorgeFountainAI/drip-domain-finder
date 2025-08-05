@@ -95,7 +95,8 @@ const FeaturedDomains = () => {
   };
 
   const handleBuyDomain = (domain: Domain) => {
-    const affiliateUrl = `https://www.spaceship.com/domain-search/${domain.name}${domain.tld}?utm_source=domaindrip&utm_medium=affiliate&utm_campaign=featured`;
+    const domainName = `${domain.name}${domain.tld}`;
+    const affiliateUrl = `https://spaceship.pxf.io/c/5885493/1234567/16015?u=https://www.spaceship.com/domains/search?q=${encodeURIComponent(domainName)}`;
     window.open(affiliateUrl, '_blank');
   };
 
