@@ -26,6 +26,50 @@ export const SearchHistoryViewer = ({ onSearchAgain }: SearchHistoryViewerProps)
     fetchSearchHistory();
   }, []);
 
+  const clearHistory = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        toast({
+          title: "Error",
+          description: "You must be logged in to clear history.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      const { error } = await supabase
+        .from('search_history')
+        .delete()
+        .eq('user_id', user.id);
+
+      if (error) {
+        console.error('Error clearing search history:', error);
+        toast({
+          title: "Error", 
+          description: "Failed to clear search history. Please try again.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      setSearchHistory([]);
+      
+      toast({
+        title: "History cleared",
+        description: "Your search history has been cleared.",
+      });
+    } catch (error) {
+      console.error('Error clearing search history:', error);
+      toast({
+        title: "Error",
+        description: "Failed to clear search history. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
   const fetchSearchHistory = async () => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
@@ -175,6 +219,16 @@ export const SearchHistoryViewer = ({ onSearchAgain }: SearchHistoryViewerProps)
               </Button>
             </div>
           ))}
+          <div className="pt-3 border-t">
+            <Button
+              onClick={clearHistory}
+              variant="outline"
+              size="sm"
+              className="w-full text-destructive hover:text-destructive-foreground hover:bg-destructive"
+            >
+              Clear History
+            </Button>
+          </div>
         </div>
       </CardContent>
     </Card>

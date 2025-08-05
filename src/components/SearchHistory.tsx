@@ -43,9 +43,17 @@ export const SearchHistory: React.FC<SearchHistoryProps> = ({ onSearchAgain, cur
   const loadSearchHistory = async () => {
     setIsLoading(true);
     try {
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        setIsLoading(false);
+        return;
+      }
+
       const { data, error } = await supabase
         .from('search_history')
         .select('id, keyword, created_at')
+        .eq('user_id', user.id)
         .order('created_at', { ascending: false })
         .limit(10);
 
@@ -89,10 +97,21 @@ export const SearchHistory: React.FC<SearchHistoryProps> = ({ onSearchAgain, cur
   // Clear all search history
   const clearHistory = async () => {
     try {
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        toast({
+          title: "Error",
+          description: "You must be logged in to clear history.",
+          variant: "destructive",
+        });
+        return;
+      }
+
       const { error } = await supabase
         .from('search_history')
         .delete()
-        .neq('id', '00000000-0000-0000-0000-000000000000'); // Delete all records
+        .eq('user_id', user.id);
 
       if (error) {
         console.error('Error clearing search history:', error);
