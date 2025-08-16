@@ -173,7 +173,7 @@ const LandingPage = () => {
               </span>
             </h1>
             
-            <p className="text-xl sm:text-2xl text-muted-foreground mb-12 max-w-4xl mx-auto px-4 leading-relaxed">Tired of dead-end domain searches?
+            <p className="text-xl sm:text-2xl text-muted-foreground mb-12 max-w-4xl mx-auto px-4 leading-relaxed font-bold">Tired of dead-end domain searches?
 We only show what’s buyable. Get FlipScores, smart suggestions, and bulk-buy options—all in one place.</p>
             
             <div className="flex flex-col sm:flex-row gap-4 justify-center px-4">
