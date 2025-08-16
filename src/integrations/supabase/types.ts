@@ -7,7 +7,7 @@ export type Json =
   | Json[]
 
 export type Database = {
-  // Allows to automatically instanciate createClient with right options
+  // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
     PostgrestVersion: "12.2.3 (519615d)"
@@ -191,11 +191,11 @@ export type Database = {
     }
     Functions: {
       admin_update_user_credits: {
-        Args: { target_user_id: string; credit_change: number }
+        Args: { credit_change: number; target_user_id: string }
         Returns: Json
       }
       complete_credit_purchase: {
-        Args: { stripe_session_id: string; user_id: string; credits: number }
+        Args: { credits: number; stripe_session_id: string; user_id: string }
         Returns: Json
       }
       ensure_user_starter_credits: {
@@ -205,12 +205,12 @@ export type Database = {
       get_all_users_with_credits: {
         Args: Record<PropertyKey, never>
         Returns: {
-          user_id: string
-          email: string
-          current_credits: number
-          total_purchased_credits: number
-          is_admin: boolean
           created_at: string
+          current_credits: number
+          email: string
+          is_admin: boolean
+          total_purchased_credits: number
+          user_id: string
         }[]
       }
       is_admin: {
