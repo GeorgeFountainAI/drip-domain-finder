@@ -60,7 +60,7 @@ export const DomainResults: React.FC<DomainResultsProps> = ({
   const IMPACT_DEEP_LINK_BASE = "https://spaceship.sjv.io/c/6354443/2873271/21274?u=";
 
   const buildAffiliateUrl = (domainName: string) => {
-    const landingPage = `https://www.spaceship.com/domain/search?query=${domainName}`;
+    const landingPage = `https://www.spaceship.com/domains/search?q=${domainName}`;
     return `${IMPACT_DEEP_LINK_BASE}${encodeURIComponent(landingPage)}`;
   };
 
@@ -80,7 +80,8 @@ export const DomainResults: React.FC<DomainResultsProps> = ({
 
   const handleSelectAll = (checked: boolean) => {
     if (checked) {
-      setSelectedDomains(sortedDomains.map(domain => domain.name));
+      // Only select available domains
+      setSelectedDomains(sortedDomains.filter(domain => domain.available).map(domain => domain.name));
     } else {
       setSelectedDomains([]);
     }
@@ -353,16 +354,16 @@ export const DomainResults: React.FC<DomainResultsProps> = ({
               </div>
             )}
             
-            {/* Select All */}
+            {/* Select All Available */}
             {sortedDomains && sortedDomains.length > 0 && (
               <div className="flex items-center gap-2">
                 <Checkbox
                   id="select-all"
-                  checked={selectedDomains.length === sortedDomains.length}
+                  checked={selectedDomains.length === sortedDomains.filter(domain => domain.available).length && sortedDomains.filter(domain => domain.available).length > 0}
                   onCheckedChange={handleSelectAll}
                 />
                 <label htmlFor="select-all" className="text-sm font-medium">
-                  Select All
+                  Select All Available
                 </label>
               </div>
             )}
@@ -417,18 +418,23 @@ export const DomainResults: React.FC<DomainResultsProps> = ({
                   return (
                     <Card 
                       key={domain.name}
-                      className={`group hover:shadow-lg transition-all duration-300 hover:scale-105 border-border ${
+                      className={`group transition-all duration-300 border-border ${
+                        !domain.available 
+                          ? 'opacity-50 grayscale cursor-not-allowed' 
+                          : 'hover:shadow-lg hover:scale-105'
+                      } ${
                         isSelected ? 'ring-2 ring-primary bg-muted/50' : ''
                       }`}
                     >
                       <CardContent className="p-6">
                         <div className="space-y-4">
-                          {/* Selection Checkbox */}
+                          {/* Selection Checkbox - Only for available domains */}
                           <div className="flex items-start justify-between">
                             <Checkbox
                               id={`select-${domain.name}`}
                               checked={isSelected}
-                              onCheckedChange={(checked) => handleDomainSelection(domain.name, checked as boolean)}
+                              disabled={!domain.available}
+                              onCheckedChange={(checked) => domain.available && handleDomainSelection(domain.name, checked as boolean)}
                             />
                           </div>
                           
@@ -459,8 +465,12 @@ export const DomainResults: React.FC<DomainResultsProps> = ({
                           
                           {/* Availability & Price */}
                           <div className="space-y-1">
-                            <p className="text-sm font-medium text-green-600">
-                              ✓ Available
+                            <p className={`text-sm font-medium ${
+                              domain.available 
+                                ? 'text-green-600' 
+                                : 'text-red-600'
+                            }`}>
+                              {domain.available ? '✓ Available' : '✗ Unavailable'}
                             </p>
                             <p className="text-sm text-muted-foreground">
                               ${domain.price.toFixed(2)}/year
@@ -496,14 +506,15 @@ export const DomainResults: React.FC<DomainResultsProps> = ({
                             </Button>
                           </div>
                           
-                          {/* Buy Button */}
+                          {/* Buy Button - Only for available domains */}
                           <Button
-                            onClick={() => handleBuyNow(domain.name)}
-                            className="w-full bg-primary text-primary-foreground hover:bg-primary/90 font-semibold rounded-lg transition-all duration-200 gap-2"
+                            onClick={() => domain.available && handleBuyNow(domain.name)}
+                            disabled={!domain.available}
+                            className="w-full bg-primary text-primary-foreground hover:bg-primary/90 font-semibold rounded-lg transition-all duration-200 gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                             size="lg"
                           >
-                            BUY NOW
-                            <ExternalLink className="h-4 w-4" />
+                            {domain.available ? 'BUY NOW' : 'UNAVAILABLE'}
+                            {domain.available && <ExternalLink className="h-4 w-4" />}
                           </Button>
                         </div>
                       </CardContent>

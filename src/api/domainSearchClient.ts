@@ -113,7 +113,7 @@ export const searchDomains = async (keyword: string, forceDemoMode = false): Pro
   }
   
   
-  // Check if we should use demo mode (for investor presentations or API unavailability)
+  // Only use demo mode if explicitly forced (for presentations)
   const demoMode = forceDemoMode;
   
   try {

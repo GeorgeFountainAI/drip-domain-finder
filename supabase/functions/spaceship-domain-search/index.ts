@@ -88,9 +88,10 @@ serve(async (req) => {
         const domainName = `${variation}.${tld}`;
         
         try {
-          // Skip API call if no API key available and use mock data instead
+          // Check if API key is available
           if (!spaceshipApiKey) {
-            throw new Error("No Spaceship API key configured, using mock data");
+            console.log("No Spaceship API key configured, using mock data for development");
+            throw new Error("No API key configured");
           }
           
           // Call Spaceship API for domain availability
