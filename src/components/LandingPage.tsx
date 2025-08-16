@@ -285,7 +285,7 @@ We only show what’s buyable. Get FlipScores, smart suggestions, and bulk-buy o
             <h2 className="text-4xl sm:text-5xl font-bold mb-6">
               Built for Success
             </h2>
-            <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
+            <p className="text-xl text-foreground max-w-3xl mx-auto">
               Every feature designed with intelligence and business success in mind.
             </p>
           </div>
