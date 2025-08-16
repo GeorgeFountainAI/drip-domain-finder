@@ -9,6 +9,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { ArrowLeft, ExternalLink, ThumbsUp, ThumbsDown, ShoppingCart, ChevronDown } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { buildSpaceshipUrl } from "@/utils/buildSpaceshipUrl";
 
 interface Domain {
   name: string;
@@ -56,17 +57,9 @@ export const DomainResults: React.FC<DomainResultsProps> = ({
   const [isHistoryOpen, setIsHistoryOpen] = useState(false);
   const [user, setUser] = useState<any>(null);
 
-  // Impact deep link base URL
-  const IMPACT_DEEP_LINK_BASE = "https://spaceship.sjv.io/c/6354443/2873271/21274?u=";
-
-  const buildAffiliateUrl = (domainName: string) => {
-    const landingPage = `https://www.spaceship.com/domains/search?q=${domainName}`;
-    return `${IMPACT_DEEP_LINK_BASE}${encodeURIComponent(landingPage)}`;
-  };
-
   const handleBuyNow = (domainName: string) => {
     console.log(`🛒 Buying ${domainName} via affiliate link`);
-    const affiliateUrl = buildAffiliateUrl(domainName);
+    const affiliateUrl = buildSpaceshipUrl(domainName);
     window.open(affiliateUrl, "_blank");
   };
 
@@ -125,10 +118,10 @@ export const DomainResults: React.FC<DomainResultsProps> = ({
   const handleBuySelected = () => {
     console.log(`🛒 Bulk buying domains: ${selectedDomains.join(', ')}`);
     
-    // Open a new tab for each selected domain using the Impact deep link format
+    // Open a new tab for each selected domain using the Spaceship URL format
     selectedDomains.forEach((domainName, index) => {
       setTimeout(() => {
-        const affiliateUrl = buildAffiliateUrl(domainName);
+        const affiliateUrl = buildSpaceshipUrl(domainName);
         window.open(affiliateUrl, "_blank");
       }, index * 500); // Stagger the tab openings by 500ms to avoid browser blocking
     });
