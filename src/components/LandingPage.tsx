@@ -13,7 +13,6 @@ import demoFrame3 from "@/assets/demo-frame-3-search.jpg";
 import domainDripLogo from "/lovable-uploads/54151200-6cf6-4c1b-b88a-bc150fc097c8.png";
 import FAQPreview from "@/components/FAQPreview";
 import CreditBalance from "@/components/CreditBalance";
-
 const LandingPage = () => {
   const [user, setUser] = useState(null);
 
@@ -22,10 +21,8 @@ const LandingPage = () => {
     if (rawScore <= 10) return rawScore; // Already on 1-10 scale
     return Math.round(rawScore / 10); // Normalize from 1-100 to 1-10
   };
-
   const getFlipScoreBadge = (score: number) => {
     const normalizedScore = normalizeFlipScore(score);
-    
     if (normalizedScore >= 1 && normalizedScore <= 3) {
       return {
         score: normalizedScore,
@@ -59,7 +56,6 @@ const LandingPage = () => {
         emoji: "🔵"
       };
     }
-    
     return null;
   };
 
@@ -83,7 +79,6 @@ const LandingPage = () => {
     });
     return () => subscription.unsubscribe();
   }, []);
-
   const features = [{
     icon: Crown,
     title: "Premium Domain Curation",
@@ -109,7 +104,6 @@ const LandingPage = () => {
     title: "Strategic Extensions",
     description: "Access to .com, .io, .ai, .tech domains plus emerging extensions perfect for your brand."
   }];
-
   const featuredDrops = [{
     category: "Tech",
     domains: ["CodeForge.ai", "TechVault.io", "DataStream.dev"],
@@ -123,7 +117,6 @@ const LandingPage = () => {
     domains: ["StudioCraft.com", "DesignVault.io", "BrandForge.co"],
     color: "from-accent to-primary"
   }];
-
   return <div className="min-h-screen bg-gradient-noir relative overflow-hidden">
       {/* Subtle background for watermark visibility */}
       <div className="fixed inset-0 z-0 bg-gradient-to-br from-background via-muted/30 to-background" />
@@ -180,10 +173,55 @@ const LandingPage = () => {
               </span>
             </h1>
             
-            <p className="text-xl sm:text-2xl text-muted-foreground mb-12 max-w-4xl mx-auto px-4 leading-relaxed">
-              Discover premium domains, get AI-powered suggestions, and build your digital presence with 
-              intelligent tools designed for entrepreneurs and digital investors.
-            </p>
+            <p className="text-xl sm:text-2xl text-muted-foreground mb-12 max-w-4xl mx-auto px-4 leading-relaxed">Warn
+	
+	System Configuration Data Exposed to All Users	
+
+Issue Description
+
+The 'settings' table is publicly readable and contains system configuration values like credit amounts. Competitors or malicious users could access this data to understand your business model and pricing structure. Restrict access to settings data to authenticated users or administrators only.
+
+LLM Database Check
+PUBLIC_SYSTEM_CONFIGURATION
+
+
+	
+Warn
+	
+	Function Search Path Mutable	
+
+Issue Description
+
+Detects functions where the search_path parameter is not set. Remediation: https://supabase.com/docs/guides/database/database-linter?lint=0011_function_search_path_mutable
+
+Supabase
+SUPA_function_search_path_mutable
+
+
+	
+Warn
+	
+	Auth OTP long expiry	
+
+Issue Description
+
+OTP expiry exceeds recommended threshold Remediation: https://supabase.com/docs/guides/platform/going-into-prod#security
+
+Supabase
+SUPA_auth_otp_long_expiry
+
+
+	
+Warn
+	
+	Leaked Password Protection Disabled	
+
+Issue Description
+
+Leaked password protection is currently disabled. Remediation: https://supabase.com/docs/guides/auth/password-security#password-strength-and-leaked-password-protection
+
+Supabase
+SUPA_auth_leaked_password_protection</p>
             
             <div className="flex flex-col sm:flex-row gap-4 justify-center px-4">
               <Button asChild size="lg" className="text-lg px-8 py-6 bg-primary hover:bg-primary/90 text-primary-foreground shadow-primary">
@@ -258,10 +296,14 @@ const LandingPage = () => {
         
         <div className="container mx-auto max-w-6xl relative z-10">
           <div className="text-center mb-16">
-            <h2 className="text-4xl sm:text-5xl font-bold mb-6 text-foreground" style={{color: '#222'}}>
+            <h2 className="text-4xl sm:text-5xl font-bold mb-6 text-foreground" style={{
+            color: '#222'
+          }}>
               Latest Premium Drops
             </h2>
-            <p className="text-xl max-w-3xl mx-auto" style={{color: '#333'}}>
+            <p className="text-xl max-w-3xl mx-auto" style={{
+            color: '#333'
+          }}>
               Handpicked domains across key industries where entrepreneurs are building their digital empires.
             </p>
           </div>
@@ -272,16 +314,24 @@ const LandingPage = () => {
                   <div className={`h-12 w-12 rounded-lg bg-gradient-to-r ${drop.color} flex items-center justify-center mb-4 group-hover:scale-110 transition-transform shadow-lg`}>
                     <Gem className="h-6 w-6 text-white" />
                   </div>
-                  <CardTitle className="text-2xl text-primary" style={{color: '#222'}}>{drop.category}</CardTitle>
+                  <CardTitle className="text-2xl text-primary" style={{
+                color: '#222'
+              }}>{drop.category}</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-3">
                     {drop.domains.map((domain, domainIndex) => <div key={domainIndex} className="flex items-center justify-between p-3 rounded-lg bg-background/80 border border-primary/20 shadow-sm">
-                        <span className="font-mono text-sm" style={{color: '#333'}}>{domain}</span>
-                        <Badge variant="outline" className="text-xs bg-primary/20 border-primary/40" style={{color: '#222'}}>Available</Badge>
+                        <span className="font-mono text-sm" style={{
+                    color: '#333'
+                  }}>{domain}</span>
+                        <Badge variant="outline" className="text-xs bg-primary/20 border-primary/40" style={{
+                    color: '#222'
+                  }}>Available</Badge>
                       </div>)}
                   </div>
-                  <Button className="w-full mt-4 bg-primary/20 hover:bg-primary/30 border border-primary/40 shadow-md" style={{color: '#222'}}>
+                  <Button className="w-full mt-4 bg-primary/20 hover:bg-primary/30 border border-primary/40 shadow-md" style={{
+                color: '#222'
+              }}>
                     View All {drop.category} Domains
                   </Button>
                 </CardContent>
@@ -333,23 +383,27 @@ const LandingPage = () => {
       <section className="py-20 px-4">
         <div className="container mx-auto max-w-4xl text-center">
           <TooltipProvider>
-            <h2 className="text-4xl sm:text-5xl font-bold mb-6" style={{color: '#222'}}>
+            <h2 className="text-4xl sm:text-5xl font-bold mb-6" style={{
+            color: '#222'
+          }}>
               Flip Score & Valuation Tool
             </h2>
-            <p className="text-xl mb-8 max-w-3xl mx-auto" style={{color: '#333'}}>
+            <p className="text-xl mb-8 max-w-3xl mx-auto" style={{
+            color: '#333'
+          }}>
               Get instant ROI projections and market analysis for any domain. Know exactly what you're buying 
               and its potential before you invest.
             </p>
             
             <div className="bg-card/60 rounded-2xl border border-primary/20 p-8 mb-8">
               {(() => {
-                const flipScoreBadge = getFlipScoreBadge(94); // Using example score of 94 (which normalizes to 9)
-                return (
-                  <div className="space-y-4">
+              const flipScoreBadge = getFlipScoreBadge(94); // Using example score of 94 (which normalizes to 9)
+              return <div className="space-y-4">
                     <div className="flex items-center justify-center gap-3">
-                      <div className="text-4xl font-bold" style={{color: '#222'}}>FlipScore:</div>
-                      {flipScoreBadge && (
-                        <div className="flex items-center gap-2">
+                      <div className="text-4xl font-bold" style={{
+                    color: '#222'
+                  }}>FlipScore:</div>
+                      {flipScoreBadge && <div className="flex items-center gap-2">
                           <Badge className={`text-lg px-4 py-2 ${flipScoreBadge.className}`}>
                             {flipScoreBadge.emoji} {flipScoreBadge.score}/10 - {flipScoreBadge.label}
                           </Badge>
@@ -361,18 +415,20 @@ const LandingPage = () => {
                               <p>{flipScoreBadge.tooltip}</p>
                             </TooltipContent>
                           </Tooltip>
-                        </div>
-                      )}
+                        </div>}
                     </div>
-                    <div className="text-lg mb-4" style={{color: '#333'}}>Projected 6-month value: $12,500 - $25,000</div>
-                    <div className="flex justify-center gap-4 text-sm" style={{color: '#444'}}>
+                    <div className="text-lg mb-4" style={{
+                  color: '#333'
+                }}>Projected 6-month value: $12,500 - $25,000</div>
+                    <div className="flex justify-center gap-4 text-sm" style={{
+                  color: '#444'
+                }}>
                       <span>• High brandability</span>
                       <span>• Growing market trend</span>
                       <span>• Premium extension</span>
                     </div>
-                  </div>
-                );
-              })()}
+                  </div>;
+            })()}
             </div>
           </TooltipProvider>
         </div>
@@ -475,5 +531,4 @@ const LandingPage = () => {
       </footer>
     </div>;
 };
-
 export default LandingPage;
