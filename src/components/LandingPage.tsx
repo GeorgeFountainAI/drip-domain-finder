@@ -173,55 +173,8 @@ const LandingPage = () => {
               </span>
             </h1>
             
-            <p className="text-xl sm:text-2xl text-muted-foreground mb-12 max-w-4xl mx-auto px-4 leading-relaxed">Warn
-	
-	System Configuration Data Exposed to All Users	
-
-Issue Description
-
-The 'settings' table is publicly readable and contains system configuration values like credit amounts. Competitors or malicious users could access this data to understand your business model and pricing structure. Restrict access to settings data to authenticated users or administrators only.
-
-LLM Database Check
-PUBLIC_SYSTEM_CONFIGURATION
-
-
-	
-Warn
-	
-	Function Search Path Mutable	
-
-Issue Description
-
-Detects functions where the search_path parameter is not set. Remediation: https://supabase.com/docs/guides/database/database-linter?lint=0011_function_search_path_mutable
-
-Supabase
-SUPA_function_search_path_mutable
-
-
-	
-Warn
-	
-	Auth OTP long expiry	
-
-Issue Description
-
-OTP expiry exceeds recommended threshold Remediation: https://supabase.com/docs/guides/platform/going-into-prod#security
-
-Supabase
-SUPA_auth_otp_long_expiry
-
-
-	
-Warn
-	
-	Leaked Password Protection Disabled	
-
-Issue Description
-
-Leaked password protection is currently disabled. Remediation: https://supabase.com/docs/guides/auth/password-security#password-strength-and-leaked-password-protection
-
-Supabase
-SUPA_auth_leaked_password_protection</p>
+            <p className="text-xl sm:text-2xl text-muted-foreground mb-12 max-w-4xl mx-auto px-4 leading-relaxed">Tired of dead-end domain searches?
+We only show what’s buyable. Get FlipScores, smart suggestions, and bulk-buy options—all in one place.</p>
             
             <div className="flex flex-col sm:flex-row gap-4 justify-center px-4">
               <Button asChild size="lg" className="text-lg px-8 py-6 bg-primary hover:bg-primary/90 text-primary-foreground shadow-primary">
@@ -243,31 +196,7 @@ SUPA_auth_leaked_password_protection</p>
           <div className="relative mx-auto max-w-5xl">
             <div className="relative group">
               <div className="absolute -inset-6 bg-gradient-to-r from-primary/25 via-secondary/25 to-primary/25 rounded-3xl blur-3xl opacity-60 group-hover:opacity-80 transition-opacity"></div>
-              <div className="relative rounded-2xl border border-primary/20 bg-card/90 backdrop-blur p-6 sm:p-10 shadow-elevated">
-                <div className="relative rounded-xl overflow-hidden bg-gradient-card">
-                  {/* Demo Slideshow */}
-                  <div className="relative w-full h-auto">
-                    <img src={demoFrame1} alt="DomainDrip Premium Access Demo" className="w-full h-auto object-cover rounded-lg transition-opacity duration-500 group-hover:opacity-0" />
-                    <img src={demoFrame2} alt="DomainDrip Credit System Demo" className="absolute inset-0 w-full h-auto object-cover rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-500 delay-1000" />
-                    <img src={demoFrame3} alt="DomainDrip AI Search Demo" className="absolute inset-0 w-full h-auto object-cover rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-500 delay-2000" />
-                  </div>
-                  
-                  {/* Enhanced indicators with gold accents */}
-                  <div className="absolute bottom-6 left-1/2 transform -translate-x-1/2 flex space-x-3 opacity-80 group-hover:opacity-100 transition-opacity duration-300">
-                    <div className="w-3 h-3 rounded-full bg-primary group-hover:scale-110 transition-transform duration-500"></div>
-                    <div className="w-3 h-3 rounded-full bg-primary/50 group-hover:bg-primary group-hover:scale-110 transition-all duration-500 delay-1000"></div>
-                    <div className="w-3 h-3 rounded-full bg-primary/50 group-hover:bg-primary group-hover:scale-110 transition-all duration-500 delay-2000"></div>
-                  </div>
-                  
-                  {/* Premium badge */}
-                  <div className="absolute top-6 right-6 bg-primary/90 backdrop-blur rounded-lg px-4 py-2 text-primary-foreground text-sm font-medium">
-                    <span className="flex items-center gap-1">
-                      <Crown className="h-3 w-3" />
-                      Premium
-                    </span>
-                  </div>
-                </div>
-              </div>
+              
             </div>
             
             {/* Platform stats */}
