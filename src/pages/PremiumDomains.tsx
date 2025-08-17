@@ -89,10 +89,11 @@ const PremiumDomains = () => {
     }
   };
 
-  const handleBuyDomain = (domain: Domain) => {
+  const handleBuyDomain = async (domain: Domain) => {
     const domainName = `${domain.name}${domain.tld}`;
-    const affiliateUrl = `https://spaceship.pxf.io/c/5885493/1234567/16015?u=https://www.spaceship.com/domains/search?q=${encodeURIComponent(domainName)}`;
-    window.open(affiliateUrl, '_blank');
+    const { buildSpaceshipUrl } = await import('@/utils/spaceship');
+    const affiliateUrl = buildSpaceshipUrl(domainName);
+    window.open(affiliateUrl, '_blank', 'noopener noreferrer');
   };
 
   return (

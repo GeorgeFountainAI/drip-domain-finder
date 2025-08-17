@@ -9,7 +9,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { ArrowLeft, ExternalLink, ThumbsUp, ThumbsDown, ShoppingCart, ChevronDown } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { buildSpaceshipUrl } from "@/utils/buildSpaceshipUrl";
+import { buildSpaceshipUrl, openInBatches } from "@/utils/spaceship";
 
 interface Domain {
   name: string;
@@ -56,11 +56,14 @@ export const DomainResults: React.FC<DomainResultsProps> = ({
   const [searchHistory, setSearchHistory] = useState<SearchHistoryItem[]>([]);
   const [isHistoryOpen, setIsHistoryOpen] = useState(false);
   const [user, setUser] = useState<any>(null);
+  const [debounceTimeout, setDebounceTimeout] = useState<number | null>(null);
+  const [popupBlocked, setPopupBlocked] = useState(false);
 
   const handleBuyNow = (domainName: string) => {
     console.log(`🛒 Buying ${domainName} via affiliate link`);
+    if (import.meta.env.DEV) console.log('BUY URL:', buildSpaceshipUrl(domainName));
     const affiliateUrl = buildSpaceshipUrl(domainName);
-    window.open(affiliateUrl, "_blank");
+    window.open(affiliateUrl, "_blank", "noopener");
   };
 
   const handleDomainSelection = (domainName: string, checked: boolean) => {
@@ -116,18 +119,54 @@ export const DomainResults: React.FC<DomainResultsProps> = ({
   };
 
   const handleBuySelected = () => {
+    if (debounceTimeout) return; // Prevent double-clicks
+    
     console.log(`🛒 Bulk buying domains: ${selectedDomains.join(', ')}`);
     
-    // Open a new tab for each selected domain using the Spaceship URL format
-    selectedDomains.forEach((domainName, index) => {
-      setTimeout(() => {
-        const affiliateUrl = buildSpaceshipUrl(domainName);
-        window.open(affiliateUrl, "_blank");
-      }, index * 500); // Stagger the tab openings by 500ms to avoid browser blocking
+    // Debounce for 300ms
+    const timeout = window.setTimeout(() => {
+      setDebounceTimeout(null);
+    }, 300);
+    setDebounceTimeout(timeout);
+    
+    // Use openInBatches utility
+    openInBatches(selectedDomains, 5, 300, (url) => {
+      const newWindow = window.open(url, '_blank', 'noopener');
+      if (!newWindow) {
+        setPopupBlocked(true);
+        setTimeout(() => setPopupBlocked(false), 5000);
+      }
     });
     
     // Clear selection after purchase
     setSelectedDomains([]);
+  };
+
+  const handleCopySelected = async () => {
+    if (selectedDomains.length === 0) return;
+    
+    try {
+      await navigator.clipboard.writeText(selectedDomains.join('\n'));
+      // Show toast or simple feedback
+      console.log(`Copied ${selectedDomains.length} domains`);
+    } catch (err) {
+      console.error('Failed to copy:', err);
+    }
+  };
+
+  const handleDownloadCSV = () => {
+    if (selectedDomains.length === 0) return;
+    
+    const csvContent = 'domain\n' + selectedDomains.join('\n');
+    const blob = new Blob([csvContent], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'domains.csv';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
   };
 
   const handleSortChange = (value: SortOption) => {
@@ -517,17 +556,48 @@ export const DomainResults: React.FC<DomainResultsProps> = ({
               </div>
             </TooltipProvider>
             
-            {/* Buy Selected Domains Button */}
+            {/* Sticky Footer with Bulk Actions */}
             {selectedDomains.length > 0 && (
-              <div className="fixed bottom-6 right-6 z-50">
-                <Button
-                  onClick={handleBuySelected}
-                  size="lg"
-                  className="bg-primary text-primary-foreground hover:bg-primary/90 shadow-lg gap-2"
-                >
-                  <ShoppingCart className="h-5 w-5" />
-                  Buy Selected Domains ({selectedDomains.length})
-                </Button>
+              <div className="fixed bottom-0 left-0 right-0 bg-background border-t border-border shadow-lg z-50">
+                {popupBlocked && (
+                  <div className="bg-orange-100 text-orange-800 text-sm p-2 text-center">
+                    Pop-ups blocked. Allow pop-ups or use Copy/CSV.
+                  </div>
+                )}
+                <div className="max-w-6xl mx-auto p-4">
+                  <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+                    <div className="text-sm text-muted-foreground">
+                      {selectedDomains.length} domain(s) selected
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Button
+                        onClick={handleBuySelected}
+                        disabled={debounceTimeout !== null}
+                        aria-disabled={debounceTimeout !== null}
+                        className="bg-primary text-primary-foreground hover:bg-primary/90 gap-2"
+                      >
+                        <ShoppingCart className="h-4 w-4" />
+                        Buy Selected on Spaceship
+                      </Button>
+                      <Button
+                        onClick={handleCopySelected}
+                        variant="outline"
+                        disabled={selectedDomains.length === 0}
+                        aria-disabled={selectedDomains.length === 0}
+                      >
+                        Copy Selected
+                      </Button>
+                      <Button
+                        onClick={handleDownloadCSV}
+                        variant="outline"
+                        disabled={selectedDomains.length === 0}
+                        aria-disabled={selectedDomains.length === 0}
+                      >
+                        Download CSV
+                      </Button>
+                    </div>
+                  </div>
+                </div>
               </div>
             )}
           </>
