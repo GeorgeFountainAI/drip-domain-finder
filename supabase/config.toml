@@ -21,3 +21,6 @@ verify_jwt = false
 
 [functions.spaceship-domain-search]
 verify_jwt = false
+
+[functions.setup-admin]
+verify_jwt = false

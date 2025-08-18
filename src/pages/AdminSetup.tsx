@@ -61,34 +61,16 @@ const AdminSetup = () => {
     setSubmitting(true);
 
     try {
-      const { data, error } = await supabase.functions.invoke('admin-data', {
-        body: { 
-          action: 'setupFirstAdmin',
-          email: email.trim()
-        }
+      const { data, error } = await supabase.functions.invoke('setup-admin', {
+        body: { email: email.trim() }
       });
 
-      if (error || data?.error) {
-        throw new Error(data?.error || error?.message || 'Failed to setup admin');
+      if (error) {
+        throw new Error(error.message || 'Failed to setup admin');
       }
-
-      if (data?.needsManualSecretSetup) {
-        toast({
-          title: "Setup validated!",
-          description: "Please configure the ADMIN_USERS secret in Supabase to complete setup.",
-        });
-        
-        // Show instructions for manual setup
-        setError(`Setup validated! To complete admin setup, please:
-        
-1. Go to your Supabase project settings
-2. Navigate to Edge Functions → Secrets  
-3. Add a new secret named "ADMIN_USERS"
-4. Set the value to: ${email}
-5. Save the secret and refresh this page
-
-Once configured, you'll see the Admin Tools in the header.`);
-        return;
+      
+      if (!data.ok) {
+        throw new Error(data.error || 'Failed to setup admin');
       }
 
       toast({
