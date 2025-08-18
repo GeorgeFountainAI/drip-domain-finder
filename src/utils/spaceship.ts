@@ -56,12 +56,14 @@ export function openSingle(domain: string): boolean {
  * @param domains array of domain strings
  * @param batchSize number of tabs per batch (default 5)
  * @param delayMs delay between batches in ms (default 300)
+ * @param openFn custom function to open URLs (default uses window.open)
  * @returns { opened: number, blocked: number }
  */
 export async function openInBatches(
   domains: string[],
   batchSize = 5,
-  delayMs = 300
+  delayMs = 300,
+  openFn: (url: string) => void = (url) => window.open(url, '_blank', 'noopener')
 ): Promise<{ opened: number; blocked: number }> {
   if (typeof window === "undefined") return { opened: 0, blocked: 0 };
 
@@ -71,6 +73,23 @@ export async function openInBatches(
   for (let i = 0; i < domains.length; i += batchSize) {
     const batch = domains.slice(i, i + batchSize);
     for (const d of batch) {
-      const ok = openSingle(d);
-      ok ? opened++ : blocked++;
+      const url = buildSpaceshipUrl(d);
+      openFn(url);
+      opened++;
     }
+    
+    // Add delay between batches
+    if (i + batchSize < domains.length) {
+      await new Promise(resolve => setTimeout(resolve, delayMs));
+    }
+  }
+  
+  return { opened, blocked: 0 };
+}
+
+/** split into chunks of size n */
+export function chunk<T>(arr: T[], size: number): T[][] {
+  const out: T[][] = [];
+  for (let i = 0; i < arr.length; i += size) out.push(arr.slice(i, i + size));
+  return out;
+}
