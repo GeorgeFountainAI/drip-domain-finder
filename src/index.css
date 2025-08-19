@@ -8,7 +8,7 @@
   :root {
     --background: 0 0% 100%; /* Pure white background */
     --foreground: 0 0% 15%; /* Dark text for contrast */
-
+--muted-foreground: 0 0% 25%; /* darker gray for subtitles and FAQ */
     --card: 0 0% 98%; /* Very light card background */
     --card-foreground: 0 0% 15%;
 
