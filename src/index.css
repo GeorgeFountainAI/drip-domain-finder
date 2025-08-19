@@ -151,3 +151,7 @@
     animation: collapsible-up 0.3s ease-out;
   }
 }
+/* Force darker readable text for body content */
+body, p, span, li, small {
+  color: #1f2937 !important; /* Tailwind slate-800 (dark gray) */
+}
