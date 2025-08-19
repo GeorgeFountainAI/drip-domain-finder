@@ -169,4 +169,8 @@ body, p, span, li, small {
 .prose a {
   color: #111827 !important; /* Tailwind slate-900 */
 }
+/* TEST: make literally ALL text red */
+* {
+  color: red !important;
+}
 
