@@ -292,6 +292,24 @@ We only show what’s buyable. Get FlipScores, smart suggestions, and bulk-buy o
   </p>
 </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+{features.map((feature, index) => (
+  <Card
+    key={index}
+    className="border border-primary/20 bg-card/80 backdrop-blur hover:bg-card/90 transition-all duration-300 group"
+  >
+    <CardHeader>
+      <div className="h-14 w-14 rounded-xl bg-primary/15 flex items-center justify-center mb-4 group-hover:bg-primary/25 transition-colors">
+        {feature.icon}
+      </div>
+      <CardTitle className="text-xl">{feature.title}</CardTitle>
+    </CardHeader>
+    <CardContent>
+      <CardDescription className="text-muted-foreground leading-relaxed">
+        {feature.description}
+      </CardDescription>
+    </CardContent>
+  </Card>
+))}
             {features.map((feature, index) => <Card key={index} className="border border-primary/20 bg-card/80 backdrop-blur hover:bg-card/90 transition-all duration-300 group">
                 <CardHeader>
                   <div className="h-14 w-14 rounded-xl bg-primary/15 flex items-center justify-center mb-4 group-hover:bg-primary/25 transition-colors">
