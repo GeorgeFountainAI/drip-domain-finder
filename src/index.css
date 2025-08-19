@@ -170,7 +170,13 @@ body, p, span, li, small {
   color: #111827 !important; /* Tailwind slate-900 */
 }
 /* TEST: make literally ALL text red */
-* {
-  color: red !important;
+/* Force FAQ subtitles and links darker */
+.faq-subtitle,
+.faq-heading,
+.faq,
+.accordion,
+.accordion p,
+.accordion span,
+.accordion a {
+  color: #111827 !important; /* Tailwind slate-900 */
 }
-
