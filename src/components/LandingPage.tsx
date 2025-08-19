@@ -283,12 +283,13 @@ We only show what’s buyable. Get FlipScores, smart suggestions, and bulk-buy o
         <div className="container mx-auto max-w-6xl">
           <div className="text-center mb-16">
             <h2 className="text-4xl sm:text-5xl font-bold mb-6">
-              Built for Success
-            </h2>
-            <p className="text-xl text-foreground max-w-3xl mx-auto">
-              Every feature designed with intelligence and business success in mind.
-            </p>
-          </div>
+ <h2 className="text-4xl sm:text-3xl font-bold mb-6 text-slate-900">
+  Built for Success
+</h2>
+<p className="text-lg text-slate-800 max-w-3xl mx-auto">
+  Every feature designed with intelligence and business success in mind.
+</p>
+         </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {features.map((feature, index) => <Card key={index} className="border border-primary/20 bg-card/80 backdrop-blur hover:bg-card/90 transition-all duration-300 group">
