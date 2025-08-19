@@ -172,4 +172,10 @@ body, p, span, li, small {
 .text-gray-500 {
   color: #111827 !important; /* Tailwind slate-900 (near black) */
 }
+.prose,
+.prose p,
+.prose span,
+.prose a {
+  color: red !important;
+}
 
