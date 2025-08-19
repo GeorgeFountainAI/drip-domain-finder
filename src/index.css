@@ -165,4 +165,11 @@ body, p, span, li, small {
 .text-secondary-foreground {
   color: #374151 !important; /* Tailwind slate-700 */
 }
+/* FORCE all faint text darker */
+.text-muted-foreground,
+.text-secondary-foreground,
+.text-gray-400,
+.text-gray-500 {
+  color: #111827 !important; /* Tailwind slate-900 (near black) */
+}
 
