@@ -157,25 +157,16 @@
 body, p, span, li, small {
   color: #1f2937 !important; /* Tailwind slate-800 (dark gray) */
 }
-/* Darken any text using 'text-muted-foreground' */
-.text-muted-foreground {
-  color: #374151 !important; /* Tailwind slate-700 */
-}
-.text-muted-foreground,
-.text-secondary-foreground {
-  color: #374151 !important; /* Tailwind slate-700 */
-}
-/* FORCE all faint text darker */
+/* === Force all faint text darker (FAQ, subtitles, small gray text) === */
 .text-muted-foreground,
 .text-secondary-foreground,
 .text-gray-400,
-.text-gray-500 {
-  color: #111827 !important; /* Tailwind slate-900 (near black) */
-}
+.text-gray-500,
+.text-sm,
 .prose,
 .prose p,
 .prose span,
 .prose a {
-  color: red !important;
+  color: #111827 !important; /* Tailwind slate-900 */
 }
 
