@@ -279,64 +279,40 @@ We only show what’s buyable. Get FlipScores, smart suggestions, and bulk-buy o
       </section>
 
       {/* Features Section */}
-      <section id="features" className="py-20 px-4 bg-background/50">
-        <div className="container mx-auto max-w-6xl">
-          <div className="text-center mb-16">
-            <h2 className="text-4xl sm:text-5xl font-bold mb-6">
-<div className="text-center mb-8">
-  <h2 className="text-4xl sm:text-3xl font-bold mb-6 text-slate-900">
-    Built for Success
-  </h2>
-  <p className="text-lg text-slate-800 max-w-3xl mx-auto">
-    Every feature designed with intelligence and business success in mind.
-  </p>
-</div>
-<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-  {features.map((feature, index) => (
-    <Card
-      key={index}
-      className="border border-primary/20 bg-card/80 backdrop-blur hover:bg-card/90 transition-all duration-300 group"
-    >
-      <CardHeader>
-        <div className="h-14 w-14 rounded-xl bg-primary/15 flex items-center justify-center mb-4 group-hover:bg-primary/25 transition-colors">
-          {feature.icon}
-        </div>
-        <CardTitle className="text-xl text-slate-900">{feature.title}</CardTitle>
-      </CardHeader>
+  <section id="features" className="py-20 px-4 bg-background/50">
+  <div className="container mx-auto max-w-6xl">
+    <div className="text-center mb-8">
+      <h2 className="text-4xl sm:text-3xl font-bold mb-6 text-slate-900">
+        Built for Success
+      </h2>
+      <p className="text-lg text-slate-800 max-w-3xl mx-auto">
+        Every feature designed with intelligence and business success in mind.
+      </p>
+    </div>
 
-      <CardContent>
-        <CardDescription className="leading-relaxed text-slate-800">
-          {feature.description}
-        </CardDescription>
-      </CardContent>
-    </Card>
-  ))}
-</div>
-      <CardTitle className="text-xl">{feature.title}</CardTitle>
-    </CardHeader>
-    <CardContent>
-      <CardDescription className="text-muted-foreground leading-relaxed">
-        {feature.description}
-      </CardDescription>
-    </CardContent>
-  </Card>
-))}
-            {features.map((feature, index) => <Card key={index} className="border border-primary/20 bg-card/80 backdrop-blur hover:bg-card/90 transition-all duration-300 group">
-                <CardHeader>
-                  <div className="h-14 w-14 rounded-xl bg-primary/15 flex items-center justify-center mb-4 group-hover:bg-primary/25 transition-colors">
-                    <feature.icon className="h-7 w-7 text-primary" />
-                  </div>
-                  <CardTitle className="text-xl">{feature.title}</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <CardDescription className="text-muted-foreground leading-relaxed">
-                    {feature.description}
-                  </CardDescription>
-                </CardContent>
-              </Card>)}
-          </div>
-        </div>
-      </section>
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+      {features.map((feature, index) => (
+        <Card
+          key={index}
+          className="border border-primary/20 bg-card/80 backdrop-blur hover:bg-card/90 transition-all duration-300 group"
+        >
+          <CardHeader>
+            <div className="h-14 w-14 rounded-xl bg-primary/15 flex items-center justify-center mb-4 group-hover:bg-primary/25 transition-colors">
+              {feature.icon}
+            </div>
+            <CardTitle className="text-xl text-slate-900">{feature.title}</CardTitle>
+          </CardHeader>
+
+          <CardContent>
+            <CardDescription className="leading-relaxed text-slate-800">
+              {feature.description}
+            </CardDescription>
+          </CardContent>
+        </Card>
+      ))}
+    </div>
+  </div>
+</section>
 
       {/* Flip Score Preview */}
       <section className="py-20 px-4">
