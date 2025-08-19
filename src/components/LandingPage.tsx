@@ -298,7 +298,7 @@ We only show what’s buyable. Get FlipScores, smart suggestions, and bulk-buy o
         >
           <CardHeader>
             <div className="h-14 w-14 rounded-xl bg-primary/15 flex items-center justify-center mb-4 group-hover:bg-primary/25 transition-colors">
-              {feature.icon}
+              <feature.icon className="h-6 w-6 text-primary" />
             </div>
             <CardTitle className="text-xl text-slate-900">{feature.title}</CardTitle>
           </CardHeader>
