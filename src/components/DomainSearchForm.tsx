@@ -11,6 +11,7 @@
  * - Responsive design with modern UI components
  */
 import { useState, forwardRef, useImperativeHandle, useEffect } from "react";
+import VibeFilter, { Vibe } from "./filters/VibeFilter";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -93,6 +94,7 @@ export const DomainSearchForm = forwardRef<DomainSearchFormRef, DomainSearchForm
   const [rankingFilter, setRankingFilter] = useState<string>("all");
   const [tldFilter, setTldFilter] = useState<string>("all");
   const [lastSearchedKeyword, setLastSearchedKeyword] = useState<string>("");
+  const [selectedVibes, setSelectedVibes] = useState<Vibe[]>([]);
   
   const { toast } = useToast();
   const { consumeCredit, loading: creditLoading } = useConsumeCredit();
@@ -435,36 +437,40 @@ export const DomainSearchForm = forwardRef<DomainSearchFormRef, DomainSearchForm
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <form onSubmit={handleSubmit} className="flex gap-4">
-              <div className="flex-1">
-                <Input
-                  type="text"
-                  placeholder="Enter keyword to search domains..."
-                  value={keyword}
-                  onChange={handleKeywordChange}
-                  className="text-lg py-6"
-                  disabled={isLoading}
-                />
-                <p className="text-sm text-muted-foreground mt-2">
-                  Tip: Use * as a wildcard. Example: ai* finds domains starting with 'ai'.
-                </p>
-              </div>
-              <Button 
-                type="submit" 
-                size="lg" 
-                disabled={isLoading || !keyword.trim()}
-                className="px-8 py-6 text-lg"
-              >
-                {isLoading ? (
-                  <>
-                    <Loader2 className="mr-2 h-5 w-5 animate-spin" data-testid="loading-spinner" /> 
-                    Searching...
-                  </>
-                ) : (
-                  <><Search className="mr-2 h-5 w-5" /> Search Domains</>
-                )}
-              </Button>
-            </form>
+            <div data-testid="search-section">
+              <form onSubmit={handleSubmit} className="flex gap-4">
+                <div className="flex-1">
+                  <Input
+                    type="text"
+                    placeholder="Enter keyword to search domains..."
+                    value={keyword}
+                    onChange={handleKeywordChange}
+                    className="text-lg py-6"
+                    disabled={isLoading}
+                  />
+                  <p className="text-sm text-muted-foreground mt-2">
+                    Tip: Use * as a wildcard. Example: ai* finds domains starting with 'ai'.
+                  </p>
+                </div>
+                <Button 
+                  type="submit" 
+                  size="lg" 
+                  disabled={isLoading || !keyword.trim()}
+                  className="px-8 py-6 text-lg"
+                >
+                  {isLoading ? (
+                    <>
+                      <Loader2 className="mr-2 h-5 w-5 animate-spin" data-testid="loading-spinner" /> 
+                      Searching...
+                    </>
+                  ) : (
+                    <><Search className="mr-2 h-5 w-5" /> Search Domains</>
+                  )}
+                </Button>
+              </form>
+            </div>
+
+            <VibeFilter selected={selectedVibes} onChange={setSelectedVibes} />
 
             {error && (
               <div className="flex items-center gap-2 text-destructive mt-4">
