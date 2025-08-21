@@ -8,9 +8,8 @@ describe("VibeFilter", () => {
   test("renders Vibe label, tooltip, chips, and toggles state", async () => {
     const user = userEvent.setup();
     const { getByText, getByRole } = render(<VibeFilter />);
-    const heading = getByText("Vibe");
+    const heading = getByText("Style & Vibe");
     expect(heading).toBeInTheDocument();
-    expect(heading).toHaveAttribute("title");
     const chip = getByRole("button", { name: "Urban" });
     expect(chip).toHaveAttribute("aria-pressed", "false");
     await user.click(chip);

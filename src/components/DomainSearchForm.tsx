@@ -429,53 +429,58 @@ export const DomainSearchForm = forwardRef<DomainSearchFormRef, DomainSearchForm
     <RequireCredits credits={isAdmin ? 0 : 1} action="search domains" showAlert={hasSearched && !isAdmin}>
       <div className={`max-w-6xl mx-auto space-y-8 ${className}`} data-testid="domain-search-form">
         {/* Search Form */}
-        <Card className="border-2">
-          <CardHeader className="text-center">
-            <CardTitle className="text-3xl mb-2">Find Your Perfect Domain</CardTitle>
-            <CardDescription className="text-base">
-              Generate perfect domain names for your next project. Enter a keyword to discover available domains instantly.
+        <Card className="border shadow-lg bg-card/50 backdrop-blur-sm">
+          <CardHeader className="text-center pb-4">
+            <CardTitle className="text-4xl font-bold tracking-tight bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
+              Find Your Perfect Domain
+            </CardTitle>
+            <CardDescription className="text-lg text-muted-foreground max-w-2xl mx-auto leading-relaxed">
+              Discover available domains instantly. Enter a keyword and let AI help you find the perfect match.
             </CardDescription>
           </CardHeader>
-          <CardContent>
+          <CardContent className="space-y-6">
             <div data-testid="search-section">
-              <form onSubmit={handleSubmit} className="flex gap-4">
-                <div className="flex-1">
-                  <Input
-                    type="text"
-                    placeholder="Enter keyword to search domains..."
-                    value={keyword}
-                    onChange={handleKeywordChange}
-                    className="text-lg py-6"
-                    disabled={isLoading}
-                  />
-                  <p className="text-sm text-muted-foreground mt-2">
-                    Tip: Use * as a wildcard. Example: ai* finds domains starting with 'ai'.
-                  </p>
+              <form onSubmit={handleSubmit} className="relative">
+                <div className="flex gap-3">
+                  <div className="flex-1 relative">
+                    <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-muted-foreground h-5 w-5" />
+                    <Input
+                      type="text"
+                      placeholder="Enter keyword to search domains..."
+                      value={keyword}
+                      onChange={handleKeywordChange}
+                      className="pl-12 h-14 text-base font-medium border-2 focus:border-primary/50 bg-background/50"
+                      disabled={isLoading}
+                    />
+                  </div>
+                  <Button 
+                    type="submit" 
+                    size="lg" 
+                    disabled={isLoading || !keyword.trim()}
+                    className="h-14 px-8 text-base font-semibold shadow-lg"
+                  >
+                    {isLoading ? (
+                      <>
+                        <Loader2 className="mr-2 h-5 w-5 animate-spin" data-testid="loading-spinner" /> 
+                        Searching...
+                      </>
+                    ) : (
+                      <>Search Domains</>
+                    )}
+                  </Button>
                 </div>
-                <Button 
-                  type="submit" 
-                  size="lg" 
-                  disabled={isLoading || !keyword.trim()}
-                  className="px-8 py-6 text-lg"
-                >
-                  {isLoading ? (
-                    <>
-                      <Loader2 className="mr-2 h-5 w-5 animate-spin" data-testid="loading-spinner" /> 
-                      Searching...
-                    </>
-                  ) : (
-                    <><Search className="mr-2 h-5 w-5" /> Search Domains</>
-                  )}
-                </Button>
+                <p className="text-sm text-muted-foreground mt-3 pl-12">
+                  💡 <strong>Pro tip:</strong> Use * as wildcard (e.g., "ai*" finds domains starting with 'ai')
+                </p>
               </form>
             </div>
 
             <VibeFilter selected={selectedVibes} onChange={setSelectedVibes} />
 
             {error && (
-              <div className="flex items-center gap-2 text-destructive mt-4">
-                <AlertCircle className="h-5 w-5" />
-                <span>{error}</span>
+              <div className="flex items-center gap-2 text-destructive bg-destructive/5 p-4 rounded-lg border border-destructive/20">
+                <AlertCircle className="h-5 w-5 flex-shrink-0" />
+                <span className="text-sm font-medium">{error}</span>
               </div>
             )}
 

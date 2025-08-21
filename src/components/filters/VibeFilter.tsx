@@ -1,4 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { HelpCircle } from "lucide-react";
 
 const VIBES = ["Urban","Professional","Trendy","Slang","Luxury","Spiritual","Techy","Playful"] as const;
 export type Vibe = typeof VIBES[number];
@@ -14,6 +16,12 @@ export default function VibeFilter({
   onChange?: (next: Vibe[]) => void;
 }) {
   const [local, setLocal] = useState<Vibe[]>(selected);
+  
+  // Sync with external changes
+  useEffect(() => {
+    setLocal(selected);
+  }, [selected]);
+
   const toggle = (v: Vibe) => {
     const next = local.includes(v) ? local.filter(x => x !== v) : [...local, v];
     setLocal(next);
@@ -21,34 +29,47 @@ export default function VibeFilter({
   };
 
   return (
-    <section data-testid="vibe-filter" className="mt-4" aria-describedby="vibe-help">
-      <h3
-        className="text-base font-semibold mb-2 text-gray-900 dark:text-gray-100"
-        title={VIBE_TOOLTIP}
-      >
-        Vibe <span aria-hidden className="ml-2 text-xs text-gray-500">?</span>
-      </h3>
-      <p id="vibe-help" className="sr-only">{VIBE_TOOLTIP}</p>
+    <TooltipProvider>
+      <section data-testid="vibe-filter" className="mt-6 mb-4">
+        <div className="flex items-center gap-2 mb-3">
+          <h3 className="text-sm font-medium text-foreground">
+            Style & Vibe
+          </h3>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <button type="button" className="text-muted-foreground hover:text-foreground transition-colors">
+                <HelpCircle className="h-3.5 w-3.5" />
+                <span className="sr-only">What are vibes?</span>
+              </button>
+            </TooltipTrigger>
+            <TooltipContent side="top" className="max-w-xs text-center">
+              <p className="text-sm">{VIBE_TOOLTIP}</p>
+            </TooltipContent>
+          </Tooltip>
+        </div>
 
-      <div className="flex flex-wrap gap-2">
-        {VIBES.map((v) => {
-          const active = local.includes(v);
-          return (
-            <button
-              key={v}
-              type="button"
-              onClick={() => toggle(v)}
-              aria-pressed={active}
-              className={`px-3 py-1 rounded-full border text-sm md:text-base transition
-                ${active
-                  ? "border-gray-900 bg-gray-100 dark:bg-gray-800 dark:border-gray-100"
-                  : "border-gray-400 hover:border-gray-700 dark:border-gray-500 dark:hover:border-gray-300"}`}
-            >
-              {v}
-            </button>
-          );
-        })}
-      </div>
-    </section>
+        <div className="flex flex-wrap gap-2">
+          {VIBES.map((v) => {
+            const active = local.includes(v);
+            return (
+              <button
+                key={v}
+                type="button"
+                onClick={() => toggle(v)}
+                aria-pressed={active}
+                className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all duration-200 border
+                  ${active
+                    ? "bg-primary text-primary-foreground border-primary shadow-sm"
+                    : "bg-background text-foreground border-border hover:bg-muted hover:border-muted-foreground/20"
+                  }
+                `}
+              >
+                {v}
+              </button>
+            );
+          })}
+        </div>
+      </section>
+    </TooltipProvider>
   );
 }
