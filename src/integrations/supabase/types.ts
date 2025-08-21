@@ -185,6 +185,33 @@ export type Database = {
         }
         Relationships: []
       }
+      validation_logs: {
+        Row: {
+          created_at: string
+          domain: string
+          id: string
+          message: string | null
+          source: string
+          status: string | null
+        }
+        Insert: {
+          created_at?: string
+          domain: string
+          id?: string
+          message?: string | null
+          source: string
+          status?: string | null
+        }
+        Update: {
+          created_at?: string
+          domain?: string
+          id?: string
+          message?: string | null
+          source?: string
+          status?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

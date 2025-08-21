@@ -1,3 +1,4 @@
+
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 
@@ -34,13 +35,19 @@ serve(async (req) => {
       );
     }
 
-    // Initialize Supabase client for authentication
+    // Initialize Supabase client for authentication and logging
     const supabaseClient = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
       Deno.env.get("SUPABASE_ANON_KEY") ?? ""
     );
 
-    // Get authenticated user
+    const supabaseService = createClient(
+      Deno.env.get("SUPABASE_URL") ?? "",
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
+      { auth: { persistSession: false } }
+    );
+
+    // Get authenticated user and log search
     const authHeader = req.headers.get("Authorization");
     if (authHeader) {
       const token = authHeader.replace("Bearer ", "");
@@ -48,13 +55,6 @@ serve(async (req) => {
       const user = data.user;
       
       if (user) {
-        // Log search attempt
-        const supabaseService = createClient(
-          Deno.env.get("SUPABASE_URL") ?? "",
-          Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
-          { auth: { persistSession: false } }
-        );
-        
         await supabaseService
           .from('search_history')
           .insert({
@@ -78,81 +78,32 @@ serve(async (req) => {
     ];
 
     const domains: Domain[] = [];
-
-    // Check availability using Spaceship API
     const spaceshipApiKey = Deno.env.get("SPACESHIP_API_KEY");
-    console.log("Spaceship API Key available:", !!spaceshipApiKey);
-    
-    for (const variation of variations.slice(0, 3)) { // Limit to avoid too many API calls
-      for (const tld of tlds.slice(0, 8)) { // Limit TLDs
-        const domainName = `${variation}.${tld}`;
-        let isAvailable = false;
-        let domainPrice = getDefaultPrice(tld);
-        
-        try {
-          // Check if API key is available
-          if (!spaceshipApiKey) {
-            console.log("No Spaceship API key configured, using mock data for development");
-            throw new Error("No API key configured");
-          }
-          
-          // Call real Spaceship API for domain availability
-          const response = await fetch(`https://api.spaceship.com/domains/v1/availability?domain=${encodeURIComponent(domainName)}`, {
-            method: 'GET',
-            headers: {
-              'Authorization': `Bearer ${spaceshipApiKey}`,
-              'Content-Type': 'application/json',
-            }
-          });
 
-          if (response.ok) {
-            const data = await response.json();
-            console.log(`Spaceship API response for ${domainName}:`, data);
-            
-            // Handle Spaceship API response format
-            if (data && typeof data.available === 'boolean') {
-              isAvailable = data.available;
-              domainPrice = data.price || getDefaultPrice(tld);
-            } else {
-              // Fallback if unexpected response format
-              console.warn(`Unexpected API response format for ${domainName}:`, data);
-              isAvailable = Math.random() > 0.4; // Mock fallback
-            }
-          } else {
-            console.error(`API request failed for ${domainName}:`, response.status, response.statusText);
-            // Fallback to mock data if API fails
-            isAvailable = Math.random() > 0.4;
-          }
-        } catch (error) {
-          console.error(`Error checking domain ${domainName}:`, error);
-          // Fallback to mock data
-          isAvailable = Math.random() > 0.4;
+    for (const variation of variations.slice(0, 3)) {
+      for (const tld of tlds.slice(0, 8)) {
+        const domainName = `${variation}.${tld}`;
+        
+        // Check availability with strict validation
+        const availabilityResult = await checkDomainAvailability(domainName, spaceshipApiKey, supabaseService);
+        
+        if (availabilityResult.available) {
+          const domain: Domain = {
+            name: domainName,
+            available: true,
+            price: availabilityResult.price || getDefaultPrice(tld),
+            tld,
+            flipScore: calculateFlipScore(domainName),
+            trendStrength: calculateTrendStrength(variation)
+          };
+          domains.push(domain);
         }
-        
-        // Create domain object
-        const domain: Domain = {
-          name: domainName,
-          available: isAvailable,
-          price: domainPrice,
-          tld
-        };
-        
-        // Only calculate FlipScore and TrendStrength for AVAILABLE domains
-        if (isAvailable) {
-          domain.flipScore = calculateFlipScore(domainName);
-          domain.trendStrength = calculateTrendStrength(variation);
-        }
-        
-        domains.push(domain);
+        // Note: We no longer add unavailable domains to the results
       }
     }
 
-    // Sort by availability first, then by flip score
-    domains.sort((a, b) => {
-      if (a.available && !b.available) return -1;
-      if (!a.available && b.available) return 1;
-      return (b.flipScore || 0) - (a.flipScore || 0);
-    });
+    // Sort by flip score (all domains are available at this point)
+    domains.sort((a, b) => (b.flipScore || 0) - (a.flipScore || 0));
 
     return new Response(
       JSON.stringify({ domains: domains.slice(0, 15) }),
@@ -173,6 +124,120 @@ serve(async (req) => {
     );
   }
 });
+
+async function checkDomainAvailability(domainName: string, spaceshipApiKey: string | undefined, supabaseService: any) {
+  let spaceshipResult = null;
+  
+  try {
+    if (!spaceshipApiKey) {
+      await logValidation(supabaseService, domainName, 'spaceship', 'error', 'No Spaceship API key configured');
+      return { available: false, price: null };
+    }
+    
+    // Call Spaceship API
+    const response = await fetch(`https://api.spaceship.com/domains/v1/availability?domain=${encodeURIComponent(domainName)}`, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${spaceshipApiKey}`,
+        'Content-Type': 'application/json',
+      }
+    });
+
+    if (!response.ok) {
+      await logValidation(supabaseService, domainName, 'spaceship', 'error', 
+        `API request failed: ${response.status} ${response.statusText}`);
+      return { available: false, price: null };
+    }
+
+    const data = await response.json();
+    spaceshipResult = data;
+    
+    // Strict parsing - domain must pass ALL availability checks
+    const isSpaceshipAvailable = 
+      data && 
+      data.available === true && 
+      (!data.status || (data.status.toLowerCase() !== 'taken' && data.status.toLowerCase() !== 'registered')) &&
+      data.registered !== true;
+    
+    if (!isSpaceshipAvailable) {
+      // Domain is definitely not available according to Spaceship
+      return { available: false, price: data?.price };
+    }
+    
+    // Spaceship says it's available - double-check with RDAP
+    const rdapResult = await verifyWithRDAP(domainName, supabaseService);
+    
+    if (!rdapResult.available) {
+      // RDAP override - log the mismatch
+      await logValidation(supabaseService, domainName, 'rdap', 'mismatch', 
+        `Spaceship marked available but RDAP shows registered: ${rdapResult.message}`);
+      return { available: false, price: data?.price };
+    }
+    
+    // Both Spaceship and RDAP confirm availability
+    return { available: true, price: data?.price };
+    
+  } catch (error) {
+    console.error(`Error checking domain ${domainName}:`, error);
+    await logValidation(supabaseService, domainName, 'spaceship', 'error', 
+      `Exception during availability check: ${error.message}`);
+    return { available: false, price: null };
+  }
+}
+
+async function verifyWithRDAP(domainName: string, supabaseService: any) {
+  try {
+    const response = await fetch(`https://rdap.org/domain/${domainName}`, {
+      method: 'GET',
+      headers: { 'Accept': 'application/json' }
+    });
+    
+    if (response.status === 404) {
+      // 404 means domain is not registered - confirm available
+      return { available: true, message: 'RDAP 404 - not registered' };
+    }
+    
+    if (response.ok) {
+      const rdapData = await response.json();
+      const status = JSON.stringify(rdapData.status || []).toLowerCase();
+      
+      if (status.includes('active') || status.includes('ok')) {
+        // Domain is actively registered
+        return { available: false, message: `RDAP shows active registration: ${status}` };
+      }
+      
+      // Unusual status - treat as unavailable to be safe
+      return { available: false, message: `RDAP unusual status: ${status}` };
+    }
+    
+    // RDAP request failed - default to unavailable for safety
+    await logValidation(supabaseService, domainName, 'rdap', 'error', 
+      `RDAP request failed: ${response.status}`);
+    return { available: false, message: 'RDAP request failed' };
+    
+  } catch (error) {
+    console.error(`RDAP error for ${domainName}:`, error);
+    await logValidation(supabaseService, domainName, 'rdap', 'error', 
+      `RDAP exception: ${error.message}`);
+    return { available: false, message: 'RDAP exception' };
+  }
+}
+
+async function logValidation(supabaseService: any, domain: string, source: string, status: string, message: string) {
+  try {
+    await supabaseService
+      .from('validation_logs')
+      .insert({
+        domain,
+        source,
+        status,
+        message,
+        created_at: new Date().toISOString()
+      });
+  } catch (error) {
+    console.error('Failed to log validation:', error);
+  }
+}
 
 function calculateFlipScore(domainName: string): number {
   const name = domainName.split('.')[0];

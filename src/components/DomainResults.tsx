@@ -7,7 +7,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { ArrowLeft, ExternalLink, ThumbsUp, ThumbsDown, ShoppingCart, ChevronDown, CheckCircle, XCircle, Clock } from "lucide-react";
+import { ArrowLeft, ExternalLink, ThumbsUp, ThumbsDown, ShoppingCart, ChevronDown, CheckCircle, Clock } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { buildSpaceshipUrl, openInBatches } from "@/utils/spaceship";
 
@@ -58,16 +58,46 @@ export const DomainResults: React.FC<DomainResultsProps> = ({
   const [user, setUser] = useState<any>(null);
   const [debounceTimeout, setDebounceTimeout] = useState<number | null>(null);
   const [popupBlocked, setPopupBlocked] = useState(false);
+  const [validatingBuyLink, setValidatingBuyLink] = useState<string | null>(null);
 
-  const handleBuyNow = (domainName: string, isAvailable: boolean) => {
+  const validateBuyLink = async (domainName: string): Promise<{ ok: boolean; url?: string; error?: string }> => {
+    try {
+      const response = await supabase.functions.invoke('validate-buy-link', {
+        body: { domain: domainName }
+      });
+      
+      if (response.error) {
+        console.error(`❌ Buy link validation failed for ${domainName}:`, response.error);
+        return { ok: false, error: 'validation_failed' };
+      }
+      
+      return response.data;
+    } catch (error) {
+      console.error(`❌ Buy link validation error for ${domainName}:`, error);
+      return { ok: false, error: 'network_error' };
+    }
+  };
+
+  const handleBuyNow = async (domainName: string, isAvailable: boolean) => {
     if (!isAvailable) {
       console.log(`❌ Cannot buy ${domainName} - domain is not available`);
       return;
     }
     
-    console.log(`🛒 Buying ${domainName} via affiliate link`);
-    if (import.meta.env.DEV) console.log('BUY URL:', buildSpaceshipUrl(domainName));
-    const affiliateUrl = buildSpaceshipUrl(domainName);
+    setValidatingBuyLink(domainName);
+    console.log(`🔍 Validating buy link for ${domainName}...`);
+    
+    const validation = await validateBuyLink(domainName);
+    setValidatingBuyLink(null);
+    
+    if (!validation.ok) {
+      console.error(`❌ Buy link validation failed for ${domainName}:`, validation.error);
+      // Don't open the window if validation fails
+      return;
+    }
+    
+    console.log(`🛒 Opening validated buy link for ${domainName}`);
+    const affiliateUrl = validation.url || buildSpaceshipUrl(domainName);
     window.open(affiliateUrl, "_blank", "noopener");
   };
 
@@ -81,14 +111,13 @@ export const DomainResults: React.FC<DomainResultsProps> = ({
 
   const handleSelectAll = (checked: boolean) => {
     if (checked) {
-      // Only select available domains
-      setSelectedDomains(sortedDomains.filter(domain => domain.available).map(domain => domain.name));
+      // Only select available domains (all domains in results are available now)
+      setSelectedDomains(availableDomains.map(domain => domain.name));
     } else {
       setSelectedDomains([]);
     }
   };
 
-  // Save feedback to Supabase
   const saveFeedbackToSupabase = async (domainName: string, feedbackType: 'like' | 'dislike') => {
     try {
       const { error } = await supabase
@@ -152,7 +181,6 @@ export const DomainResults: React.FC<DomainResultsProps> = ({
     
     try {
       await navigator.clipboard.writeText(selectedDomains.join('\n'));
-      // Show toast or simple feedback
       console.log(`Copied ${selectedDomains.length} domains`);
     } catch (err) {
       console.error('Failed to copy:', err);
@@ -179,7 +207,6 @@ export const DomainResults: React.FC<DomainResultsProps> = ({
     console.log('📊 Sort changed to:', value);
   };
 
-  // Save search to history
   const saveSearchToHistory = async (searchQuery: string) => {
     if (!searchQuery?.trim()) return;
     
@@ -198,7 +225,6 @@ export const DomainResults: React.FC<DomainResultsProps> = ({
     }
   };
 
-  // Load search history
   const loadSearchHistory = async () => {
     try {
       const { data, error } = await supabase
@@ -233,9 +259,7 @@ export const DomainResults: React.FC<DomainResultsProps> = ({
     return `${Math.floor(diffInSeconds / 86400)} days ago`;
   };
 
-  // Effects
   useEffect(() => {
-    // Get current user
     const getUser = async () => {
       const { data: { user } } = await supabase.auth.getUser();
       setUser(user);
@@ -243,7 +267,6 @@ export const DomainResults: React.FC<DomainResultsProps> = ({
     
     getUser();
 
-    // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       setUser(session?.user || null);
     });
@@ -252,45 +275,26 @@ export const DomainResults: React.FC<DomainResultsProps> = ({
   }, []);
 
   useEffect(() => {
-    // Save search to history when component renders with a query
     if (query && !isLoading) {
       saveSearchToHistory(query);
     }
   }, [query, isLoading, user]);
 
   useEffect(() => {
-    // Load search history when user changes
-    if (user !== null) { // Check for both logged in and anonymous users
+    if (user !== null) {
       loadSearchHistory();
     }
   }, [user]);
 
-  // Normalize flip score to 1-10 scale
+  const availableDomains = useMemo(() => {
+    return domains?.filter(domain => domain.available === true) || [];
+  }, [domains]);
+
   const normalizeFlipScore = (rawScore: number): number => {
-    if (rawScore <= 10) return rawScore; // Already on 1-10 scale
-    return Math.round(rawScore / 10); // Normalize from 1-100 to 1-10
+    if (rawScore <= 10) return rawScore;
+    return Math.round(rawScore / 10);
   };
 
-  // Get availability status badge
-  const getAvailabilityBadge = (domain: Domain) => {
-    if (domain.available) {
-      return {
-        icon: <CheckCircle className="h-4 w-4" />,
-        text: "Available",
-        className: "bg-green-100 text-green-700 border-green-200 dark:bg-green-900/30 dark:text-green-300 dark:border-green-800",
-        tooltip: "This domain is available for registration"
-      };
-    } else {
-      return {
-        icon: <XCircle className="h-4 w-4" />,
-        text: "Taken",
-        className: "bg-red-100 text-red-700 border-red-200 dark:bg-red-900/30 dark:text-red-300 dark:border-red-800",
-        tooltip: "This domain is already registered"
-      };
-    }
-  };
-
-  // Get flip score badge properties - only for available domains
   const getFlipScoreBadge = (domain: Domain) => {
     if (!domain.available || !domain.flipScore) return null;
     
@@ -329,27 +333,26 @@ export const DomainResults: React.FC<DomainResultsProps> = ({
     return domain.flipScore || domain.trendStrength || Math.floor(Math.random() * 10) + 1;
   };
 
-  // Memoized sorted domains
   const sortedDomains = useMemo(() => {
-    if (!domains) return [];
+    if (!availableDomains.length) return [];
     
-    const sorted = [...domains].sort((a, b) => {
+    const sorted = [...availableDomains].sort((a, b) => {
       switch (sortBy) {
         case 'rank':
           const rankA = getRankingScore(a);
           const rankB = getRankingScore(b);
-          return rankB - rankA; // Highest to lowest
+          return rankB - rankA;
         case 'price':
-          return a.price - b.price; // Low to high
+          return a.price - b.price;
         case 'name':
-          return a.name.localeCompare(b.name); // A-Z
+          return a.name.localeCompare(b.name);
         default:
           return 0;
       }
     });
     
     return sorted;
-  }, [domains, sortBy]);
+  }, [availableDomains, sortBy]);
 
   if (isLoading) {
     return (
@@ -371,7 +374,7 @@ export const DomainResults: React.FC<DomainResultsProps> = ({
     );
   }
 
-  console.log('🚀 DomainResults rendering with', domains?.length, 'domains');
+  console.log('🚀 DomainResults rendering with', availableDomains?.length, 'available domains');
 
   return (
     <div className="min-h-screen bg-background p-6">
@@ -389,7 +392,7 @@ export const DomainResults: React.FC<DomainResultsProps> = ({
         {/* Header with Sort and Select All */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
           <h1 className="text-3xl font-bold text-foreground">
-            Domain Results ({sortedDomains?.length || 0} found)
+            Available Domains ({sortedDomains?.length || 0} found)
           </h1>
           
           <div className="flex items-center gap-4">
@@ -415,7 +418,7 @@ export const DomainResults: React.FC<DomainResultsProps> = ({
               <div className="flex items-center gap-2">
                 <Checkbox
                   id="select-all"
-                  checked={selectedDomains.length === sortedDomains.filter(domain => domain.available).length && sortedDomains.filter(domain => domain.available).length > 0}
+                  checked={selectedDomains.length === sortedDomains.length && sortedDomains.length > 0}
                   onCheckedChange={handleSelectAll}
                 />
                 <label htmlFor="select-all" className="text-sm font-medium">
@@ -470,27 +473,23 @@ export const DomainResults: React.FC<DomainResultsProps> = ({
                   const isSelected = selectedDomains.includes(domain.name);
                   const rankingScore = getRankingScore(domain);
                   const flipScoreBadge = getFlipScoreBadge(domain);
+                  const isValidating = validatingBuyLink === domain.name;
                   
                   return (
                     <Card 
                       key={domain.name}
-                      className={`group transition-all duration-300 border-border ${
-                        !domain.available 
-                          ? 'opacity-50 grayscale cursor-not-allowed' 
-                          : 'hover:shadow-lg hover:scale-105'
-                      } ${
+                      className={`group transition-all duration-300 border-border hover:shadow-lg hover:scale-105 ${
                         isSelected ? 'ring-2 ring-primary bg-muted/50' : ''
                       }`}
                     >
                       <CardContent className="p-6">
                         <div className="space-y-4">
-                          {/* Selection Checkbox - Only for available domains */}
+                          {/* Selection Checkbox */}
                           <div className="flex items-start justify-between">
                             <Checkbox
                               id={`select-${domain.name}`}
                               checked={isSelected}
-                              disabled={!domain.available}
-                              onCheckedChange={(checked) => domain.available && handleDomainSelection(domain.name, checked as boolean)}
+                              onCheckedChange={(checked) => handleDomainSelection(domain.name, checked as boolean)}
                             />
                           </div>
                           
@@ -522,22 +521,10 @@ export const DomainResults: React.FC<DomainResultsProps> = ({
                           {/* Availability & Price */}
                           <div className="space-y-2">
                             <div className="flex items-center gap-2">
-                              {(() => {
-                                const availabilityBadge = getAvailabilityBadge(domain);
-                                return (
-                                  <Tooltip>
-                                    <TooltipTrigger asChild>
-                                      <Badge className={`${availabilityBadge.className} flex items-center gap-1`}>
-                                        {availabilityBadge.icon}
-                                        {availabilityBadge.text}
-                                      </Badge>
-                                    </TooltipTrigger>
-                                    <TooltipContent>
-                                      <p>{availabilityBadge.tooltip}</p>
-                                    </TooltipContent>
-                                  </Tooltip>
-                                );
-                              })()}
+                              <Badge className="bg-green-100 text-green-700 border-green-200 dark:bg-green-900/30 dark:text-green-300 dark:border-green-800 flex items-center gap-1">
+                                <CheckCircle className="h-4 w-4" />
+                                Available
+                              </Badge>
                             </div>
                             <p className="text-sm text-muted-foreground">
                               ${domain.price.toFixed(2)}/year
@@ -573,15 +560,24 @@ export const DomainResults: React.FC<DomainResultsProps> = ({
                             </Button>
                           </div>
                           
-                          {/* Buy Button - Only for available domains */}
+                          {/* Buy Button */}
                           <Button
                             onClick={() => handleBuyNow(domain.name, domain.available)}
-                            disabled={!domain.available}
-                            className="w-full bg-primary text-primary-foreground hover:bg-primary/90 font-semibold rounded-lg transition-all duration-200 gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                            disabled={isValidating}
+                            className="w-full bg-primary text-primary-foreground hover:bg-primary/90 font-semibold rounded-lg transition-all duration-200 gap-2"
                             size="lg"
                           >
-                            {domain.available ? 'BUY NOW' : 'UNAVAILABLE'}
-                            {domain.available && <ExternalLink className="h-4 w-4" />}
+                            {isValidating ? (
+                              <>
+                                <Clock className="h-4 w-4 animate-spin" />
+                                VALIDATING...
+                              </>
+                            ) : (
+                              <>
+                                BUY NOW
+                                <ExternalLink className="h-4 w-4" />
+                              </>
+                            )}
                           </Button>
                         </div>
                       </CardContent>
@@ -608,7 +604,6 @@ export const DomainResults: React.FC<DomainResultsProps> = ({
                       <Button
                         onClick={handleBuySelected}
                         disabled={debounceTimeout !== null}
-                        aria-disabled={debounceTimeout !== null}
                         className="bg-primary text-primary-foreground hover:bg-primary/90 gap-2"
                       >
                         <ShoppingCart className="h-4 w-4" />
@@ -618,7 +613,6 @@ export const DomainResults: React.FC<DomainResultsProps> = ({
                         onClick={handleCopySelected}
                         variant="outline"
                         disabled={selectedDomains.length === 0}
-                        aria-disabled={selectedDomains.length === 0}
                       >
                         Copy Selected
                       </Button>
@@ -626,7 +620,6 @@ export const DomainResults: React.FC<DomainResultsProps> = ({
                         onClick={handleDownloadCSV}
                         variant="outline"
                         disabled={selectedDomains.length === 0}
-                        aria-disabled={selectedDomains.length === 0}
                       >
                         Download CSV
                       </Button>
@@ -638,7 +631,7 @@ export const DomainResults: React.FC<DomainResultsProps> = ({
           </>
         ) : (
           <div className="text-center py-12">
-            <p className="text-lg text-destructive">No domains to display</p>
+            <p className="text-lg text-muted-foreground">No available domains found</p>
           </div>
         )}
       </div>

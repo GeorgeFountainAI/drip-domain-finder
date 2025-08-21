@@ -1,5 +1,6 @@
+
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { render } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import '@testing-library/jest-dom';
 import { DomainResults } from './DomainResults';
@@ -30,18 +31,28 @@ vi.mock('@/integrations/supabase/client', () => ({
           })
         })
       })
-    })
+    }),
+    functions: {
+      invoke: vi.fn().mockResolvedValue({ 
+        data: { ok: true, url: 'https://validated-url.com' }, 
+        error: null 
+      })
+    }
   }
 }));
 
-const mockDomains = [
-  { name: 'example1', available: true, price: 10, tld: '.com', flipScore: 85 },
-  { name: 'example2', available: true, price: 15, tld: '.net' },
-  { name: 'unavailable', available: false, price: 20, tld: '.org' }
+const mockAvailableDomains = [
+  { name: 'example1.com', available: true, price: 10, tld: 'com', flipScore: 85 },
+  { name: 'example2.net', available: true, price: 15, tld: 'net' }
+];
+
+const mockUnavailableDomains = [
+  { name: 'unavailable.org', available: false, price: 20, tld: 'org' },
+  { name: 'getsupermind.com', available: false, price: 12.99, tld: 'com' }
 ];
 
 const defaultProps = {
-  domains: mockDomains,
+  domains: mockAvailableDomains,
   onAddToCart: vi.fn(),
   onBack: vi.fn(),
   isLoading: false,
@@ -53,19 +64,99 @@ describe('DomainResults', () => {
     vi.clearAllMocks();
   });
 
-  it('renders list of domains with checkboxes', () => {
-    const { getByText, getAllByRole } = render(<DomainResults {...defaultProps} />);
+  it('renders only available domains', () => {
+    render(<DomainResults {...defaultProps} />);
     
-    expect(getByText('example1')).toBeInTheDocument();
-    expect(getByText('example2')).toBeInTheDocument();
-    expect(getByText('unavailable')).toBeInTheDocument();
+    expect(screen.getByText('example1.com')).toBeInTheDocument();
+    expect(screen.getByText('example2.net')).toBeInTheDocument();
     
-    const checkboxes = getAllByRole('checkbox');
-    expect(checkboxes.length).toBeGreaterThan(0);
+    // Should show available count
+    expect(screen.getByText(/Available Domains \(2 found\)/)).toBeInTheDocument();
   });
 
-  it('calls buildSpaceshipUrl with correct domain', () => {
+  it('does not render unavailable domains', () => {
+    const propsWithUnavailable = {
+      ...defaultProps,
+      domains: [...mockAvailableDomains, ...mockUnavailableDomains]
+    };
+    
+    render(<DomainResults {...propsWithUnavailable />);
+    
+    // Available domains should be present
+    expect(screen.getByText('example1.com')).toBeInTheDocument();
+    expect(screen.getByText('example2.net')).toBeInTheDocument();
+    
+    // Unavailable domains should NOT be present
+    expect(screen.queryByText('unavailable.org')).not.toBeInTheDocument();
+    expect(screen.queryByText('getsupermind.com')).not.toBeInTheDocument();
+    
+    // Count should only include available domains
+    expect(screen.getByText(/Available Domains \(2 found\)/)).toBeInTheDocument();
+  });
+
+  it('shows correct availability badges for available domains', () => {
     render(<DomainResults {...defaultProps} />);
-    expect(spaceshipUtils.buildSpaceshipUrl).toBeDefined();
+    
+    const availableBadges = screen.getAllByText('Available');
+    expect(availableBadges).toHaveLength(2);
+  });
+
+  it('renders checkboxes for available domains', () => {
+    render(<DomainResults {...defaultProps} />);
+    
+    const checkboxes = screen.getAllByRole('checkbox');
+    // Should have 3 checkboxes: 2 for domains + 1 for "Select All"
+    expect(checkboxes).toHaveLength(3);
+  });
+
+  it('shows "No available domains found" when no available domains', () => {
+    const propsNoAvailable = {
+      ...defaultProps,
+      domains: mockUnavailableDomains
+    };
+    
+    render(<DomainResults {...propsNoAvailable />);
+    
+    expect(screen.getByText('No available domains found')).toBeInTheDocument();
+    expect(screen.getByText(/Available Domains \(0 found\)/)).toBeInTheDocument();
+  });
+
+  it('validates buy links before opening', async () => {
+    const user = userEvent.setup();
+    render(<DomainResults {...defaultProps} />);
+    
+    const buyButtons = screen.getAllByText('BUY NOW');
+    await user.click(buyButtons[0]);
+    
+    // Should call validate-buy-link function
+    const { supabase } = await import('@/integrations/supabase/client');
+    expect(supabase.functions.invoke).toHaveBeenCalledWith('validate-buy-link', {
+      body: { domain: 'example1.com' }
+    });
+  });
+
+  it('prevents opening invalid buy links', async () => {
+    const user = userEvent.setup();
+    
+    // Mock validation failure
+    const { supabase } = await import('@/integrations/supabase/client');
+    vi.mocked(supabase.functions.invoke).mockResolvedValueOnce({
+      data: { ok: false, error: '404' },
+      error: null
+    });
+    
+    // Mock window.open to track calls
+    const mockWindowOpen = vi.fn();
+    vi.stubGlobal('window', { ...window, open: mockWindowOpen });
+    
+    render(<DomainResults {...defaultProps} />);
+    
+    const buyButtons = screen.getAllByText('BUY NOW');
+    await user.click(buyButtons[0]);
+    
+    // Should not open window if validation fails
+    expect(mockWindowOpen).not.toHaveBeenCalled();
+    
+    vi.unstubAllGlobals();
   });
 });
