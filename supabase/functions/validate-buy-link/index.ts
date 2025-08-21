@@ -32,20 +32,36 @@ serve(async (req) => {
       { auth: { persistSession: false } }
     );
 
-    // Build Spaceship cart URL
+    // Build both cart and search URLs for testing
     const cartUrl = `https://www.spaceship.com/domain-registration?search=${encodeURIComponent(domain)}`;
+    const searchUrl = `https://www.spaceship.com/domain-search?query=${encodeURIComponent(domain)}`;
     
+    // Try cart URL first
     try {
-      // Test if the cart URL is accessible
       const response = await fetch(cartUrl, {
-        method: 'HEAD', // Just check headers, don't download content
+        method: 'HEAD',
         redirect: 'follow'
       });
       
       if (response.status === 404) {
-        // Log 404 error
+        // Cart URL failed, try search URL as fallback
+        try {
+          const searchResponse = await fetch(searchUrl, { method: 'HEAD', redirect: 'follow' });
+          
+          if (searchResponse.ok) {
+            // Search URL works, use it instead
+            return new Response(
+              JSON.stringify({ ok: true, url: searchUrl }),
+              { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
+            );
+          }
+        } catch (searchError) {
+          console.log('Search URL also failed:', searchError);
+        }
+        
+        // Both URLs failed - log and return failure
         await logValidation(supabaseService, domain, 'buy_link', '404', 
-          `Cart URL returned 404: ${cartUrl}`);
+          `Both cart and search URLs returned 404: ${cartUrl}, ${searchUrl}`);
         
         return new Response(
           JSON.stringify({ 

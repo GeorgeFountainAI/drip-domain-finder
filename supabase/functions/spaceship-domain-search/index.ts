@@ -160,7 +160,9 @@ async function checkDomainAvailability(domainName: string, spaceshipApiKey: stri
       data.registered !== true;
     
     if (!isSpaceshipAvailable) {
-      // Domain is definitely not available according to Spaceship
+      // Domain is definitely not available according to Spaceship - log it
+      await logValidation(supabaseService, domainName, 'spaceship', 'unavailable', 
+        `Spaceship API marked unavailable: available=${data?.available}, status=${data?.status}, registered=${data?.registered}`);
       return { available: false, price: data?.price };
     }
     

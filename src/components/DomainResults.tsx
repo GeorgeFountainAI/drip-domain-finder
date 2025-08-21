@@ -92,13 +92,19 @@ export const DomainResults: React.FC<DomainResultsProps> = ({
     
     if (!validation.ok) {
       console.error(`❌ Buy link validation failed for ${domainName}:`, validation.error);
-      // Don't open the window if validation fails
+      // Don't open the window if validation fails - user will see disabled button
       return;
     }
     
     console.log(`🛒 Opening validated buy link for ${domainName}`);
     const affiliateUrl = validation.url || buildSpaceshipUrl(domainName);
-    window.open(affiliateUrl, "_blank", "noopener");
+    const newWindow = window.open(affiliateUrl, "_blank", "noopener");
+    
+    if (!newWindow) {
+      console.log(`❌ Popup blocked for ${domainName}`);
+      setPopupBlocked(true);
+      setTimeout(() => setPopupBlocked(false), 5000);
+    }
   };
 
   const handleDomainSelection = (domainName: string, checked: boolean) => {

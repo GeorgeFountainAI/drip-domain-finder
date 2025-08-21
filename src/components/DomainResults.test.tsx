@@ -1,6 +1,5 @@
-
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { render } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import '@testing-library/jest-dom';
 import { DomainResults } from './DomainResults';
@@ -65,13 +64,13 @@ describe('DomainResults', () => {
   });
 
   it('renders only available domains', () => {
-    render(<DomainResults {...defaultProps} />);
+    const { getByText } = render(<DomainResults {...defaultProps} />);
     
-    expect(screen.getByText('example1.com')).toBeInTheDocument();
-    expect(screen.getByText('example2.net')).toBeInTheDocument();
+    expect(getByText('example1.com')).toBeInTheDocument();
+    expect(getByText('example2.net')).toBeInTheDocument();
     
     // Should show available count
-    expect(screen.getByText(/Available Domains \(2 found\)/)).toBeInTheDocument();
+    expect(getByText(/Available Domains \(2 found\)/)).toBeInTheDocument();
   });
 
   it('does not render unavailable domains', () => {
@@ -80,31 +79,31 @@ describe('DomainResults', () => {
       domains: [...mockAvailableDomains, ...mockUnavailableDomains]
     };
     
-    render(<DomainResults {...propsWithUnavailable />);
+    const { getByText, queryByText } = render(<DomainResults {...propsWithUnavailable} />);
     
     // Available domains should be present
-    expect(screen.getByText('example1.com')).toBeInTheDocument();
-    expect(screen.getByText('example2.net')).toBeInTheDocument();
+    expect(getByText('example1.com')).toBeInTheDocument();
+    expect(getByText('example2.net')).toBeInTheDocument();
     
     // Unavailable domains should NOT be present
-    expect(screen.queryByText('unavailable.org')).not.toBeInTheDocument();
-    expect(screen.queryByText('getsupermind.com')).not.toBeInTheDocument();
+    expect(queryByText('unavailable.org')).not.toBeInTheDocument();
+    expect(queryByText('getsupermind.com')).not.toBeInTheDocument();
     
     // Count should only include available domains
-    expect(screen.getByText(/Available Domains \(2 found\)/)).toBeInTheDocument();
+    expect(getByText(/Available Domains \(2 found\)/)).toBeInTheDocument();
   });
 
   it('shows correct availability badges for available domains', () => {
-    render(<DomainResults {...defaultProps} />);
+    const { getAllByText } = render(<DomainResults {...defaultProps} />);
     
-    const availableBadges = screen.getAllByText('Available');
+    const availableBadges = getAllByText('Available');
     expect(availableBadges).toHaveLength(2);
   });
 
   it('renders checkboxes for available domains', () => {
-    render(<DomainResults {...defaultProps} />);
+    const { getAllByRole } = render(<DomainResults {...defaultProps} />);
     
-    const checkboxes = screen.getAllByRole('checkbox');
+    const checkboxes = getAllByRole('checkbox');
     // Should have 3 checkboxes: 2 for domains + 1 for "Select All"
     expect(checkboxes).toHaveLength(3);
   });
@@ -115,17 +114,17 @@ describe('DomainResults', () => {
       domains: mockUnavailableDomains
     };
     
-    render(<DomainResults {...propsNoAvailable />);
+    const { getByText } = render(<DomainResults {...propsNoAvailable} />);
     
-    expect(screen.getByText('No available domains found')).toBeInTheDocument();
-    expect(screen.getByText(/Available Domains \(0 found\)/)).toBeInTheDocument();
+    expect(getByText('No available domains found')).toBeInTheDocument();
+    expect(getByText(/Available Domains \(0 found\)/)).toBeInTheDocument();
   });
 
   it('validates buy links before opening', async () => {
     const user = userEvent.setup();
-    render(<DomainResults {...defaultProps} />);
+    const { getAllByText } = render(<DomainResults {...defaultProps} />);
     
-    const buyButtons = screen.getAllByText('BUY NOW');
+    const buyButtons = getAllByText('BUY NOW');
     await user.click(buyButtons[0]);
     
     // Should call validate-buy-link function
@@ -149,14 +148,36 @@ describe('DomainResults', () => {
     const mockWindowOpen = vi.fn();
     vi.stubGlobal('window', { ...window, open: mockWindowOpen });
     
-    render(<DomainResults {...defaultProps} />);
+    const { getAllByText } = render(<DomainResults {...defaultProps} />);
     
-    const buyButtons = screen.getAllByText('BUY NOW');
+    const buyButtons = getAllByText('BUY NOW');
     await user.click(buyButtons[0]);
     
     // Should not open window if validation fails
     expect(mockWindowOpen).not.toHaveBeenCalled();
     
     vi.unstubAllGlobals();
+  });
+
+  it('never renders getsupermind.com as available', () => {
+    const propsWithGetsupermind = {
+      ...defaultProps,
+      domains: [
+        ...mockAvailableDomains, 
+        { name: 'getsupermind.com', available: false, price: 12.99, tld: 'com' }
+      ]
+    };
+    
+    const { getByText, queryByText } = render(<DomainResults {...propsWithGetsupermind} />);
+    
+    // getsupermind.com should never appear
+    expect(queryByText('getsupermind.com')).not.toBeInTheDocument();
+    
+    // Only available domains should be shown
+    expect(getByText('example1.com')).toBeInTheDocument();
+    expect(getByText('example2.net')).toBeInTheDocument();
+    
+    // Should show correct count excluding unavailable domains
+    expect(getByText(/Available Domains \(2 found\)/)).toBeInTheDocument();
   });
 });
