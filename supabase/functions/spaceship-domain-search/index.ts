@@ -86,6 +86,8 @@ serve(async (req) => {
     for (const variation of variations.slice(0, 3)) { // Limit to avoid too many API calls
       for (const tld of tlds.slice(0, 8)) { // Limit TLDs
         const domainName = `${variation}.${tld}`;
+        let isAvailable = false;
+        let domainPrice = getDefaultPrice(tld);
         
         try {
           // Check if API key is available
@@ -94,64 +96,54 @@ serve(async (req) => {
             throw new Error("No API key configured");
           }
           
-          // Call Spaceship API for domain availability
-          const response = await fetch(`https://api.spaceship.com/domain/check`, {
-            method: 'POST',
+          // Call real Spaceship API for domain availability
+          const response = await fetch(`https://api.spaceship.com/domains/v1/availability?domain=${encodeURIComponent(domainName)}`, {
+            method: 'GET',
             headers: {
               'Authorization': `Bearer ${spaceshipApiKey}`,
               'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              domains: [domainName]
-            })
+            }
           });
 
           if (response.ok) {
             const data = await response.json();
-            const domainData = data.domains?.[0];
+            console.log(`Spaceship API response for ${domainName}:`, data);
             
-            if (domainData) {
-              const flipScore = calculateFlipScore(domainName);
-              const trendStrength = calculateTrendStrength(variation);
-              
-              domains.push({
-                name: domainName,
-                available: domainData.available || false,
-                price: domainData.price || getDefaultPrice(tld),
-                tld,
-                flipScore,
-                trendStrength
-              });
+            // Handle Spaceship API response format
+            if (data && typeof data.available === 'boolean') {
+              isAvailable = data.available;
+              domainPrice = data.price || getDefaultPrice(tld);
+            } else {
+              // Fallback if unexpected response format
+              console.warn(`Unexpected API response format for ${domainName}:`, data);
+              isAvailable = Math.random() > 0.4; // Mock fallback
             }
           } else {
+            console.error(`API request failed for ${domainName}:`, response.status, response.statusText);
             // Fallback to mock data if API fails
-            const flipScore = calculateFlipScore(domainName);
-            const trendStrength = calculateTrendStrength(variation);
-            
-            domains.push({
-              name: domainName,
-              available: Math.random() > 0.4,
-              price: getDefaultPrice(tld),
-              tld,
-              flipScore,
-              trendStrength
-            });
+            isAvailable = Math.random() > 0.4;
           }
         } catch (error) {
           console.error(`Error checking domain ${domainName}:`, error);
           // Fallback to mock data
-          const flipScore = calculateFlipScore(domainName);
-          const trendStrength = calculateTrendStrength(variation);
-          
-          domains.push({
-            name: domainName,
-            available: Math.random() > 0.4,
-            price: getDefaultPrice(tld),
-            tld,
-            flipScore,
-            trendStrength
-          });
+          isAvailable = Math.random() > 0.4;
         }
+        
+        // Create domain object
+        const domain: Domain = {
+          name: domainName,
+          available: isAvailable,
+          price: domainPrice,
+          tld
+        };
+        
+        // Only calculate FlipScore and TrendStrength for AVAILABLE domains
+        if (isAvailable) {
+          domain.flipScore = calculateFlipScore(domainName);
+          domain.trendStrength = calculateTrendStrength(variation);
+        }
+        
+        domains.push(domain);
       }
     }
 

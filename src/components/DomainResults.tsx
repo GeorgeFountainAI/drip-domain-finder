@@ -7,7 +7,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { ArrowLeft, ExternalLink, ThumbsUp, ThumbsDown, ShoppingCart, ChevronDown } from "lucide-react";
+import { ArrowLeft, ExternalLink, ThumbsUp, ThumbsDown, ShoppingCart, ChevronDown, CheckCircle, XCircle, Clock } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { buildSpaceshipUrl, openInBatches } from "@/utils/spaceship";
 
@@ -59,7 +59,12 @@ export const DomainResults: React.FC<DomainResultsProps> = ({
   const [debounceTimeout, setDebounceTimeout] = useState<number | null>(null);
   const [popupBlocked, setPopupBlocked] = useState(false);
 
-  const handleBuyNow = (domainName: string) => {
+  const handleBuyNow = (domainName: string, isAvailable: boolean) => {
+    if (!isAvailable) {
+      console.log(`❌ Cannot buy ${domainName} - domain is not available`);
+      return;
+    }
+    
     console.log(`🛒 Buying ${domainName} via affiliate link`);
     if (import.meta.env.DEV) console.log('BUY URL:', buildSpaceshipUrl(domainName));
     const affiliateUrl = buildSpaceshipUrl(domainName);
@@ -266,9 +271,28 @@ export const DomainResults: React.FC<DomainResultsProps> = ({
     return Math.round(rawScore / 10); // Normalize from 1-100 to 1-10
   };
 
-  // Get flip score badge properties
+  // Get availability status badge
+  const getAvailabilityBadge = (domain: Domain) => {
+    if (domain.available) {
+      return {
+        icon: <CheckCircle className="h-4 w-4" />,
+        text: "Available",
+        className: "bg-green-100 text-green-700 border-green-200 dark:bg-green-900/30 dark:text-green-300 dark:border-green-800",
+        tooltip: "This domain is available for registration"
+      };
+    } else {
+      return {
+        icon: <XCircle className="h-4 w-4" />,
+        text: "Taken",
+        className: "bg-red-100 text-red-700 border-red-200 dark:bg-red-900/30 dark:text-red-300 dark:border-red-800",
+        tooltip: "This domain is already registered"
+      };
+    }
+  };
+
+  // Get flip score badge properties - only for available domains
   const getFlipScoreBadge = (domain: Domain) => {
-    if (!domain.flipScore) return null;
+    if (!domain.available || !domain.flipScore) return null;
     
     const normalizedScore = normalizeFlipScore(domain.flipScore);
     
@@ -496,14 +520,25 @@ export const DomainResults: React.FC<DomainResultsProps> = ({
                           </div>
                           
                           {/* Availability & Price */}
-                          <div className="space-y-1">
-                            <p className={`text-sm font-medium ${
-                              domain.available 
-                                ? 'text-green-600' 
-                                : 'text-red-600'
-                            }`}>
-                              {domain.available ? '✓ Available' : '✗ Unavailable'}
-                            </p>
+                          <div className="space-y-2">
+                            <div className="flex items-center gap-2">
+                              {(() => {
+                                const availabilityBadge = getAvailabilityBadge(domain);
+                                return (
+                                  <Tooltip>
+                                    <TooltipTrigger asChild>
+                                      <Badge className={`${availabilityBadge.className} flex items-center gap-1`}>
+                                        {availabilityBadge.icon}
+                                        {availabilityBadge.text}
+                                      </Badge>
+                                    </TooltipTrigger>
+                                    <TooltipContent>
+                                      <p>{availabilityBadge.tooltip}</p>
+                                    </TooltipContent>
+                                  </Tooltip>
+                                );
+                              })()}
+                            </div>
                             <p className="text-sm text-muted-foreground">
                               ${domain.price.toFixed(2)}/year
                             </p>
@@ -540,7 +575,7 @@ export const DomainResults: React.FC<DomainResultsProps> = ({
                           
                           {/* Buy Button - Only for available domains */}
                           <Button
-                            onClick={() => domain.available && handleBuyNow(domain.name)}
+                            onClick={() => handleBuyNow(domain.name, domain.available)}
                             disabled={!domain.available}
                             className="w-full bg-primary text-primary-foreground hover:bg-primary/90 font-semibold rounded-lg transition-all duration-200 gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                             size="lg"
