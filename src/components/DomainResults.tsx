@@ -1,133 +1,106 @@
-import React from "react";
-import { useSearchStore, useSelectedDomains } from "@/lib/store";
-import { supabase } from "@/integrations/supabase/client";
-import { HelpCircle, TrendingUp } from "lucide-react";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+// src/components/DomainResults.tsx
 
-const FlipScoreWithTooltip = ({ score }: { score: number }) => {
-  const getScoreColor = (score: number) => {
-    if (score >= 80) return 'text-green-600';
-    if (score >= 60) return 'text-yellow-600';
-    return 'text-orange-600';
-  };
+import React from 'react';
+import { buildSpaceshipUrl } from '@/utils/spaceship';
+import { useSelectedDomains } from '../../lib/store';
 
-  const scoreOutOfTen = Math.round((score / 100) * 10);
-
-  return (
-    <div className="flex items-center gap-1">
-      <span className="text-sm text-purple-600 bg-purple-100 rounded px-2 py-1">
-        Flip Score: {scoreOutOfTen}/10
-      </span>
-      <Tooltip>
-        <TooltipTrigger asChild>
-          <button type="button" className="text-muted-foreground hover:text-foreground transition-colors">
-            <HelpCircle className="h-3 w-3" />
-            <span className="sr-only">What is Flip Score?</span>
-          </button>
-        </TooltipTrigger>
-        <TooltipContent side="top" className="max-w-xs">
-          <div className="text-sm">
-            <strong>Flip Score = Brand Potential</strong>
-            <ul className="mt-1 space-y-1">
-              <li>• Short, memorable names</li>
-              <li>• Trendy keywords</li>
-              <li>• Available .com domains</li>
-              <li>• High resale interest</li>
-            </ul>
-          </div>
-        </TooltipContent>
-      </Tooltip>
-    </div>
-  );
+type DomainResult = {
+  domain: string;
+  available: boolean;
+  price: number;
+  flipScore?: number;
 };
 
-const DomainResults = () => {
-  const { results } = useSearchStore();
-  const { selectedDomains, add, remove } = useSelectedDomains();
+interface Props {
+  results: DomainResult[];
+}
 
-  const handleCheckboxChange = (domain: string) => {
+const DomainResults: React.FC<Props> = ({ results }) => {
+  const {
+    selectedDomains,
+    add: selectDomain,
+    remove: deselectDomain,
+    clear: clearSelected,
+  } = useSelectedDomains();
+
+  const toggleSelection = (domain: string) => {
     if (selectedDomains.includes(domain)) {
-      remove(domain);
+      deselectDomain(domain);
     } else {
-      add(domain);
+      selectDomain(domain);
     }
   };
 
-  const buildBuyLink = (domain: string) => {
-    return `https://www.spaceship.com/domains/domain-registration/results?search=${domain}&irclickid=Wc7xihyLMxycUY8QQ-Spo2Tf4Ukp26X0lyT-3Uk0`;
+  const openAffiliateLinks = () => {
+    const selected = results.filter((d) =>
+      selectedDomains.includes(d.domain)
+    );
+    selected.forEach((d) => {
+      window.open(buildSpaceshipUrl(d.domain), '_blank', 'noopener,noreferrer');
+    });
   };
-
-  const handleBuyClick = async (e: React.MouseEvent, domain: string) => {
-    e.preventDefault();
-    
-    try {
-      const { data, error } = await supabase.functions.invoke('validate-buy-link', {
-        body: { domain }
-      });
-      
-      if (error) {
-        console.error('Validation error:', error);
-        return;
-      }
-      
-      if (data?.ok) {
-        const url = buildBuyLink(domain);
-        window.open(url, '_blank', 'noopener,noreferrer');
-      }
-    } catch (error) {
-      console.error('Failed to validate buy link:', error);
-    }
-  };
-
-  // Filter results to only show available domains and exclude getsupermind.com
-  const filteredResults = results.filter(
-    item => item.available && item.domain !== 'getsupermind.com'
-  );
 
   return (
-    <TooltipProvider>
-      <div className="flex flex-col gap-4">
-        {filteredResults.map((item) => {
-          const isSelected = selectedDomains.includes(item.domain);
-
-          return (
-            <div
-              key={item.domain}
-              className="rounded-xl border-2 border-primary/20 p-4 shadow-elevated bg-card hover:shadow-primary transition-all duration-200"
-            >
-              <div className="flex justify-between items-center mb-2">
-                <div className="flex items-center gap-2">
-                  <input
-                    type="checkbox"
-                    checked={isSelected}
-                    onChange={() => handleCheckboxChange(item.domain)}
-                    className="rounded border-2 border-primary/30"
-                  />
-                  <span className="text-lg font-bold text-primary">{item.domain}</span>
-                </div>
-                {item.flipScore && <FlipScoreWithTooltip score={item.flipScore} />}
+    <div>
+      <h2 className="text-xl font-semibold mb-4">Results</h2>
+      {results.length === 0 && (
+        <p className="text-gray-500">No results found.</p>
+      )}
+      <ul className="space-y-2">
+        {results.map((d) => (
+          <li
+            key={d.domain}
+            className={`flex items-center justify-between p-3 border rounded-lg ${
+              d.available
+                ? 'border-green-400 bg-green-50'
+                : 'border-gray-300 bg-gray-100'
+            }`}
+          >
+            <div>
+              <div className="font-medium">{d.domain}</div>
+              <div className="text-sm text-gray-600">
+                {d.available ? 'Available' : 'Unavailable'} — ${d.price.toFixed(2)}
               </div>
-              <div className="flex items-center gap-2 text-green-600 text-sm mb-3">
-                <span>✅ Available</span>
-                <span className="text-foreground font-medium">${item.price?.toFixed(2)}/year</span>
-              </div>
-              <a
-                href={buildBuyLink(item.domain)}
-                onClick={(e) => handleBuyClick(e, item.domain)}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="bg-primary hover:bg-primary/90 text-primary-foreground px-4 py-2 rounded-md hover:shadow-primary/30 hover:shadow-lg inline-flex items-center gap-2 font-medium transition-all duration-200"
-              >
-                BUY NOW
-                <span role="img" aria-label="arrow">
-                  🔗
-                </span>
-              </a>
             </div>
-          );
-        })}
-      </div>
-    </TooltipProvider>
+            {d.available && (
+              <div className="flex items-center space-x-3">
+                <input
+                  type="checkbox"
+                  checked={selectedDomains.includes(d.domain)}
+                  onChange={() => toggleSelection(d.domain)}
+                  className="w-5 h-5"
+                />
+                <a
+                  href={buildSpaceshipUrl(d.domain)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-blue-600 underline"
+                >
+                  Buy
+                </a>
+              </div>
+            )}
+          </li>
+        ))}
+      </ul>
+
+      {selectedDomains.length > 0 && (
+        <div className="mt-6 flex items-center space-x-4">
+          <button
+            onClick={openAffiliateLinks}
+            className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700"
+          >
+            Buy Selected ({selectedDomains.length})
+          </button>
+          <button
+            onClick={clearSelected}
+            className="bg-gray-300 px-3 py-2 rounded-md hover:bg-gray-400"
+          >
+            Clear
+          </button>
+        </div>
+      )}
+    </div>
   );
 };
 
