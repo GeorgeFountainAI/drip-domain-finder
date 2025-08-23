@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { buildSpaceshipUrl } from '@/utils/spaceship';
-import { useSelectedDomains } from '../../lib/store';
+import { useSelectedDomains } from '../lib/store';
 
 type DomainResult = {
   domain: string;
