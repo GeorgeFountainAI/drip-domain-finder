@@ -1,6 +1,7 @@
 // src/pages/AppPage.tsx
 import React, { useEffect, useMemo, useState } from 'react';
 import DomainResults from '../components/DomainResults';
+import { useSearchStore } from '@/lib/store';
 
 type DomainResult = {
   domain: string;
@@ -73,9 +74,8 @@ function generateCandidates(query: string, count = 24): DomainResult[] {
 
 const AppPage: React.FC = () => {
   const [q, setQ] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [results, setResults] = useState<DomainResult[]>([]);
   const [errMsg, setErrMsg] = useState<string | null>(null);
+  const { setResults, setLoading, loading } = useSearchStore();
 
   // Prevent "Back" → login by stabilizing the history state on /app
   useEffect(() => {
@@ -151,7 +151,7 @@ const AppPage: React.FC = () => {
       </div>
 
       <div className="mt-6">
-        <DomainResults query={q} fetcher={fetcher} />
+        <DomainResults />
       </div>
     </div>
   );

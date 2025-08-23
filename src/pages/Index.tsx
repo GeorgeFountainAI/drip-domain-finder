@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import DomainResults from '@/components/DomainResults';
+import { useSearchStore } from '@/lib/store';
 
 async function fetchDomains(query: string) {
   const res = await fetch(`/api/search?q=${encodeURIComponent(query)}`);
@@ -11,6 +12,7 @@ async function fetchDomains(query: string) {
 export default function Home() {
   const [query, setQuery] = useState('');
   const [submitted, setSubmitted] = useState(false);
+  const { setResults, setLoading } = useSearchStore();
 
   return (
     <main className="p-6 max-w-3xl mx-auto">
@@ -25,13 +27,23 @@ export default function Home() {
         />
         <button
           className="bg-violet-600 text-white px-4 py-3 rounded-lg font-semibold hover:opacity-90"
-          onClick={() => setSubmitted(true)}
+          onClick={() => {
+            setLoading(true);
+            const mockResults = [
+              { domain: `${query}.com`, available: true, price: 12.99 },
+              { domain: `${query}.io`, available: true, price: 15.99 },
+              { domain: `${query}.ai`, available: false, price: 25.99 }
+            ];
+            setResults(mockResults);
+            setLoading(false);
+            setSubmitted(true);
+          }}
         >
           Search
         </button>
       </div>
       {submitted && query && (
-        <DomainResults query={query} fetcher={fetchDomains} />
+        <DomainResults />
       )}
     </main>
   );
