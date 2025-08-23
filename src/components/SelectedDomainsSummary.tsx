@@ -20,6 +20,7 @@ const SelectedDomainsSummary = () => {
             variant="ghost"
             size="sm"
             onClick={clear}
+            aria-label="Close"
             className="h-6 w-6 p-0 hover:bg-destructive hover:text-destructive-foreground"
           >
             <X className="h-3 w-3" />

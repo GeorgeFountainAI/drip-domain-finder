@@ -4,6 +4,7 @@ import { SearchHistoryViewer } from "./SearchHistoryViewer";
 import { AuthForm } from "./AuthForm";
 import { ModernHeader } from "./ModernHeader";
 import DomainResults from "./DomainResults";
+import SelectedDomainsSummary from "./SelectedDomainsSummary";
 import { DomainCart } from "./DomainCart";
 import { DomainCheckout } from "./DomainCheckout";
 import FAQPreview from "./FAQPreview";
@@ -208,7 +209,18 @@ export const DomainDripApp = () => {
       )}
       
       {currentState === 'results' && (
-        <DomainResults />
+        <div className="container mx-auto p-4">
+          <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+            <div className="lg:col-span-3">
+              <DomainResults />
+            </div>
+            <div className="lg:col-span-1">
+              <div className="lg:sticky lg:top-4">
+                <SelectedDomainsSummary />
+              </div>
+            </div>
+          </div>
+        </div>
       )}
       
       {currentState === 'cart' && (

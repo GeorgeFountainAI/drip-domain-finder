@@ -1,5 +1,6 @@
 import React from "react";
 import { useSearchStore, useSelectedDomains } from "@/lib/store";
+import { supabase } from "@/integrations/supabase/client";
 
 const DomainResults = () => {
   const { results } = useSearchStore();
@@ -17,9 +18,36 @@ const DomainResults = () => {
     return `https://www.spaceship.com/domains/domain-registration/results?search=${domain}&irclickid=Wc7xihyLMxycUY8QQ-Spo2Tf4Ukp26X0lyT-3Uk0`;
   };
 
+  const handleBuyClick = async (e: React.MouseEvent, domain: string) => {
+    e.preventDefault();
+    
+    try {
+      const { data, error } = await supabase.functions.invoke('validate-buy-link', {
+        body: { domain }
+      });
+      
+      if (error) {
+        console.error('Validation error:', error);
+        return;
+      }
+      
+      if (data?.ok) {
+        const url = buildBuyLink(domain);
+        window.open(url, '_blank', 'noopener,noreferrer');
+      }
+    } catch (error) {
+      console.error('Failed to validate buy link:', error);
+    }
+  };
+
+  // Filter results to only show available domains and exclude getsupermind.com
+  const filteredResults = results.filter(
+    item => item.available && item.domain !== 'getsupermind.com'
+  );
+
   return (
     <div className="flex flex-col gap-4">
-      {results.map((item) => {
+      {filteredResults.map((item) => {
         const isSelected = selectedDomains.includes(item.domain);
         const scoreOutOfTen = item.flipScore
           ? Math.round((item.flipScore / 100) * 10)
@@ -49,6 +77,7 @@ const DomainResults = () => {
             </div>
             <a
               href={buildBuyLink(item.domain)}
+              onClick={(e) => handleBuyClick(e, item.domain)}
               target="_blank"
               rel="noopener noreferrer"
               className="bg-purple-600 text-white px-4 py-2 rounded hover:bg-purple-700 inline-flex items-center gap-1"
