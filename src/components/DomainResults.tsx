@@ -1,63 +1,107 @@
-"use client";
+// src/components/DomainResults.tsx
 
-import { useState } from "react";
-import { useSelectedDomains } from "@/lib/store";
-import { buildSpaceshipUrl } from "@/utils/spaceship";
+import React from 'react';
+import { buildSpaceshipUrl } from '@/utils/spaceship';
+import { useSelectedDomains } from '@/lib/store';
 
-interface Domain {
-  name: string;
+type DomainResult = {
+  domain: string;
   available: boolean;
   price: number;
-  tld: string;
   flipScore?: number;
+};
+
+interface Props {
+  results: DomainResult[];
 }
 
-interface DomainResultsProps {
-  domains: Domain[];
-  onAddToCart: (domains: Domain[]) => void;
-  onBack: () => void;
-  isLoading: boolean;
-}
+const DomainResults: React.FC<Props> = ({ results }) => {
+  const {
+    selectedDomains,
+    add: selectDomain,
+    remove: deselectDomain,
+    clear: clearSelected,
+  } = useSelectedDomains();
 
-export default function DomainResults({ domains, onAddToCart, onBack, isLoading }: DomainResultsProps) {
-  const { selectedDomains, add, remove, clear } = useSelectedDomains();
+  const toggleSelection = (domain: string) => {
+    if (selectedDomains.includes(domain)) {
+      deselectDomain(domain);
+    } else {
+      selectDomain(domain);
+    }
+  };
 
-  // Filter to only show available domains
-  const availableDomains = domains.filter(d => d.available);
-  
-  if (!availableDomains.length && !isLoading) return null;
+  const openAffiliateLinks = () => {
+    const selected = results.filter((d) =>
+      selectedDomains.includes(d.domain)
+    );
+    selected.forEach((d) => {
+      window.open(buildSpaceshipUrl(d.domain), '_blank', 'noopener,noreferrer');
+    });
+  };
 
   return (
-    <div className="space-y-6 mt-10">
-      {availableDomains.map((domain) => (
-        <div
-          key={domain.name}
-          className="border border-purple-500 rounded-xl p-6 shadow-md bg-white dark:bg-zinc-900"
-        >
-          <div className="flex items-center justify-between">
-            <div className="text-xl font-bold text-purple-700">{domain.name}</div>
-            {domain.flipScore && (
-              <div className="text-sm bg-purple-100 text-purple-700 px-2 py-1 rounded-md">
-                Flip Score: {domain.flipScore}
+    <div>
+      <h2 className="text-xl font-semibold mb-4">Results</h2>
+      {results.length === 0 && (
+        <p className="text-gray-500">No results found.</p>
+      )}
+      <ul className="space-y-2">
+        {results.map((d) => (
+          <li
+            key={d.domain}
+            className={`flex items-center justify-between p-3 border rounded-lg ${
+              d.available
+                ? 'border-green-400 bg-green-50'
+                : 'border-gray-300 bg-gray-100'
+            }`}
+          >
+            <div>
+              <div className="font-medium">{d.domain}</div>
+              <div className="text-sm text-gray-600">
+                {d.available ? 'Available' : 'Unavailable'} — ${d.price.toFixed(2)}
+              </div>
+            </div>
+            {d.available && (
+              <div className="flex items-center space-x-3">
+                <input
+                  type="checkbox"
+                  checked={selectedDomains.includes(d.domain)}
+                  onChange={() => toggleSelection(d.domain)}
+                  className="w-5 h-5"
+                />
+                <a
+                  href={buildSpaceshipUrl(d.domain)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-blue-600 underline"
+                >
+                  Buy
+                </a>
               </div>
             )}
-          </div>
+          </li>
+        ))}
+      </ul>
 
-          <div className="mt-2 flex items-center gap-2">
-            <span className="text-green-600 font-medium">✅ Available</span>
-            <span className="text-gray-600">${domain.price}/year</span>
-          </div>
-
-          <a
-            href={buildSpaceshipUrl(domain.name)}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="mt-4 inline-block bg-purple-600 hover:bg-purple-700 text-white font-semibold py-2 px-6 rounded transition"
+      {selectedDomains.length > 0 && (
+        <div className="mt-6 flex items-center space-x-4">
+          <button
+            onClick={openAffiliateLinks}
+            className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700"
           >
-            BUY NOW ↗
-          </a>
+            Buy Selected ({selectedDomains.length})
+          </button>
+          <button
+            onClick={clearSelected}
+            className="bg-gray-300 px-3 py-2 rounded-md hover:bg-gray-400"
+          >
+            Clear
+          </button>
         </div>
-      ))}
+      )}
     </div>
   );
-}
+};
+
+export default DomainResults;
