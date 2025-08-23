@@ -14,7 +14,7 @@ const DomainResults = () => {
   };
 
   const buildBuyLink = (domain: string) => {
-    return `https://www.spaceship.com/domains/domain-registration/results?search=${domain}`;
+    return `https://www.spaceship.com/domains/domain-registration/results?search=${domain}&irclickid=Wc7xihyLMxycUY8QQ-Spo2Tf4Ukp26X0lyT-3Uk0`;
   };
 
   return (

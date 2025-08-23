@@ -153,6 +153,17 @@ describe('DomainResults', () => {
     expect(container.firstChild?.children).toHaveLength(0);
   });
 
+  it('contains correct affiliate URL with irclickid', () => {
+    const { getAllByText } = render(<DomainResults />);
+    
+    const buyButtons = getAllByText('BUY NOW');
+    const firstBuyButton = buyButtons[0] as HTMLAnchorElement;
+    
+    expect(firstBuyButton.href).toBe(
+      'https://www.spaceship.com/domains/domain-registration/results?search=example1.com&irclickid=Wc7xihyLMxycUY8QQ-Spo2Tf4Ukp26X0lyT-3Uk0'
+    );
+  });
+
   it('validates buy links before opening', async () => {
     const user = userEvent.setup();
     const { getAllByText } = render(<DomainResults />);
