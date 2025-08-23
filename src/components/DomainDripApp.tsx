@@ -5,6 +5,7 @@ import { AuthForm } from "./AuthForm";
 import { ModernHeader } from "./ModernHeader";
 import DomainResults from "./DomainResults";
 import SelectedDomainsSummary from "./SelectedDomainsSummary";
+import BulkActionsFooter from "./BulkActionsFooter";
 import { DomainCart } from "./DomainCart";
 import { DomainCheckout } from "./DomainCheckout";
 import FAQPreview from "./FAQPreview";
@@ -241,6 +242,7 @@ export const DomainDripApp = () => {
       )}
       
         <CartButton />
+        {currentState === 'results' && <BulkActionsFooter />}
       </div>
     </div>
   );
