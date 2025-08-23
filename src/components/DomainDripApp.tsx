@@ -157,7 +157,7 @@ export const DomainDripApp = () => {
           <img 
             src={domainDripLogo} 
             alt="" 
-            className="w-[60vw] h-[60vh] object-contain opacity-[0.25] rotate-12 scale-150 mix-blend-overlay"
+            className="w-[60vw] h-[60vh] object-contain opacity-[0.08] rotate-12 scale-150 mix-blend-overlay"
           />
         </div>
       )}

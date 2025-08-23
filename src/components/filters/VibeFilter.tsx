@@ -30,7 +30,7 @@ export default function VibeFilter({
 
   return (
     <TooltipProvider>
-      <section data-testid="vibe-filter" className="mt-6 mb-4">
+      <section data-testid="vibe-filter" className="mt-4 mb-4">
         <div className="flex items-center gap-2 mb-3">
           <h3 className="text-sm font-medium text-foreground">
             Style & Vibe
@@ -49,26 +49,27 @@ export default function VibeFilter({
         </div>
 
         <div className="flex flex-wrap gap-2">
-          {VIBES.map((v) => {
-            const active = local.includes(v);
-            return (
-              <button
-                key={v}
-                type="button"
-                onClick={() => toggle(v)}
-                aria-pressed={active}
-                className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all duration-200 border
-                  ${active
-                    ? "bg-primary text-primary-foreground border-primary shadow-sm"
-                    : "bg-background text-foreground border-border hover:bg-muted hover:border-muted-foreground/20"
-                  }
-                `}
-              >
-                {v}
-              </button>
-            );
-          })}
+          {VIBES.map(vibe => (
+            <button
+              key={vibe}
+              type="button"
+              onClick={() => toggle(vibe)}
+              className={`px-3 py-1.5 text-sm rounded-md font-medium transition-all duration-200 border-2 ${
+                local.includes(vibe) 
+                  ? 'bg-primary text-primary-foreground border-primary shadow-primary/20' 
+                  : 'bg-background text-muted-foreground border-border hover:border-primary/30 hover:text-foreground'
+              }`}
+            >
+              {vibe}
+            </button>
+          ))}
         </div>
+
+        {local.length > 0 && (
+          <div className="mt-2 text-xs text-muted-foreground">
+            Selected: {local.join(", ")}
+          </div>
+        )}
       </section>
     </TooltipProvider>
   );

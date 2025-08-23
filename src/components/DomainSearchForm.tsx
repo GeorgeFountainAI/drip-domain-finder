@@ -18,12 +18,13 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Loader2, Search, Check, X, AlertCircle, Star, TrendingUp } from "lucide-react";
+import { Loader2, Search, Check, X, AlertCircle, Star, TrendingUp, HelpCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useConsumeCredit } from "@/hooks/useConsumeCredit";
 import { useAdminBypass } from "@/hooks/useAdminBypass";
 import RequireCredits from "@/components/RequireCredits";
 import { SearchHistory } from "@/components/SearchHistory";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import searchDomains from "@/api/domainSearchClient";
 import { generateWildcardSuggestions } from "@/utils/domainGenerator";
 
@@ -65,7 +66,7 @@ const StarRating = ({ rating }: { rating: number }) => {
   );
 };
 
-// Helper component for displaying flip score
+// Helper component for displaying flip score with tooltip
 const FlipScore = ({ score }: { score: number }) => {
   const getScoreColor = (score: number) => {
     if (score >= 80) return 'text-green-600 dark:text-green-400';
@@ -79,6 +80,25 @@ const FlipScore = ({ score }: { score: number }) => {
       <span className={`text-xs font-medium ${getScoreColor(score)}`}>
         {score}/100
       </span>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <button type="button" className="text-muted-foreground hover:text-foreground transition-colors">
+            <HelpCircle className="h-3 w-3" />
+            <span className="sr-only">What is Flip Score?</span>
+          </button>
+        </TooltipTrigger>
+        <TooltipContent side="top" className="max-w-xs">
+          <div className="text-sm">
+            <strong>Flip Score = Brand Potential</strong>
+            <ul className="mt-1 space-y-1">
+              <li>• Short, memorable names</li>
+              <li>• Trendy keywords</li>
+              <li>• Available .com domains</li>
+              <li>• High resale interest</li>
+            </ul>
+          </div>
+        </TooltipContent>
+      </Tooltip>
     </div>
   );
 };
@@ -427,53 +447,72 @@ export const DomainSearchForm = forwardRef<DomainSearchFormRef, DomainSearchForm
 
   return (
     <RequireCredits credits={isAdmin ? 0 : 1} action="search domains" showAlert={hasSearched && !isAdmin}>
-      <div className={`max-w-6xl mx-auto space-y-8 ${className}`} data-testid="domain-search-form">
-        {/* Search Form */}
-        <Card className="border shadow-lg bg-card/50 backdrop-blur-sm">
-          <CardHeader className="text-center pb-4">
-            <CardTitle className="text-4xl font-bold tracking-tight bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
-              Find Your Perfect Domain
-            </CardTitle>
-            <CardDescription className="text-lg text-muted-foreground max-w-2xl mx-auto leading-relaxed">
-              Discover available domains instantly. Enter a keyword and let AI help you find the perfect match.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            <div data-testid="search-section">
-              <form onSubmit={handleSubmit} className="relative">
-                <div className="flex gap-3">
-                  <div className="flex-1 relative">
-                    <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-muted-foreground h-5 w-5" />
-                    <Input
-                      type="text"
-                      placeholder="Enter keyword to search domains..."
-                      value={keyword}
-                      onChange={handleKeywordChange}
-                      className="pl-12 h-14 text-base font-medium border-2 focus:border-primary/50 bg-background/50"
-                      disabled={isLoading}
-                    />
+      <TooltipProvider>
+        <div className={`max-w-6xl mx-auto space-y-8 ${className}`} data-testid="domain-search-form">
+          {/* Search Form */}
+          <Card className="border-2 shadow-elevated bg-card backdrop-blur-sm">
+            <CardHeader className="text-center pb-4">
+              <CardTitle className="text-4xl font-bold tracking-tight bg-gradient-primary bg-clip-text text-transparent">
+                Find Your Perfect Domain
+              </CardTitle>
+              <CardDescription className="text-lg text-muted-foreground max-w-2xl mx-auto leading-relaxed">
+                Discover available domains with AI-powered search and get instant availability checks.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div data-testid="search-section">
+                <form onSubmit={handleSubmit} className="relative">
+                  <div className="flex gap-3">
+                    <div className="flex-1 relative">
+                      <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-muted-foreground h-5 w-5" />
+                      <Input
+                        type="text"
+                        placeholder="Search by keyword or *wildcard (e.g., ai*)..."
+                        value={keyword}
+                        onChange={handleKeywordChange}
+                        className="pl-12 pr-12 h-14 text-base font-medium border-2 focus:border-primary/50 bg-background shadow-card"
+                        disabled={isLoading}
+                      />
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <button
+                            type="button"
+                            className="absolute right-4 top-1/2 transform -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                          >
+                            <HelpCircle className="h-4 w-4" />
+                            <span className="sr-only">Wildcard search help</span>
+                          </button>
+                        </TooltipTrigger>
+                        <TooltipContent side="top" className="max-w-xs">
+                          <div className="text-sm">
+                            <strong>Wildcard Tips:</strong>
+                            <ul className="mt-1 space-y-1">
+                              <li>• ai* → starts with ai</li>
+                              <li>• *bot → ends with bot</li>
+                              <li>• black*beauty → contains both</li>
+                            </ul>
+                          </div>
+                        </TooltipContent>
+                      </Tooltip>
+                    </div>
+                    <Button 
+                      type="submit" 
+                      size="lg" 
+                      disabled={isLoading || !keyword.trim()}
+                      className="h-14 px-8 text-base font-semibold shadow-elevated bg-primary hover:bg-primary/90 rounded-md"
+                    >
+                      {isLoading ? (
+                        <>
+                          <Loader2 className="mr-2 h-5 w-5 animate-spin" data-testid="loading-spinner" /> 
+                          Searching...
+                        </>
+                      ) : (
+                        <>Search Domains</>
+                      )}
+                    </Button>
                   </div>
-                  <Button 
-                    type="submit" 
-                    size="lg" 
-                    disabled={isLoading || !keyword.trim()}
-                    className="h-14 px-8 text-base font-semibold shadow-lg"
-                  >
-                    {isLoading ? (
-                      <>
-                        <Loader2 className="mr-2 h-5 w-5 animate-spin" data-testid="loading-spinner" /> 
-                        Searching...
-                      </>
-                    ) : (
-                      <>Search Domains</>
-                    )}
-                  </Button>
-                </div>
-                <p className="text-sm text-muted-foreground mt-3 pl-12">
-                  💡 <strong>Pro tip:</strong> Use * as wildcard (e.g., "ai*" finds domains starting with 'ai')
-                </p>
-              </form>
-            </div>
+                </form>
+              </div>
 
             <VibeFilter selected={selectedVibes} onChange={setSelectedVibes} />
 
@@ -657,8 +696,9 @@ export const DomainSearchForm = forwardRef<DomainSearchFormRef, DomainSearchForm
               </Card>
             )}
           </div>
-        )}
-      </div>
+          )}
+        </div>
+      </TooltipProvider>
     </RequireCredits>
   );
 });
