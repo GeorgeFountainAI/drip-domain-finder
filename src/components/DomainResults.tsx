@@ -1,105 +1,66 @@
-// src/components/DomainResults.tsx
+import React from "react";
+import { useSearchStore, useSelectedDomains } from "@/lib/store";
 
-import React from 'react';
-import { buildSpaceshipUrl } from '@/utils/spaceship';
-import { useSelectedDomains } from '@/lib/store';
+const DomainResults = () => {
+  const { results } = useSearchStore();
+  const { selectedDomains, add, remove } = useSelectedDomains();
 
-type DomainResult = {
-  domain: string;
-  available: boolean;
-  price: number;
-  flipScore?: number;
-};
-
-interface Props {
-  results: DomainResult[];
-}
-
-const DomainResults: React.FC<Props> = ({ results }) => {
-  const {
-    selectedDomains,
-    add: selectDomain,
-    remove: deselectDomain,
-    clear: clearSelected,
-  } = useSelectedDomains();
-
-  const toggleSelection = (domain: string) => {
+  const handleCheckboxChange = (domain: string) => {
     if (selectedDomains.includes(domain)) {
-      deselectDomain(domain);
+      remove(domain);
     } else {
-      selectDomain(domain);
+      add(domain);
     }
   };
 
-  const openAffiliateLinks = () => {
-    const selected = results.filter((d) =>
-      selectedDomains.includes(d.domain)
-    );
-    selected.forEach((d) => {
-      window.open(buildSpaceshipUrl(d.domain), '_blank', 'noopener,noreferrer');
-    });
+  const buildBuyLink = (domain: string) => {
+    return `https://www.spaceship.com/domains/domain-registration/results?search=${domain}`;
   };
 
   return (
-    <div>
-      <h2 className="text-xl font-semibold mb-4">Results</h2>
-      {results.length === 0 && (
-        <p className="text-gray-500">No results found.</p>
-      )}
-      <ul className="space-y-2">
-        {results.map((d) => (
-          <li
-            key={d.domain}
-            className={`flex items-center justify-between p-3 border rounded-lg ${
-              d.available
-                ? 'border-green-400 bg-green-50'
-                : 'border-gray-300 bg-gray-100'
-            }`}
+    <div className="flex flex-col gap-4">
+      {results.map((item) => {
+        const isSelected = selectedDomains.includes(item.domain);
+        const scoreOutOfTen = item.flipScore
+          ? Math.round((item.flipScore / 100) * 10)
+          : 0;
+
+        return (
+          <div
+            key={item.domain}
+            className="rounded-xl border border-purple-300 p-4 shadow-md"
           >
-            <div>
-              <div className="font-medium">{d.domain}</div>
-              <div className="text-sm text-gray-600">
-                {d.available ? 'Available' : 'Unavailable'} — ${d.price.toFixed(2)}
-              </div>
-            </div>
-            {d.available && (
-              <div className="flex items-center space-x-3">
+            <div className="flex justify-between items-center mb-2">
+              <div className="flex items-center gap-2">
                 <input
                   type="checkbox"
-                  checked={selectedDomains.includes(d.domain)}
-                  onChange={() => toggleSelection(d.domain)}
-                  className="w-5 h-5"
+                  checked={isSelected}
+                  onChange={() => handleCheckboxChange(item.domain)}
                 />
-                <a
-                  href={buildSpaceshipUrl(d.domain)}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-blue-600 underline"
-                >
-                  Buy
-                </a>
+                <span className="text-lg font-bold text-purple-800">{item.domain}</span>
               </div>
-            )}
-          </li>
-        ))}
-      </ul>
-
-      {selectedDomains.length > 0 && (
-        <div className="mt-6 flex items-center space-x-4">
-          <button
-            onClick={openAffiliateLinks}
-            className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700"
-          >
-            Buy Selected ({selectedDomains.length})
-          </button>
-          <button
-            onClick={clearSelected}
-            className="bg-gray-300 px-3 py-2 rounded-md hover:bg-gray-400"
-          >
-            Clear
-          </button>
-        </div>
-      )}
+              <div className="text-sm text-purple-600 bg-purple-100 rounded px-2 py-1">
+                Flip Score: {scoreOutOfTen}/10
+              </div>
+            </div>
+            <div className="flex items-center gap-2 text-green-600 text-sm mb-2">
+              <span>✅ Available</span>
+              <span className="text-black">${item.price?.toFixed(2)}/year</span>
+            </div>
+            <a
+              href={buildBuyLink(item.domain)}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="bg-purple-600 text-white px-4 py-2 rounded hover:bg-purple-700 inline-flex items-center gap-1"
+            >
+              BUY NOW{" "}
+              <span role="img" aria-label="arrow">
+                🔗
+              </span>
+            </a>
+          </div>
+        );
+      })}
     </div>
   );
 };
