@@ -98,7 +98,7 @@ describe('DomainResults', () => {
   });
 
   it('renders only available domains', () => {
-    const { getByText } = render(<DomainResults />);
+    const { getByText } = render(<DomainResults results={mockAvailableDomains} />);
     
     expect(getByText('example1.com')).toBeInTheDocument();
     expect(getByText('example2.net')).toBeInTheDocument();
@@ -113,7 +113,7 @@ describe('DomainResults', () => {
       setLoading: mockSetLoading,
     });
     
-    const { getByText, queryByText } = render(<DomainResults />);
+    const { getByText, queryByText } = render(<DomainResults results={[...mockAvailableDomains, ...mockUnavailableDomains]} />);
     
     // Available domains should be present
     expect(getByText('example1.com')).toBeInTheDocument();
@@ -125,14 +125,14 @@ describe('DomainResults', () => {
   });
 
   it('shows correct availability badges for available domains', () => {
-    const { getAllByText } = render(<DomainResults />);
+    const { getAllByText } = render(<DomainResults results={mockAvailableDomains} />);
     
     const availableBadges = getAllByText('✅ Available');
     expect(availableBadges).toHaveLength(2);
   });
 
   it('renders checkboxes for available domains', () => {
-    const { getAllByRole } = render(<DomainResults />);
+    const { getAllByRole } = render(<DomainResults results={mockAvailableDomains} />);
     
     const checkboxes = getAllByRole('checkbox');
     expect(checkboxes).toHaveLength(2); // 2 for domains
@@ -147,14 +147,14 @@ describe('DomainResults', () => {
       setLoading: mockSetLoading,
     });
     
-    const { container } = render(<DomainResults />);
+    const { container } = render(<DomainResults results={[]} />);
     
     // Should render empty container
     expect(container.firstChild?.children).toHaveLength(0);
   });
 
   it('contains correct affiliate URL with irclickid', () => {
-    const { getAllByText } = render(<DomainResults />);
+    const { getAllByText } = render(<DomainResults results={mockAvailableDomains} />);
     
     const buyButtons = getAllByText('BUY NOW');
     const firstBuyButton = buyButtons[0] as HTMLAnchorElement;
@@ -166,7 +166,7 @@ describe('DomainResults', () => {
 
   it('validates buy links before opening', async () => {
     const user = userEvent.setup();
-    const { getAllByText } = render(<DomainResults />);
+    const { getAllByText } = render(<DomainResults results={mockAvailableDomains} />);
     
     const buyButtons = getAllByText('BUY NOW');
     await user.click(buyButtons[0]);
@@ -192,7 +192,7 @@ describe('DomainResults', () => {
     const mockWindowOpen = vi.fn();
     vi.stubGlobal('window', { ...window, open: mockWindowOpen });
     
-    const { getAllByText } = render(<DomainResults />);
+    const { getAllByText } = render(<DomainResults results={mockAvailableDomains} />);
     
     const buyButtons = getAllByText('BUY NOW');
     await user.click(buyButtons[0]);
@@ -215,7 +215,7 @@ describe('DomainResults', () => {
       setLoading: mockSetLoading,
     });
     
-    const { getByText, queryByText } = render(<DomainResults />);
+    const { getByText, queryByText } = render(<DomainResults results={[...mockAvailableDomains, { domain: 'getsupermind.com', available: false, price: 12.99 }]} />);
     
     // getsupermind.com should never appear
     expect(queryByText('getsupermind.com')).not.toBeInTheDocument();

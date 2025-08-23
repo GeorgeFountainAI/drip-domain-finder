@@ -213,7 +213,12 @@ export const DomainDripApp = () => {
         <div className="container mx-auto p-4">
           <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
             <div className="lg:col-span-3">
-              <DomainResults />
+              <DomainResults results={domains.map(d => ({
+                domain: d.name,
+                available: d.available,
+                price: d.price,
+                flipScore: 85 // Default flip score for now
+              }))} />
             </div>
             <div className="lg:col-span-1">
               <div className="lg:sticky lg:top-4">
