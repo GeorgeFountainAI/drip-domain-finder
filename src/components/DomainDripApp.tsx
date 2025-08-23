@@ -122,6 +122,19 @@ export const DomainDripApp = () => {
     }
   };
 
+  // Mock fetcher for DomainResults - this matches the expected interface
+  const mockFetcher = async (query: string) => {
+    return {
+      results: domains.map(d => ({
+        domain: d.name,
+        available: d.available,
+        price: d.price,
+        flipScore: 85
+      })),
+      suggestions: []
+    };
+  };
+
   // Cart button for results page
   const CartButton = () => {
     if (currentState !== 'results' || cartItems.length === 0) return null;
@@ -213,12 +226,7 @@ export const DomainDripApp = () => {
         <div className="container mx-auto p-4">
           <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
             <div className="lg:col-span-3">
-              <DomainResults results={domains.map(d => ({
-                domain: d.name,
-                available: d.available,
-                price: d.price,
-                flipScore: 85 // Default flip score for now
-              }))} />
+              <DomainResults query={currentKeyword} fetcher={mockFetcher} />
             </div>
             <div className="lg:col-span-1">
               <div className="lg:sticky lg:top-4">

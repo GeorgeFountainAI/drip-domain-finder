@@ -64,7 +64,7 @@ function generateCandidates(query: string, count = 24): DomainResult[] {
 
   return names.slice(0, count).map((d, i) => ({
     domain: d,
-    available: true,          // we default to “available” for UX; purchase flow confirms
+    available: true,          // we default to "available" for UX; purchase flow confirms
     price: price(i),
     flipScore: score(i),
   }));
@@ -77,7 +77,7 @@ const AppPage: React.FC = () => {
   const [results, setResults] = useState<DomainResult[]>([]);
   const [errMsg, setErrMsg] = useState<string | null>(null);
 
-  // Prevent “Back” → login by stabilizing the history state on /app
+  // Prevent "Back" → login by stabilizing the history state on /app
   useEffect(() => {
     try {
       if (location.pathname !== '/app') {
@@ -96,6 +96,15 @@ const AppPage: React.FC = () => {
     () => 'Search by keyword or *wildcard (e.g., ai*, *bot, black*beauty)…',
     []
   );
+
+  // Fetcher function that matches DomainResults interface
+  const fetcher = async (query: string) => {
+    const data = generateCandidates(query || 'brand', 24);
+    return {
+      results: data,
+      suggestions: []
+    };
+  };
 
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -142,7 +151,7 @@ const AppPage: React.FC = () => {
       </div>
 
       <div className="mt-6">
-        <DomainResults results={results} />
+        <DomainResults query={q} fetcher={fetcher} />
       </div>
     </div>
   );

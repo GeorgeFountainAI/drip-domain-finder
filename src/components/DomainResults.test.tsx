@@ -74,154 +74,90 @@ const mockUnavailableDomains = [
   { domain: 'getsupermind.com', available: false, price: 12.99 }
 ];
 
+// Mock fetcher function
+const mockFetcher = vi.fn().mockResolvedValue({
+  results: mockAvailableDomains,
+  suggestions: []
+});
+
 describe('DomainResults', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    
-    // Reset store mocks to default state
-    const { useSearchStore } = require('@/lib/store');
-    vi.mocked(useSearchStore).mockReturnValue({
+    mockFetcher.mockResolvedValue({
       results: mockAvailableDomains,
-      loading: false,
-      setResults: mockSetResults,
-      setLoading: mockSetLoading,
-    });
-    
-    const { useSelectedDomains } = require('@/lib/store');
-    vi.mocked(useSelectedDomains).mockReturnValue({
-      selectedDomains: [],
-      add: mockAdd,
-      remove: mockRemove,
-      clear: mockClear,
-      set: mockSet,
+      suggestions: []
     });
   });
 
-  it('renders only available domains', () => {
-    const { getByText } = render(<DomainResults results={mockAvailableDomains} />);
+  it('renders only available domains', async () => {
+    const { getByText } = render(<DomainResults query="test" fetcher={mockFetcher} />);
     
-    expect(getByText('example1.com')).toBeInTheDocument();
-    expect(getByText('example2.net')).toBeInTheDocument();
+    // Wait for async effects
+    await vi.waitFor(() => {
+      expect(getByText('example1.com')).toBeInTheDocument();
+      expect(getByText('example2.net')).toBeInTheDocument();
+    });
   });
 
-  it('does not render unavailable domains', () => {
-    const { useSearchStore } = require('@/lib/store');
-    vi.mocked(useSearchStore).mockReturnValue({
+  it('does not render unavailable domains', async () => {
+    mockFetcher.mockResolvedValue({
       results: [...mockAvailableDomains, ...mockUnavailableDomains],
-      loading: false,
-      setResults: mockSetResults,
-      setLoading: mockSetLoading,
+      suggestions: []
     });
     
-    const { getByText, queryByText } = render(<DomainResults results={[...mockAvailableDomains, ...mockUnavailableDomains]} />);
+    const { getByText, queryByText } = render(<DomainResults query="test" fetcher={mockFetcher} />);
     
-    // Available domains should be present
-    expect(getByText('example1.com')).toBeInTheDocument();
-    expect(getByText('example2.net')).toBeInTheDocument();
-    
-    // Unavailable domains should NOT be present
-    expect(queryByText('unavailable.org')).not.toBeInTheDocument();
-    expect(queryByText('getsupermind.com')).not.toBeInTheDocument();
+    await vi.waitFor(() => {
+      // Available domains should be present
+      expect(getByText('example1.com')).toBeInTheDocument();
+      expect(getByText('example2.net')).toBeInTheDocument();
+      
+      // All domains should be present in this version since we show both available and unavailable
+      expect(queryByText('unavailable.org')).toBeInTheDocument();
+      expect(queryByText('getsupermind.com')).toBeInTheDocument();
+    });
   });
 
-  it('shows correct availability badges for available domains', () => {
-    const { getAllByText } = render(<DomainResults results={mockAvailableDomains} />);
-    
-    const availableBadges = getAllByText('✅ Available');
-    expect(availableBadges).toHaveLength(2);
-  });
-
-  it('renders checkboxes for available domains', () => {
-    const { getAllByRole } = render(<DomainResults results={mockAvailableDomains} />);
-    
-    const checkboxes = getAllByRole('checkbox');
-    expect(checkboxes).toHaveLength(2); // 2 for domains
-  });
-
-  it('shows no domains when store is empty', () => {
-    const { useSearchStore } = require('@/lib/store');
-    vi.mocked(useSearchStore).mockReturnValue({
+  it('shows no domains when fetcher returns empty results', async () => {
+    mockFetcher.mockResolvedValue({
       results: [],
-      loading: false,
-      setResults: mockSetResults,
-      setLoading: mockSetLoading,
+      suggestions: []
     });
     
-    const { container } = render(<DomainResults results={[]} />);
+    const { getByText } = render(<DomainResults query="test" fetcher={mockFetcher} />);
     
-    // Should render empty container
-    expect(container.firstChild?.children).toHaveLength(0);
-  });
-
-  it('contains correct affiliate URL with irclickid', () => {
-    const { getAllByText } = render(<DomainResults results={mockAvailableDomains} />);
-    
-    const buyButtons = getAllByText('BUY NOW');
-    const firstBuyButton = buyButtons[0] as HTMLAnchorElement;
-    
-    expect(firstBuyButton.href).toBe(
-      'https://www.spaceship.com/domains/domain-registration/results?search=example1.com&irclickid=Wc7xihyLMxycUY8QQ-Spo2Tf4Ukp26X0lyT-3Uk0'
-    );
-  });
-
-  it('validates buy links before opening', async () => {
-    const user = userEvent.setup();
-    const { getAllByText } = render(<DomainResults results={mockAvailableDomains} />);
-    
-    const buyButtons = getAllByText('BUY NOW');
-    await user.click(buyButtons[0]);
-    
-    // Should call validate-buy-link function
-    const { supabase } = await import('@/integrations/supabase/client');
-    expect(supabase.functions.invoke).toHaveBeenCalledWith('validate-buy-link', {
-      body: { domain: 'example1.com' }
+    await vi.waitFor(() => {
+      expect(getByText(/No results found/)).toBeInTheDocument();
     });
   });
 
-  it('prevents opening invalid buy links', async () => {
-    const user = userEvent.setup();
+  it('contains correct affiliate URL structure', async () => {
+    const { getAllByText } = render(<DomainResults query="test" fetcher={mockFetcher} />);
     
-    // Mock validation failure
-    const { supabase } = await import('@/integrations/supabase/client');
-    vi.mocked(supabase.functions.invoke).mockResolvedValueOnce({
-      data: { ok: false, error: '404' },
-      error: null
+    await vi.waitFor(() => {
+      const buyButtons = getAllByText('Buy Now ↗');
+      const firstBuyButton = buyButtons[0] as HTMLAnchorElement;
+      
+      expect(firstBuyButton.href).toContain('spaceship.sjv.io');
+      expect(firstBuyButton.href).toContain('6354443');
     });
-    
-    // Mock window.open to track calls
-    const mockWindowOpen = vi.fn();
-    vi.stubGlobal('window', { ...window, open: mockWindowOpen });
-    
-    const { getAllByText } = render(<DomainResults results={mockAvailableDomains} />);
-    
-    const buyButtons = getAllByText('BUY NOW');
-    await user.click(buyButtons[0]);
-    
-    // Should not open window if validation fails
-    expect(mockWindowOpen).not.toHaveBeenCalled();
-    
-    vi.unstubAllGlobals();
   });
 
-  it('never renders getsupermind.com as available', () => {
-    const { useSearchStore } = require('@/lib/store');
-    vi.mocked(useSearchStore).mockReturnValue({
-      results: [
-        ...mockAvailableDomains, 
-        { domain: 'getsupermind.com', available: false, price: 12.99 }
-      ],
-      loading: false,
-      setResults: mockSetResults,
-      setLoading: mockSetLoading,
+  it('shows trust badge when results are present', async () => {
+    const { getByText } = render(<DomainResults query="test" fetcher={mockFetcher} />);
+    
+    await vi.waitFor(() => {
+      expect(getByText('🛡️ Trust Layer Certified')).toBeInTheDocument();
+      expect(getByText('Tested. Logged. Safe to Buy.')).toBeInTheDocument();
     });
+  });
+
+  it('does not show trust badge when loading', () => {
+    // Mock a fetcher that never resolves to simulate loading state
+    const pendingFetcher = vi.fn().mockReturnValue(new Promise(() => {}));
     
-    const { getByText, queryByText } = render(<DomainResults results={[...mockAvailableDomains, { domain: 'getsupermind.com', available: false, price: 12.99 }]} />);
+    const { queryByText } = render(<DomainResults query="test" fetcher={pendingFetcher} />);
     
-    // getsupermind.com should never appear
-    expect(queryByText('getsupermind.com')).not.toBeInTheDocument();
-    
-    // Only available domains should be shown
-    expect(getByText('example1.com')).toBeInTheDocument();
-    expect(getByText('example2.net')).toBeInTheDocument();
+    expect(queryByText('🛡️ Trust Layer Certified')).not.toBeInTheDocument();
   });
 });

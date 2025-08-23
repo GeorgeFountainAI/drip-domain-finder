@@ -1,5 +1,8 @@
+
 // /src/components/DomainResults.tsx
 import { useEffect, useState } from "react";
+import { trackEvent } from "@/utils/analytics";
+import { TrustBadge } from "./TrustBadge";
 
 export default function DomainResults({ query, fetcher }: { query: string; fetcher: (q: string) => Promise<any> }) {
   const [results, setResults] = useState([]);
@@ -45,8 +48,17 @@ export default function DomainResults({ query, fetcher }: { query: string; fetch
     };
   }, [query]);
 
+  const handleBuyClick = (domain: string, flipScore: number) => {
+    trackEvent('domain_click', {
+      domain,
+      flipScore,
+      buttonType: 'Buy on Spaceship',
+      timestamp: new Date().toISOString()
+    });
+  };
+
   return (
-    <div className="mt-6">
+    <div className="mt-6 relative">
       {loading && <div className="text-center text-gray-500">Searching...</div>}
       {err && <div className="text-center text-red-600">{err}</div>}
       {!loading && !err && results.length === 0 && (
@@ -83,6 +95,7 @@ export default function DomainResults({ query, fetcher }: { query: string; fetch
                 href={buyHref}
                 target="_blank"
                 rel="noopener noreferrer"
+                onClick={() => handleBuyClick(r.domain, flip)}
                 className="bg-violet-600 text-white px-4 py-2 rounded-2xl font-medium hover:opacity-90"
               >
                 Buy Now ↗
@@ -91,6 +104,9 @@ export default function DomainResults({ query, fetcher }: { query: string; fetch
           );
         })}
       </ul>
+      
+      {/* Trust Badge - only show when we have results and not loading */}
+      {!loading && !err && results.length > 0 && <TrustBadge />}
     </div>
   );
 }
