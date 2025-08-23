@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { render } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import '@testing-library/jest-dom';
-import { DomainResults } from './DomainResults';
+import DomainResults from './DomainResults';
 import * as spaceshipUtils from '@/utils/spaceship';
 
 // Mock the spaceship utilities

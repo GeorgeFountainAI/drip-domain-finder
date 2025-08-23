@@ -3,7 +3,7 @@ import { DomainSearchForm, DomainSearchFormRef } from "./DomainSearchForm";
 import { SearchHistoryViewer } from "./SearchHistoryViewer";
 import { AuthForm } from "./AuthForm";
 import { ModernHeader } from "./ModernHeader";
-import { DomainResults } from "./DomainResults";
+import DomainResults from "./DomainResults";
 import { DomainCart } from "./DomainCart";
 import { DomainCheckout } from "./DomainCheckout";
 import FAQPreview from "./FAQPreview";
