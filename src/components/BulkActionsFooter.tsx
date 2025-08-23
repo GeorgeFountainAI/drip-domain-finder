@@ -3,6 +3,9 @@ import { useSelectedDomains, useSearchStore } from "@/lib/store";
 import { Button } from "@/components/ui/button";
 import { ShoppingCart, Download, Copy, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { buildSpaceshipUrl } from "@/utils/spaceship";
+import { trackBulkBuy, trackExportCSV, trackCopyDomains, trackClearSelection } from "@/utils/analytics";
+import { toast } from "sonner";
 
 const BulkActionsFooter = () => {
   const { selectedDomains, clear } = useSelectedDomains();
@@ -14,31 +17,43 @@ const BulkActionsFooter = () => {
   }
 
   const buildBuyLink = (domain: string) => {
-    return `https://www.spaceship.com/domains/domain-registration/results?search=${domain}&irclickid=Wc7xihyLMxycUY8QQ-Spo2Tf4Ukp26X0lyT-3Uk0`;
+    return buildSpaceshipUrl(domain);
   };
 
   const handleBuyAll = async () => {
-    for (const domain of selectedDomains) {
+    const selectedResults = results.filter(r => 
+      selectedDomains.includes(r.domain) && r.available && r.domain !== 'getsupermind.com'
+    );
+    
+    const domains = selectedResults.map(r => r.domain);
+    trackBulkBuy(domains);
+    
+    for (const domain of domains) {
       try {
         const { data, error } = await supabase.functions.invoke('validate-buy-link', {
           body: { domain }
         });
         
         if (!error && data?.ok) {
-          const url = buildBuyLink(domain);
+          const url = buildSpaceshipUrl(domain);
           window.open(url, '_blank', 'noopener,noreferrer');
         }
       } catch (error) {
         console.error('Failed to validate buy link for', domain, error);
       }
     }
+    
+    toast.success(`Opening ${domains.length} domains in new tabs`);
   };
 
   const handleExportCSV = () => {
     // Get selected domain data from results
     const selectedData = results.filter(result => 
-      selectedDomains.includes(result.domain)
+      selectedDomains.includes(result.domain) && result.available
     );
+
+    const domains = selectedData.map(r => r.domain);
+    trackExportCSV(domains);
 
     // Create CSV content
     const headers = ['domain', 'price', 'flipScore'];
@@ -47,7 +62,7 @@ const BulkActionsFooter = () => {
       ...selectedData.map(item => [
         item.domain,
         item.price?.toFixed(2) || '0.00',
-        item.flipScore || '0'
+        item.flipScore || 'N/A'
       ].join(','))
     ];
 
@@ -63,21 +78,37 @@ const BulkActionsFooter = () => {
     link.click();
     document.body.removeChild(link);
     window.URL.revokeObjectURL(url);
+    
+    toast.success(`Exported ${selectedData.length} domains to CSV`);
   };
 
   const handleCopyToClipboard = async () => {
+    const domainNames = results
+      .filter(r => selectedDomains.includes(r.domain) && r.available)
+      .map(r => r.domain);
+    
+    trackCopyDomains(domainNames);
+    
     try {
-      await navigator.clipboard.writeText(selectedDomains.join(', '));
+      await navigator.clipboard.writeText(domainNames.join(', '));
+      toast.success('Domain names copied to clipboard');
     } catch (error) {
       console.error('Failed to copy to clipboard:', error);
       // Fallback for older browsers
       const textArea = document.createElement('textarea');
-      textArea.value = selectedDomains.join(', ');
+      textArea.value = domainNames.join(', ');
       document.body.appendChild(textArea);
       textArea.select();
       document.execCommand('copy');
       document.body.removeChild(textArea);
+      toast.success('Domain names copied to clipboard');
     }
+  };
+
+  const handleClear = () => {
+    trackClearSelection([...selectedDomains]);
+    clear();
+    toast.success('Selection cleared');
   };
 
   return (
@@ -118,7 +149,7 @@ const BulkActionsFooter = () => {
           </Button>
           
           <Button
-            onClick={clear}
+            onClick={handleClear}
             variant="outline"
             className="border-gray-300 text-gray-700 hover:bg-gray-50 px-3 py-1.5 rounded-md text-sm"
             aria-label="Clear all selected domains"

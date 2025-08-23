@@ -14,51 +14,49 @@ vi.stubGlobal('import', {
 });
 
 describe('buildSpaceshipUrl', () => {
-  beforeEach(() => {
-    mockEnv.VITE_SPACESHIP_AFF = '';
-  });
-
-  it('should return default page when domain is empty or null', () => {
-    expect(buildSpaceshipUrl('')).toBe('https://www.spaceship.com/domains/domain-registration/');
-    expect(buildSpaceshipUrl('   ')).toBe('https://www.spaceship.com/domains/domain-registration/');
-  });
-
-  it('should return direct search URL when no affiliate link is set', () => {
+  it('should return direct search URL with proper encoding', () => {
     const result = buildSpaceshipUrl('example.com');
-    expect(result).toBe('https://www.spaceship.com/domains/domain-registration/results?search=example.com');
+    expect(result).toBe('https://spaceship.sjv.io/c/6354443/1794549/21274?url=https%3A//www.spaceship.com/domains/domain-registration/results%3Fsearch%3Dexample.com');
   });
 
-  it('should wrap with affiliate link when VITE_SPACESHIP_AFF is set', () => {
-    mockEnv.VITE_SPACESHIP_AFF = 'https://spaceship.sjv.io/c/6354443/1794549/21274';
-    const result = buildSpaceshipUrl('example.com');
-    const expectedInnerUrl = 'https://www.spaceship.com/domains/domain-registration/results?search=example.com';
-    expect(result).toBe(`https://spaceship.sjv.io/c/6354443/1794549/21274?u=${encodeURIComponent(expectedInnerUrl)}`);
+  it('should contain valid CJ tracking parameter', () => {
+    const result = buildSpaceshipUrl('test.com');
+    // Should contain either 'aid=' or CJ tracking structure
+    expect(result).toMatch(/spaceship\.sjv\.io.*6354443.*1794549.*21274/);
+    expect(result).toContain('url=');
   });
 
-  it('should handle domains with spaces and special characters', () => {
-    mockEnv.VITE_SPACESHIP_AFF = 'https://spaceship.sjv.io/c/6354443/1794549/21274';
-    const result = buildSpaceshipUrl('my test domain.com');
-    const expectedInnerUrl = 'https://www.spaceship.com/domains/domain-registration/results?search=my%20test%20domain.com';
-    expect(result).toBe(`https://spaceship.sjv.io/c/6354443/1794549/21274?u=${encodeURIComponent(expectedInnerUrl)}`);
+  it('should handle domains with special characters', () => {
+    const result = buildSpaceshipUrl('my-test domain.com');
+    expect(result).toContain('spaceship.sjv.io');
+    expect(result).toContain('url=');
+    // Should properly encode the inner URL
+    expect(decodeURIComponent(result.split('url=')[1])).toContain('my-test%20domain.com');
   });
 
-  it('should ignore invalid affiliate URLs', () => {
-    mockEnv.VITE_SPACESHIP_AFF = 'not-a-url';
-    const result = buildSpaceshipUrl('example.com');
-    expect(result).toBe('https://www.spaceship.com/domains/domain-registration/results?search=example.com');
-  });
-
-  it('should handle exceptions gracefully', () => {
-    // Mock a scenario where encodeURIComponent might throw
-    const originalEncode = global.encodeURIComponent;
-    global.encodeURIComponent = vi.fn(() => {
-      throw new Error('Encoding error');
+  it('should always include affiliate tracking', () => {
+    const domains = ['example.com', 'test.net', 'my-domain.org'];
+    
+    domains.forEach(domain => {
+      const url = buildSpaceshipUrl(domain);
+      expect(url).toMatch(/spaceship\.sjv\.io.*6354443.*1794549.*21274/);
+      expect(url).toContain('url=');
     });
+  });
 
+  it('should generate valid URLs that can be parsed', () => {
     const result = buildSpaceshipUrl('example.com');
-    expect(result).toBe('https://www.spaceship.com/domains/domain-registration/');
+    expect(() => new URL(result)).not.toThrow();
+    
+    const url = new URL(result);
+    expect(url.hostname).toBe('spaceship.sjv.io');
+    expect(url.searchParams.get('url')).toBeTruthy();
+  });
 
-    global.encodeURIComponent = originalEncode;
+  it('should handle empty domain gracefully', () => {
+    const result = buildSpaceshipUrl('');
+    expect(result).toContain('spaceship.sjv.io');
+    expect(result).toContain('url=');
   });
 });
 
