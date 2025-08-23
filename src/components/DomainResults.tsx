@@ -1,64 +1,76 @@
-// src/components/DomainResults.tsx
-import React from 'react';
-import { buildSpaceshipUrl } from '../utils/spaceship';
+// /src/components/DomainResults.tsx
+import { useEffect, useMemo, useState } from "react";
+import { buildSpaceshipUrl } from "@/utils/spaceship";
 
-export type DomainResult = {
-  domain: string;
-  available: boolean;
-  price: number;
-  flipScore?: number;
-};
+function normalizeSearchResponse(raw: any) {
+  const base = raw?.data ?? raw ?? {};
+  const toArray = <T>(v: unknown, map?: (x: any) => T): T[] =>
+    Array.isArray(v) ? (map ? v.map(map) : (v as T[])) : [];
 
-interface Props {
-  results: DomainResult[];
+  const results = toArray(base.results, (x) => ({
+    domain: String(x?.domain ?? x?.name ?? ""),
+    price: typeof x?.price === "number" ? x.price : null,
+    currency: x?.currency ?? x?.priceCurrency ?? null,
+    status: x?.status ?? null,
+    flipScore:
+      typeof x?.flipScore === "number"
+        ? x.flipScore
+        : typeof x?.score === "number"
+        ? x.score
+        : null,
+  })).filter((r) => r.domain);
+
+  const suggestions = toArray(base.suggestions, (s) => String(s ?? "")).filter(Boolean);
+
+  return { results, suggestions };
 }
 
-const DomainResults: React.FC<Props> = ({ results }) => {
-  if (!results || results.length === 0) {
-    return (
-      <div className="rounded-lg border border-gray-200/60 bg-white/70 p-6 text-center text-gray-600">
-        No results found. Try a broader keyword (e.g., <strong>ai</strong>) or use a
-        wildcard like <strong>ai*</strong>.
-      </div>
-    );
-  }
-
-  return (
-    <div className="space-y-4">
-      {/* Minimal trust badge */}
-      <div className="text-xs text-gray-400 opacity-70 text-right">
-        🛡️ Trust Layer Certified · Tested. Logged. Safe to Buy.
-      </div>
-
-      {results.map((r) => (
-        <div
-          key={r.domain}
-          className="flex items-center justify-between rounded-lg border border-gray-200/60 bg-white/80 p-4"
-        >
-          <div className="space-y-1">
-            <div className="text-lg font-semibold">{r.domain}</div>
-            <div className="text-sm text-gray-600">
-              {r.available ? 'Available' : 'Unavailable'} · ${r.price.toFixed(2)} /year
-              {typeof r.flipScore === 'number' && (
-                <span className="ml-2" title="Flip Score estimates resale potential from 0–100">
-                  · Flip Score: {Math.min(100, r.flipScore)}
-                </span>
-              )}
-            </div>
-          </div>
-
-          <a
-            className="rounded-md bg-purple-600 px-4 py-2 text-white hover:bg-purple-700"
-            target="_blank"
-            rel="noopener noreferrer"
-            href={buildSpaceshipUrl(r.domain)}
-          >
-            Buy Now ↗
-          </a>
-        </div>
-      ))}
-    </div>
-  );
+type Props = {
+  query: string;
+  fetcher: (q: string) => Promise<any>;
 };
 
-export default DomainResults;
+export default function DomainResults({ query, fetcher }: Props) {
+  const [loading, setLoading] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
+  const [results, setResults] = useState<any[]>([]);
+  const [suggestions, setSuggestions] = useState<string[]>([]);
+
+  useEffect(() => {
+    let alive = true;
+    async function run() {
+      if (!query?.trim()) {
+        setResults([]);
+        setSuggestions([]);
+        setErr(null);
+        return;
+      }
+      setLoading(true);
+      setErr(null);
+      try {
+        const raw = await fetcher(query);
+        const norm = normalizeSearchResponse(raw);
+        if (!alive) return;
+        setResults(norm.results || []);
+        setSuggestions(norm.suggestions || []);
+      } catch (e: any) {
+        if (!alive) return;
+        setResults([]);
+        setSuggestions([]);
+        setErr(e?.message ?? "Search failed");
+      } finally {
+        if (alive) setLoading(false);
+      }
+    }
+    run();
+    return () => {
+      alive = false;
+    };
+  }, [query, fetcher]);
+
+  const empty = !loading && !err && results.length === 0;
+
+  const rows = useMemo(() => {
+    return (results || []).map((r) => {
+      const buyHref = buildSpaceshipUrl(r.domain, { sid: "domaindrip", campaign: "buy_button" });
+      const pri
