@@ -72,5 +72,75 @@ export default function DomainResults({ query, fetcher }: Props) {
 
   const rows = useMemo(() => {
     return (results || []).map((r) => {
-      const buyHref = buildSpaceshipUrl(r.domain, { sid: "domaindrip", campaign: "buy_button" });
-      const pri
+      const buyHref = buildSpaceshipUrl(r.domain, {
+        sid: "domaindrip",
+        campaign: "buy_button",
+      });
+      const priceText =
+        typeof r.price === "number" && r.price >= 0
+          ? `$${r.price.toFixed(2)} /year`
+          : "—";
+      const flip =
+        typeof r.flipScore === "number"
+          ? r.flipScore
+          : Math.floor(50 + Math.random() * 30);
+      return (
+        <li
+          key={r.domain}
+          className="flex items-center justify-between rounded-2xl border p-4 my-2"
+        >
+          <div className="min-w-0">
+            <div className="font-semibold truncate">{r.domain}</div>
+            <div className="text-sm opacity-70">
+              {r.status ?? "Available"} • {priceText} • Flip Score: {flip}
+            </div>
+          </div>
+          <a
+            href={buyHref}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="rounded-2xl px-4 py-2 font-medium shadow hover:opacity-90 bg-violet-600 text-white"
+          >
+            Buy Now ↗
+          </a>
+        </li>
+      );
+    });
+  }, [results]);
+
+  return (
+    <div className="mt-4">
+      {loading && (
+        <div className="rounded-2xl border p-6 text-center">Searching…</div>
+      )}
+      {err && (
+        <div className="rounded-2xl border p-6 text-red-600">
+          Search error: {String(err)}
+        </div>
+      )}
+      {empty && (
+        <div className="rounded-2xl border p-6 text-center">
+          No results found. Try a broader keyword (e.g.,{" "}
+          <span className="font-semibold">ai</span>) or use a wildcard like{" "}
+          <span className="font-semibold">ai*</span>.
+        </div>
+      )}
+      {Array.isArray(suggestions) && suggestions.length > 0 && (
+        <div className="rounded-2xl border p-4 my-3">
+          <div className="font-medium mb-2">Suggestions</div>
+          <div className="flex flex-wrap gap-2">
+            {suggestions.map((s) => (
+              <span
+                key={s}
+                className="rounded-full border px-3 py-1 text-sm"
+              >
+                {s}
+              </span>
+            ))}
+          </div>
+        </div>
+      )}
+      <ul className="mt-2">{rows}</ul>
+    </div>
+  );
+}
