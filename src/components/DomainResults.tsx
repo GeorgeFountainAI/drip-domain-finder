@@ -20,7 +20,7 @@ interface DomainResultsProps {
 }
 
 export default function DomainResults({ domains, onAddToCart, onBack, isLoading }: DomainResultsProps) {
-  const { selectedDomains, addDomain, removeDomain, clearDomains } = useSelectedDomains();
+  const { selectedDomains, add, remove, clear } = useSelectedDomains();
 
   // Filter to only show available domains
   const availableDomains = domains.filter(d => d.available);
