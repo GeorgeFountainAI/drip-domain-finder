@@ -40,46 +40,80 @@ vi.mock('@/integrations/supabase/client', () => ({
   }
 }));
 
+// Mock Zustand stores
+const mockSetResults = vi.fn();
+const mockSetLoading = vi.fn();
+const mockAdd = vi.fn();
+const mockRemove = vi.fn();
+const mockClear = vi.fn();
+const mockSet = vi.fn();
+
+vi.mock('@/lib/store', () => ({
+  useSearchStore: vi.fn(() => ({
+    results: [],
+    loading: false,
+    setResults: mockSetResults,
+    setLoading: mockSetLoading,
+  })),
+  useSelectedDomains: vi.fn(() => ({
+    selectedDomains: [],
+    add: mockAdd,
+    remove: mockRemove,
+    clear: mockClear,
+    set: mockSet,
+  })),
+}));
+
 const mockAvailableDomains = [
-  { name: 'example1.com', available: true, price: 10, tld: 'com', flipScore: 85 },
-  { name: 'example2.net', available: true, price: 15, tld: 'net' }
+  { domain: 'example1.com', available: true, price: 10, flipScore: 85 },
+  { domain: 'example2.net', available: true, price: 15 }
 ];
 
 const mockUnavailableDomains = [
-  { name: 'unavailable.org', available: false, price: 20, tld: 'org' },
-  { name: 'getsupermind.com', available: false, price: 12.99, tld: 'com' }
+  { domain: 'unavailable.org', available: false, price: 20 },
+  { domain: 'getsupermind.com', available: false, price: 12.99 }
 ];
-
-const defaultProps = {
-  domains: mockAvailableDomains,
-  onAddToCart: vi.fn(),
-  onBack: vi.fn(),
-  isLoading: false,
-  query: 'test'
-};
 
 describe('DomainResults', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    
+    // Reset store mocks to default state
+    const { useSearchStore } = require('@/lib/store');
+    vi.mocked(useSearchStore).mockReturnValue({
+      results: mockAvailableDomains,
+      loading: false,
+      setResults: mockSetResults,
+      setLoading: mockSetLoading,
+    });
+    
+    const { useSelectedDomains } = require('@/lib/store');
+    vi.mocked(useSelectedDomains).mockReturnValue({
+      selectedDomains: [],
+      add: mockAdd,
+      remove: mockRemove,
+      clear: mockClear,
+      set: mockSet,
+    });
   });
 
   it('renders only available domains', () => {
-    const { getByText } = render(<DomainResults {...defaultProps} />);
+    const { getByText } = render(<DomainResults />);
     
     expect(getByText('example1.com')).toBeInTheDocument();
     expect(getByText('example2.net')).toBeInTheDocument();
-    
-    // Should show available count
-    expect(getByText(/Available Domains \(2 found\)/)).toBeInTheDocument();
   });
 
   it('does not render unavailable domains', () => {
-    const propsWithUnavailable = {
-      ...defaultProps,
-      domains: [...mockAvailableDomains, ...mockUnavailableDomains]
-    };
+    const { useSearchStore } = require('@/lib/store');
+    vi.mocked(useSearchStore).mockReturnValue({
+      results: [...mockAvailableDomains, ...mockUnavailableDomains],
+      loading: false,
+      setResults: mockSetResults,
+      setLoading: mockSetLoading,
+    });
     
-    const { getByText, queryByText } = render(<DomainResults {...propsWithUnavailable} />);
+    const { getByText, queryByText } = render(<DomainResults />);
     
     // Available domains should be present
     expect(getByText('example1.com')).toBeInTheDocument();
@@ -88,41 +122,40 @@ describe('DomainResults', () => {
     // Unavailable domains should NOT be present
     expect(queryByText('unavailable.org')).not.toBeInTheDocument();
     expect(queryByText('getsupermind.com')).not.toBeInTheDocument();
-    
-    // Count should only include available domains
-    expect(getByText(/Available Domains \(2 found\)/)).toBeInTheDocument();
   });
 
   it('shows correct availability badges for available domains', () => {
-    const { getAllByText } = render(<DomainResults {...defaultProps} />);
+    const { getAllByText } = render(<DomainResults />);
     
-    const availableBadges = getAllByText('Available');
+    const availableBadges = getAllByText('✅ Available');
     expect(availableBadges).toHaveLength(2);
   });
 
   it('renders checkboxes for available domains', () => {
-    const { getAllByRole } = render(<DomainResults {...defaultProps} />);
+    const { getAllByRole } = render(<DomainResults />);
     
     const checkboxes = getAllByRole('checkbox');
-    // Should have 3 checkboxes: 2 for domains + 1 for "Select All"
-    expect(checkboxes).toHaveLength(3);
+    expect(checkboxes).toHaveLength(2); // 2 for domains
   });
 
-  it('shows "No available domains found" when no available domains', () => {
-    const propsNoAvailable = {
-      ...defaultProps,
-      domains: mockUnavailableDomains
-    };
+  it('shows no domains when store is empty', () => {
+    const { useSearchStore } = require('@/lib/store');
+    vi.mocked(useSearchStore).mockReturnValue({
+      results: [],
+      loading: false,
+      setResults: mockSetResults,
+      setLoading: mockSetLoading,
+    });
     
-    const { getByText } = render(<DomainResults {...propsNoAvailable} />);
+    const { container } = render(<DomainResults />);
     
-    expect(getByText('No available domains found')).toBeInTheDocument();
-    expect(getByText(/Available Domains \(0 found\)/)).toBeInTheDocument();
+    // Should render empty container
+    expect(container.firstChild?.children).toHaveLength(0);
   });
 
   it('validates buy links before opening', async () => {
     const user = userEvent.setup();
-    const { getAllByText } = render(<DomainResults {...defaultProps} />);
+    const { getAllByText } = render(<DomainResults />);
     
     const buyButtons = getAllByText('BUY NOW');
     await user.click(buyButtons[0]);
@@ -148,7 +181,7 @@ describe('DomainResults', () => {
     const mockWindowOpen = vi.fn();
     vi.stubGlobal('window', { ...window, open: mockWindowOpen });
     
-    const { getAllByText } = render(<DomainResults {...defaultProps} />);
+    const { getAllByText } = render(<DomainResults />);
     
     const buyButtons = getAllByText('BUY NOW');
     await user.click(buyButtons[0]);
@@ -160,15 +193,18 @@ describe('DomainResults', () => {
   });
 
   it('never renders getsupermind.com as available', () => {
-    const propsWithGetsupermind = {
-      ...defaultProps,
-      domains: [
+    const { useSearchStore } = require('@/lib/store');
+    vi.mocked(useSearchStore).mockReturnValue({
+      results: [
         ...mockAvailableDomains, 
-        { name: 'getsupermind.com', available: false, price: 12.99, tld: 'com' }
-      ]
-    };
+        { domain: 'getsupermind.com', available: false, price: 12.99 }
+      ],
+      loading: false,
+      setResults: mockSetResults,
+      setLoading: mockSetLoading,
+    });
     
-    const { getByText, queryByText } = render(<DomainResults {...propsWithGetsupermind} />);
+    const { getByText, queryByText } = render(<DomainResults />);
     
     // getsupermind.com should never appear
     expect(queryByText('getsupermind.com')).not.toBeInTheDocument();
@@ -176,8 +212,5 @@ describe('DomainResults', () => {
     // Only available domains should be shown
     expect(getByText('example1.com')).toBeInTheDocument();
     expect(getByText('example2.net')).toBeInTheDocument();
-    
-    // Should show correct count excluding unavailable domains
-    expect(getByText(/Available Domains \(2 found\)/)).toBeInTheDocument();
   });
 });

@@ -208,12 +208,7 @@ export const DomainDripApp = () => {
       )}
       
       {currentState === 'results' && (
-        <DomainResults
-          domains={domains}
-          onAddToCart={handleAddToCart}
-          onBack={handleBackToSearch}
-          isLoading={isLoading}
-        />
+        <DomainResults />
       )}
       
       {currentState === 'cart' && (
