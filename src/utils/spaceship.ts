@@ -9,31 +9,23 @@ function enc(s: string) {
 }
 
 // --- URL builders ----------------------------------------------------------
-// Preferred: go straight to add-to-cart for a specific domain.
-export function spaceshipCartUrl(domain: string) {
-  const d = enc(normalizeDomain(domain));
-  return `https://www.spaceship.com/cart/domain/register?domain=${d}`;
-}
-
-// Fallback: search results page (use only if cart has issues).
+// Now defaults to search page instead of cart (cart was unreliable).
 export function spaceshipSearchUrl(domain: string) {
   const d = enc(normalizeDomain(domain));
-  // Note: no trailing slash before ?search
   return `https://www.spaceship.com/domains/domain-registration/results?search=${d}`;
 }
 
 // Set your CJ base if/when approved; otherwise leave as "" for direct links.
-const CJ_CLICK_BASE = "";
-// Example (replace Xs): const CJ_CLICK_BASE = "https://www.anrdoezrs.net/click-XXXXXX-YYYYYY?url=";
+const CJ_CLICK_BASE = "https://spaceship.sjv.io/c/6354443/1794549/21274?url=";
 
 export function buildSpaceshipUrl(domain: string) {
-  const target = spaceshipCartUrl(domain);
+  const target = spaceshipSearchUrl(domain);
   if (!CJ_CLICK_BASE) return target;
   return `${CJ_CLICK_BASE}${enc(target)}`;
 }
 
 export function buildSpaceshipUrlWithFallback(domain: string) {
-  const primary = buildSpaceshipUrl(domain); // cart
+  const primary = buildSpaceshipUrl(domain); // search page
   const search = CJ_CLICK_BASE
     ? `${CJ_CLICK_BASE}${enc(spaceshipSearchUrl(domain))}`
     : spaceshipSearchUrl(domain);
@@ -77,13 +69,13 @@ export async function openInBatches(
       openFn(url);
       opened++;
     }
-    
+
     // Add delay between batches
     if (i + batchSize < domains.length) {
       await new Promise(resolve => setTimeout(resolve, delayMs));
     }
   }
-  
+
   return { opened, blocked: 0 };
 }
 
