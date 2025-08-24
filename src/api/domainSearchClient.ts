@@ -158,6 +158,35 @@ export const searchDomains = async (keyword: string, forceDemoMode = false): Pro
     
     await logSearchAttempt(cleanKeyword, true);
     
+    // Client-side fallback: If edge function returns empty results, generate demo data
+    if (!data.domains || data.domains.length === 0) {
+      console.log('Edge function returned no domains, falling back to enhanced mock data');
+      
+      const fallbackDomains = generateEnhancedMockDomains(cleanKeyword);
+      
+      // Add scores to available domains
+      const availableDomains = fallbackDomains.filter(d => d.available);
+      if (availableDomains.length > 0) {
+        const scores = await domainScoringService.getBatchScores(
+          availableDomains.map(d => d.name)
+        );
+        
+        fallbackDomains.forEach(domain => {
+          if (domain.available && scores.has(domain.name)) {
+            const domainScore = scores.get(domain.name)!;
+            domain.flipScore = domainScore.flipScore;
+            domain.trendStrength = domainScore.trendStrength;
+          }
+        });
+      }
+      
+      return {
+        domains: fallbackDomains,
+        error: 'Using demo results - API temporarily unavailable',
+        isDemo: true
+      };
+    }
+    
     return {
       domains: data.domains || [],
       isDemo: false
