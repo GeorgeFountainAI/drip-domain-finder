@@ -1,5 +1,5 @@
 import React from 'react';
-import { useSearchStore } from '@/stores/useSearchStore';
+import { useSearchStore } from '../lib/store';
 import { buildSpaceshipUrl } from '@/utils/spaceship';
 
 export default function DomainResults() {
