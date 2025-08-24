@@ -4,17 +4,43 @@
  */
 
 export const buildSpaceshipUrl = (domain: string): string => {
+  // Build inner Spaceship search URL
+  const inner = `https://www.spaceship.com/domains?search=${encodeURIComponent(domain)}&irgwc=1`;
+  
   // Try to use CJ deeplink base from environment
   const cjBase = import.meta.env.VITE_CJ_DEEPLINK_BASE;
   
   if (cjBase) {
-    // Build CJ affiliate deeplink
-    const spaceshipSearchUrl = `https://www.spaceship.com/domains?search=${encodeURIComponent(domain)}&irgwc=1`;
-    return `${cjBase}u=${encodeURIComponent(spaceshipSearchUrl)}`;
+    let href: string;
+    
+    // Check if CJ base already includes "u="
+    if (cjBase.includes('u=')) {
+      href = `${cjBase}${encodeURIComponent(inner)}`;
+    } else {
+      // Add ?u= or &u= depending on whether base already has query params
+      const separator = cjBase.includes('?') ? '&u=' : '?u=';
+      href = `${cjBase}${separator}${encodeURIComponent(inner)}`;
+    }
+    
+    // DEV-only logging
+    if (import.meta.env.DEV) {
+      console.log('Affiliate link generated:', href);
+      const urlObj = new URL(href);
+      const uParam = urlObj.searchParams.get('u');
+      if (uParam) {
+        console.log('Inner URL:', decodeURIComponent(uParam));
+      }
+    }
+    
+    return href;
   }
   
   // Fallback to plain Spaceship search URL with tracking
-  return `https://www.spaceship.com/domains?search=${encodeURIComponent(domain)}&irgwc=1`;
+  if (import.meta.env.DEV) {
+    console.log('Affiliate link generated:', inner);
+  }
+  
+  return inner;
 };
 
 export const chunk = <T>(array: T[], size: number): T[][] => {

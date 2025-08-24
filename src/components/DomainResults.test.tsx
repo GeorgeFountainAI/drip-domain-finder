@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { render } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import '@testing-library/jest-dom';
@@ -154,5 +154,103 @@ describe('DomainResults', () => {
     const { queryByText } = render(<DomainResults />);
     
     expect(queryByText('Trust Layer')).not.toBeInTheDocument();
+  });
+
+  describe('Affiliate link regression tests', () => {
+    beforeEach(async () => {
+      // Use real buildSpaceshipUrl implementation for these tests
+      const actualSpaceship = await vi.importActual<typeof spaceshipUtils>('@/utils/spaceship');
+      vi.mocked(spaceshipUtils.buildSpaceshipUrl).mockImplementation(
+        actualSpaceship.buildSpaceshipUrl
+      );
+    });
+
+    afterEach(() => {
+      // Reset to mock implementation
+      vi.mocked(spaceshipUtils.buildSpaceshipUrl).mockImplementation(
+        (domain: string) => `https://mock-spaceship-url.com?domain=${domain}`
+      );
+    });
+
+    it('should generate direct spaceship URL when no CJ base is set', () => {
+      // Temporarily clear VITE_CJ_DEEPLINK_BASE
+      const originalEnv = import.meta.env.VITE_CJ_DEEPLINK_BASE;
+      // @ts-ignore - Override for test
+      import.meta.env.VITE_CJ_DEEPLINK_BASE = undefined;
+      
+      const { container } = render(<DomainResults />);
+      const buyLink = container.querySelector('a[href*="spaceship.com"]') as HTMLAnchorElement;
+      
+      expect(buyLink).toBeInTheDocument();
+      expect(buyLink.href).toContain('https://www.spaceship.com/domains?search=');
+      expect(buyLink.href).not.toContain('/domain-registration/results');
+      expect(buyLink.href).toContain('irgwc=1');
+      expect(buyLink.target).toBe('_blank');
+      expect(buyLink.rel).toBe('noopener noreferrer');
+      
+      // Restore original env
+      // @ts-ignore
+      import.meta.env.VITE_CJ_DEEPLINK_BASE = originalEnv;
+    });
+
+    it('should generate CJ deeplink when CJ base is set', () => {
+      // Set CJ base for test
+      const originalEnv = import.meta.env.VITE_CJ_DEEPLINK_BASE;
+      // @ts-ignore - Override for test
+      import.meta.env.VITE_CJ_DEEPLINK_BASE = 'https://spaceship.sjv.io/c/123/456/789?';
+      
+      const { container } = render(<DomainResults />);
+      const buyLink = container.querySelector('a') as HTMLAnchorElement;
+      
+      expect(buyLink).toBeInTheDocument();
+      expect(buyLink.href).toContain('spaceship.sjv.io');
+      expect(buyLink.href).toContain('u=');
+      
+      // Extract and verify u parameter
+      const url = new URL(buyLink.href);
+      const uParam = url.searchParams.get('u');
+      expect(uParam).toBeTruthy();
+      
+      const decodedInner = decodeURIComponent(uParam!);
+      expect(decodedInner).toContain('https://www.spaceship.com/domains?search=');
+      expect(decodedInner).not.toContain('/domain-registration/results');
+      expect(decodedInner).toContain('irgwc=1');
+      
+      expect(buyLink.target).toBe('_blank');
+      expect(buyLink.rel).toBe('noopener noreferrer');
+      
+      // Restore original env
+      // @ts-ignore
+      import.meta.env.VITE_CJ_DEEPLINK_BASE = originalEnv;
+    });
+
+    it('should never contain deprecated domain-registration/results path', () => {
+      const testCases = [
+        undefined, // No CJ base
+        'https://spaceship.sjv.io/c/123/456/789?', // With CJ base
+        'https://spaceship.sjv.io/c/123/456/789?u=' // CJ base ending with u=
+      ];
+      
+      testCases.forEach(cjBase => {
+        const originalEnv = import.meta.env.VITE_CJ_DEEPLINK_BASE;
+        // @ts-ignore - Override for test
+        import.meta.env.VITE_CJ_DEEPLINK_BASE = cjBase;
+        
+        const { container } = render(<DomainResults />);
+        const buyLinks = container.querySelectorAll('a');
+        
+        buyLinks.forEach(link => {
+          expect(link.href).not.toContain('/domain-registration/results');
+          expect(link.href).not.toContain('irclickid');
+          if (link.href.includes('spaceship.com')) {
+            expect(link.href).toContain('irgwc=1');
+          }
+        });
+        
+        // Restore original env
+        // @ts-ignore
+        import.meta.env.VITE_CJ_DEEPLINK_BASE = originalEnv;
+      });
+    });
   });
 });

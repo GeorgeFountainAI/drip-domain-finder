@@ -4,7 +4,9 @@ import { buildSpaceshipUrl, chunk, openInBatches } from './spaceship';
 // Mock import.meta.env
 const mockEnv = {
   VITE_SPACESHIP_AFF: '',
-  VITE_SPACESHIP_CAMPAIGN: 'DomainDrip'
+  VITE_SPACESHIP_CAMPAIGN: 'DomainDrip',
+  VITE_CJ_DEEPLINK_BASE: '',
+  DEV: false
 };
 
 vi.stubGlobal('import', {
@@ -14,49 +16,94 @@ vi.stubGlobal('import', {
 });
 
 describe('buildSpaceshipUrl', () => {
-  it('should return direct search URL with proper encoding', () => {
-    const result = buildSpaceshipUrl('example.com');
-    expect(result).toBe('https://spaceship.sjv.io/c/6354443/1794549/21274?url=https%3A//www.spaceship.com/domains/domain-registration/results%3Fsearch%3Dexample.com');
+  beforeEach(() => {
+    mockEnv.VITE_CJ_DEEPLINK_BASE = '';
   });
 
-  it('should contain valid CJ tracking parameter', () => {
+  it('should return direct search URL when no CJ base is set', () => {
+    const result = buildSpaceshipUrl('example.com');
+    expect(result).toBe('https://www.spaceship.com/domains?search=example.com&irgwc=1');
+    expect(result).not.toContain('/domain-registration/results');
+    expect(result).not.toContain('irclickid');
+  });
+
+  it('should build CJ deeplink when CJ base is provided', () => {
+    mockEnv.VITE_CJ_DEEPLINK_BASE = 'https://spaceship.sjv.io/c/123/456/789?';
     const result = buildSpaceshipUrl('test.com');
-    // Should contain either 'aid=' or CJ tracking structure
-    expect(result).toMatch(/spaceship\.sjv\.io.*6354443.*1794549.*21274/);
-    expect(result).toContain('url=');
+    
+    expect(result).toContain('spaceship.sjv.io');
+    expect(result).toContain('u=');
+    
+    // Extract and decode the u parameter
+    const url = new URL(result);
+    const uParam = url.searchParams.get('u');
+    expect(uParam).toBeTruthy();
+    
+    const decodedInner = decodeURIComponent(uParam!);
+    expect(decodedInner).toBe('https://www.spaceship.com/domains?search=test.com&irgwc=1');
+    expect(decodedInner).not.toContain('/domain-registration/results');
+  });
+
+  it('should handle CJ base that already ends with u=', () => {
+    mockEnv.VITE_CJ_DEEPLINK_BASE = 'https://spaceship.sjv.io/c/123/456/789?u=';
+    const result = buildSpaceshipUrl('test.com');
+    
+    const expectedInner = 'https://www.spaceship.com/domains?search=test.com&irgwc=1';
+    expect(result).toBe(`https://spaceship.sjv.io/c/123/456/789?u=${encodeURIComponent(expectedInner)}`);
+  });
+
+  it('should add proper separator for CJ base without query params', () => {
+    mockEnv.VITE_CJ_DEEPLINK_BASE = 'https://spaceship.sjv.io/c/123/456/789';
+    const result = buildSpaceshipUrl('test.com');
+    
+    expect(result).toContain('?u=');
+    expect(result).not.toContain('&u=');
+  });
+
+  it('should add proper separator for CJ base with existing query params', () => {
+    mockEnv.VITE_CJ_DEEPLINK_BASE = 'https://spaceship.sjv.io/c/123/456/789?existing=param';
+    const result = buildSpaceshipUrl('test.com');
+    
+    expect(result).toContain('&u=');
+    expect(result).toContain('existing=param');
   });
 
   it('should handle domains with special characters', () => {
     const result = buildSpaceshipUrl('my-test domain.com');
-    expect(result).toContain('spaceship.sjv.io');
-    expect(result).toContain('url=');
-    // Should properly encode the inner URL
-    expect(decodeURIComponent(result.split('url=')[1])).toContain('my-test%20domain.com');
-  });
-
-  it('should always include affiliate tracking', () => {
-    const domains = ['example.com', 'test.net', 'my-domain.org'];
-    
-    domains.forEach(domain => {
-      const url = buildSpaceshipUrl(domain);
-      expect(url).toMatch(/spaceship\.sjv\.io.*6354443.*1794549.*21274/);
-      expect(url).toContain('url=');
-    });
+    expect(result).toContain('my-test%20domain.com');
+    expect(result).not.toContain('/domain-registration/results');
   });
 
   it('should generate valid URLs that can be parsed', () => {
+    mockEnv.VITE_CJ_DEEPLINK_BASE = 'https://spaceship.sjv.io/c/123/456/789?';
     const result = buildSpaceshipUrl('example.com');
     expect(() => new URL(result)).not.toThrow();
     
     const url = new URL(result);
     expect(url.hostname).toBe('spaceship.sjv.io');
-    expect(url.searchParams.get('url')).toBeTruthy();
+    expect(url.searchParams.get('u')).toBeTruthy();
   });
 
   it('should handle empty domain gracefully', () => {
     const result = buildSpaceshipUrl('');
-    expect(result).toContain('spaceship.sjv.io');
-    expect(result).toContain('url=');
+    expect(result).toBe('https://www.spaceship.com/domains?search=&irgwc=1');
+    expect(result).not.toContain('/domain-registration/results');
+  });
+
+  it('should never contain deprecated paths or parameters', () => {
+    const domains = ['example.com', 'test.net', 'my-domain.org'];
+    
+    // Test with and without CJ base
+    [undefined, 'https://spaceship.sjv.io/c/123/456/789?'].forEach(cjBase => {
+      mockEnv.VITE_CJ_DEEPLINK_BASE = cjBase || '';
+      
+      domains.forEach(domain => {
+        const url = buildSpaceshipUrl(domain);
+        expect(url).not.toContain('/domain-registration/results');
+        expect(url).not.toContain('irclickid');
+        expect(url).toContain('irgwc=1'); // Should still have tracking
+      });
+    });
   });
 });
 
@@ -91,7 +138,7 @@ describe('openInBatches', () => {
   });
 
   it('should open URLs in batches with delay', async () => {
-    mockEnv.VITE_SPACESHIP_AFF = 'https://spaceship.sjv.io/c/6354443/1794549/21274';
+    mockEnv.VITE_CJ_DEEPLINK_BASE = 'https://spaceship.sjv.io/c/6354443/1794549/21274?';
     const domains = ['domain1.com', 'domain2.com', 'domain3.com'];
     
     const promise = openInBatches(domains, 2, 100, mockOpenFn);
@@ -119,7 +166,7 @@ describe('openInBatches', () => {
   });
 
   it('should use buildSpaceshipUrl for each domain', async () => {
-    mockEnv.VITE_SPACESHIP_AFF = 'https://spaceship.sjv.io/c/6354443/1794549/21274';
+    mockEnv.VITE_CJ_DEEPLINK_BASE = 'https://spaceship.sjv.io/c/6354443/1794549/21274?';
     const domains = ['test.com'];
     
     await openInBatches(domains, 1, 0, mockOpenFn);
