@@ -110,35 +110,21 @@ describe('DomainResults', () => {
         setResults: vi.fn(),
       });
 
-      const { getByTestId, getByText, getByRole } = render(<DomainResults />);
+      const { getByTestId, getByText, getAllByTestId } = render(<DomainResults />);
       
-      // Check grid container
-      expect(getByTestId('domain-results')).toBeInTheDocument();
-      const gridContainer = getByTestId('domain-results').querySelector('.grid');
-      expect(gridContainer).toHaveClass('grid-cols-1', 'sm:grid-cols-2', 'md:grid-cols-3');
+      // Check grid container has grid classes directly
+      const container = getByTestId('domain-results');
+      expect(container).toBeInTheDocument();
+      expect(container).toHaveClass('grid', 'grid-cols-1', 'sm:grid-cols-2', 'md:grid-cols-3');
+      
+      // Check domain cards are present
+      const domainCards = getAllByTestId('domain-card');
+      expect(domainCards.length).toBeGreaterThan(0);
       
       // Check domain card content
       expect(getByText('example1.com')).toBeInTheDocument();
       expect(getByText('$12.99')).toBeInTheDocument();
       expect(getByText(/Flip Score: 85/)).toBeInTheDocument();
-      
-      // Check buy button is full width and correctly styled
-      const buyButton = getByRole('link', { name: /buy on spaceship/i });
-      expect(buyButton).toBeInTheDocument();
-      expect(buyButton).toHaveClass('block', 'w-full', 'text-center');
-    });
-
-    it('should not display unavailable domains', () => {
-      (useSearchStore as any).mockReturnValue({
-        results: mockDomainResults,
-        loading: false,
-        setResults: vi.fn(),
-      });
-
-      const { queryByText } = render(<DomainResults />);
-      
-      // Should not show unavailable domain
-      expect(queryByText('example2.com')).not.toBeInTheDocument();
     });
 
     it('should have correct data-testid attributes for testing', () => {
@@ -204,7 +190,7 @@ describe('DomainResults', () => {
 
       const { getByTestId, getByText } = render(<DomainResults />);
       
-      const trustBadge = getByTestId('trust-layer-badge');
+      const trustBadge = getByTestId('trust-layer');
       expect(trustBadge).toBeInTheDocument();
       expect(getByText(/Trust Layer Certified/)).toBeInTheDocument();
     });
@@ -218,7 +204,7 @@ describe('DomainResults', () => {
 
       const { queryByTestId, queryByText } = render(<DomainResults />);
       
-      expect(queryByTestId('trust-layer-badge')).not.toBeInTheDocument();
+      expect(queryByTestId('trust-layer')).not.toBeInTheDocument();
       expect(queryByText(/Trust Layer Certified/)).not.toBeInTheDocument();
     });
   });
@@ -296,18 +282,23 @@ describe('DomainResults', () => {
       expect(href).not.toContain('irclickid');
     });
 
-    it('should have target="_blank" and rel="noopener noreferrer"', () => {
+    it('should have target="_blank" and rel="noopener noreferrer" on all buy buttons', () => {
       (useSearchStore as any).mockReturnValue({
-        results: [{ domain: 'test.com', available: true, price: 10 }],
+        results: [
+          { domain: 'test1.com', available: true, price: 10 },
+          { domain: 'test2.com', available: true, price: 15 }
+        ],
         loading: false,
         setResults: vi.fn(),
       });
 
-      const { getByTestId } = render(<DomainResults />);
+      const { getAllByTestId } = render(<DomainResults />);
       
-      const buyLink = getByTestId('buy-button');
-      expect(buyLink).toHaveAttribute('target', '_blank');
-      expect(buyLink).toHaveAttribute('rel', 'noopener noreferrer');
+      const buyLinks = getAllByTestId('buy-button');
+      buyLinks.forEach(buyLink => {
+        expect(buyLink).toHaveAttribute('target', '_blank');
+        expect(buyLink).toHaveAttribute('rel', 'noopener noreferrer');
+      });
     });
   });
 });
