@@ -42,10 +42,10 @@ const AppPage: React.FC = () => {
   return (
     <div className="min-h-screen">
       <AppHeader user={user} />
-      <div className="mx-auto max-w-5xl px-4 py-6">
+      <main className="max-w-4xl mx-auto p-6">
         <DomainSearchForm onResults={handleResults} />
         <DomainResults />
-      </div>
+      </main>
     </div>
   );
 };

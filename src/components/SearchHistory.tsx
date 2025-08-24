@@ -167,10 +167,8 @@ export const SearchHistory: React.FC<SearchHistoryProps> = ({ onSearchAgain, cur
     }
   }, [currentKeyword]);
 
-  // Don't render if no history and not open
-  if (searchHistory.length === 0 && !isOpen) {
-    return null;
-  }
+  // Always render the collapsible header for better UX
+  // (removed conditional rendering so users always see the section)
 
   return (
     <Card className="border-border">
