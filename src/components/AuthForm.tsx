@@ -68,6 +68,10 @@ export const AuthForm = ({ onAuthSuccess }: AuthFormProps) => {
         onAuthSuccess();
       } else {
         navigate('/');
+        // Dev check: ensure we land on homepage after login
+        if (process.env.NODE_ENV === 'development') {
+          setTimeout(() => console.assert(window.location.pathname === '/', 'Post-login should redirect to "/"'), 50);
+        }
       }
     } catch (err) {
       setError("An unexpected error occurred. Please try again.");
@@ -134,6 +138,10 @@ export const AuthForm = ({ onAuthSuccess }: AuthFormProps) => {
           onAuthSuccess();
         } else {
           navigate('/');
+          // Dev check: ensure we land on homepage after signup
+          if (process.env.NODE_ENV === 'development') {
+            setTimeout(() => console.assert(window.location.pathname === '/', 'Post-signup should redirect to "/"'), 50);
+          }
         }
       }
 

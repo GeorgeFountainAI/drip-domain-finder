@@ -9,7 +9,7 @@ export default function DomainResults() {
   if (!results || results.length === 0) return null;
 
   return (
-    <div className="mt-6 space-y-4 px-4">
+    <div className="mt-6 space-y-3 px-4">
       {results.map((domain) => {
         const url = buildSpaceshipUrl(domain.domain);
         const isAvailable = domain.available;
@@ -19,41 +19,55 @@ export default function DomainResults() {
         return (
           <div
             key={domain.domain}
-            className="flex flex-wrap items-center justify-between bg-white border border-gray-200 rounded-xl p-4 shadow-sm"
+            className="bg-card border border-border rounded-xl p-4 shadow-sm hover:bg-accent/50 transition-colors"
           >
-            <div className="flex flex-col sm:flex-row sm:items-center sm:space-x-4">
-              <span className="font-semibold text-lg">{domain.domain}</span>
-              <span className="text-gray-600">{price}</span>
-              <span
-                className="ml-2 px-2 py-1 bg-purple-100 text-purple-800 text-sm rounded-full"
-                title="Flip Score estimates brand value potential based on rarity, length, trend, and suffix."
-              >
-                Flip Score: {flipScore}
-              </span>
-            </div>
+            <div className="flex items-center justify-between gap-3">
+              {/* Left: Domain and Price */}
+              <div className="flex-1 min-w-0">
+                <div className="font-bold text-lg text-foreground truncate">
+                  {domain.domain}
+                </div>
+                <div className="text-sm text-muted-foreground">
+                  {price}
+                </div>
+              </div>
 
-            <div className="mt-2 sm:mt-0">
-              {isAvailable ? (
-                <a
-                  href={url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-block px-4 py-2 bg-purple-600 text-white rounded hover:bg-purple-700 text-sm font-medium"
+              {/* Middle: Flip Score Badge */}
+              <div className="flex-shrink-0">
+                <span
+                  className="px-2 py-1 bg-primary/10 text-primary text-xs rounded-full font-medium"
+                  title="Flip Score estimates brand potential (length, rarity, trend, suffix)."
                 >
-                  Buy on Spaceship
-                </a>
-              ) : (
-                <span className="text-red-500 text-sm">Unavailable</span>
-              )}
+                  Flip Score: {flipScore}
+                </span>
+              </div>
+
+              {/* Right: Buy Button */}
+              <div className="flex-shrink-0">
+                {isAvailable ? (
+                  <a
+                    href={url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 text-sm font-medium transition-colors"
+                  >
+                    Buy on Spaceship
+                  </a>
+                ) : (
+                  <span className="text-destructive text-sm font-medium">Unavailable</span>
+                )}
+              </div>
             </div>
           </div>
         );
       })}
 
-      {/* Trust Layer */}
-      <div className="text-sm text-gray-500 text-right mt-4 pr-2">
-        🛡️ <span className="text-purple-600 font-semibold">Trust Layer Certified</span> &nbsp;•&nbsp; Tested. Logged. Safe to Buy.
-      </div>
+      {/* Trust Layer Badge */}
+      {results.length > 0 && (
+        <div className="text-sm text-muted-foreground text-right mt-4 pr-2">
+          🛡️ <span className="text-primary font-semibold">Trust Layer Certified</span> &nbsp;•&nbsp; Tested. Logged. Safe to Buy.
+        </div>
+      )}
     </div>
   );
 }

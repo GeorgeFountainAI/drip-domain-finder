@@ -4,12 +4,17 @@
  */
 
 export const buildSpaceshipUrl = (domain: string): string => {
-  // Use the direct Spaceship URL format with irclickid
-  const cjId = 'YOURCJID'; // This should be configured via environment variable
-  const baseUrl = 'https://spaceship.com/domains/domain-registration/results';
-  const domainParam = `domain=${encodeURIComponent(domain)}`;
+  // Try to use CJ deeplink base from environment
+  const cjBase = import.meta.env.VITE_CJ_DEEPLINK_BASE;
   
-  return `${baseUrl}?irclickid=${cjId}&${domainParam}`;
+  if (cjBase) {
+    // Build CJ affiliate deeplink
+    const spaceshipSearchUrl = `https://www.spaceship.com/domains?search=${encodeURIComponent(domain)}&irgwc=1`;
+    return `${cjBase}u=${encodeURIComponent(spaceshipSearchUrl)}`;
+  }
+  
+  // Fallback to plain Spaceship search URL with tracking
+  return `https://www.spaceship.com/domains?search=${encodeURIComponent(domain)}&irgwc=1`;
 };
 
 export const chunk = <T>(array: T[], size: number): T[][] => {
