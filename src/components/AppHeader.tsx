@@ -11,17 +11,35 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import CreditBalance from "@/components/CreditBalance";
 import CreditPurchase from "@/components/CreditPurchase";
+import type { User as SupabaseUser } from '@supabase/supabase-js';
 
 interface AppHeaderProps {
-  user: any;
+  user: SupabaseUser | null;
 }
 
 export const AppHeader = ({ user }: AppHeaderProps) => {
   const { toast } = useToast();
   const location = useLocation();
+  const [currentUser, setCurrentUser] = useState<SupabaseUser | null>(user);
   const [showCreditPurchase, setShowCreditPurchase] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
   const [isCheckingAdmin, setIsCheckingAdmin] = useState(true);
+
+  // Subscribe to auth state changes
+  useEffect(() => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (event, session) => {
+        setCurrentUser(session?.user ?? null);
+      }
+    );
+
+    // Initialize with current session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setCurrentUser(session?.user ?? null);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
 
   // Listen for custom event to open credit purchase modal
   useEffect(() => {
@@ -38,7 +56,7 @@ export const AppHeader = ({ user }: AppHeaderProps) => {
   // Check if user is admin
   useEffect(() => {
     const checkAdminStatus = async () => {
-      if (!user?.email) {
+      if (!currentUser?.email) {
         setIsAdmin(false);
         setIsCheckingAdmin(false);
         return;
@@ -62,7 +80,7 @@ export const AppHeader = ({ user }: AppHeaderProps) => {
     };
 
     checkAdminStatus();
-  }, [user?.email]);
+  }, [currentUser?.email]);
 
   const handleLogout = async () => {
     try {
@@ -134,75 +152,83 @@ export const AppHeader = ({ user }: AppHeaderProps) => {
         </div>
 
         <div className="flex items-center gap-4">
-          <CreditBalance />
-          
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setShowCreditPurchase(true)}
-            className="gap-2"
-          >
-            <CreditCard className="h-4 w-4" />
-            <span className="hidden sm:inline">Buy Credits</span>
-            <span className="sm:hidden">Credits</span>
-          </Button>
-
-          <div className="flex items-center gap-2">
-            <User className="h-4 w-4 text-muted-foreground" />
-            <Badge variant="outline" className="hidden sm:inline-flex">
-              {user?.email}
-            </Badge>
-            <span className="text-sm text-muted-foreground sm:hidden">
-              {user?.email?.split('@')[0]}
-            </span>
-          </div>
-
-          {/* Admin Tools Dropdown */}
-          {isAdmin && !isCheckingAdmin && (
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="outline" size="sm" className="gap-2">
-                  <Settings className="h-4 w-4" />
-                  <span className="hidden sm:inline">Admin Tools</span>
-                  <span className="sm:hidden">Tools</span>
-                  <ChevronDown className="h-3 w-3" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent 
-                align="end" 
-                className="w-48 bg-background border shadow-elevated z-50"
+          {currentUser ? (
+            <>
+              <CreditBalance />
+              
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setShowCreditPurchase(true)}
+                className="gap-2"
               >
-                <DropdownMenuItem asChild>
-                  <Link to="/admin/deploy" className="flex items-center gap-2 cursor-pointer">
-                    <Rocket className="h-4 w-4" />
-                    Deploy to Production
-                  </Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem asChild>
-                  <Link to="/admin/logs" className="flex items-center gap-2 cursor-pointer">
-                    <FileText className="h-4 w-4" />
-                    View Logs
-                  </Link>
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem disabled className="flex items-center gap-2 text-muted-foreground">
-                  <UserPlus className="h-4 w-4" />
-                  Add Admins
-                  <Badge variant="outline" className="text-xs ml-auto">Soon</Badge>
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          )}
+                <CreditCard className="h-4 w-4" />
+                <span className="hidden sm:inline">Buy Credits</span>
+                <span className="sm:hidden">Credits</span>
+              </Button>
 
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleLogout}
-            className="gap-2"
-          >
-            <LogOut className="h-4 w-4" />
-            <span className="hidden sm:inline">Logout</span>
-          </Button>
+              <div className="flex items-center gap-2">
+                <User className="h-4 w-4 text-muted-foreground" />
+                <Badge variant="outline" className="hidden sm:inline-flex">
+                  {currentUser.email}
+                </Badge>
+                <span className="text-sm text-muted-foreground sm:hidden">
+                  {currentUser.email?.split('@')[0]}
+                </span>
+              </div>
+
+              {/* Admin Tools Dropdown */}
+              {isAdmin && !isCheckingAdmin && (
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="outline" size="sm" className="gap-2">
+                      <Settings className="h-4 w-4" />
+                      <span className="hidden sm:inline">Admin Tools</span>
+                      <span className="sm:hidden">Tools</span>
+                      <ChevronDown className="h-3 w-3" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent 
+                    align="end" 
+                    className="w-48 bg-background border shadow-elevated z-50"
+                  >
+                    <DropdownMenuItem asChild>
+                      <Link to="/admin/deploy" className="flex items-center gap-2 cursor-pointer">
+                        <Rocket className="h-4 w-4" />
+                        Deploy to Production
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                      <Link to="/admin/logs" className="flex items-center gap-2 cursor-pointer">
+                        <FileText className="h-4 w-4" />
+                        View Logs
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem disabled className="flex items-center gap-2 text-muted-foreground">
+                      <UserPlus className="h-4 w-4" />
+                      Add Admins
+                      <Badge variant="outline" className="text-xs ml-auto">Soon</Badge>
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              )}
+
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleLogout}
+                className="gap-2"
+              >
+                <LogOut className="h-4 w-4" />
+                <span className="hidden sm:inline">Logout</span>
+              </Button>
+            </>
+          ) : (
+            <Button asChild variant="default" size="sm">
+              <Link to="/auth">Sign In</Link>
+            </Button>
+          )}
         </div>
       </div>
     </header>

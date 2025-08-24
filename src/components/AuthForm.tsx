@@ -67,10 +67,10 @@ export const AuthForm = ({ onAuthSuccess }: AuthFormProps) => {
       if (onAuthSuccess) {
         onAuthSuccess();
       } else {
-        navigate('/');
-        // Dev check: ensure we land on homepage after login
+        navigate('/app');
+        // Dev check: ensure we land on app page after login
         if (process.env.NODE_ENV === 'development') {
-          setTimeout(() => console.assert(window.location.pathname === '/', 'Post-login should redirect to "/"'), 50);
+          setTimeout(() => console.assert(window.location.pathname === '/app', 'Post-login should redirect to "/app"'), 50);
         }
       }
     } catch (err) {
@@ -137,10 +137,10 @@ export const AuthForm = ({ onAuthSuccess }: AuthFormProps) => {
         if (onAuthSuccess) {
           onAuthSuccess();
         } else {
-          navigate('/');
-          // Dev check: ensure we land on homepage after signup
+          navigate('/app');
+          // Dev check: ensure we land on app page after signup
           if (process.env.NODE_ENV === 'development') {
-            setTimeout(() => console.assert(window.location.pathname === '/', 'Post-signup should redirect to "/"'), 50);
+            setTimeout(() => console.assert(window.location.pathname === '/app', 'Post-signup should redirect to "/app"'), 50);
           }
         }
       }
