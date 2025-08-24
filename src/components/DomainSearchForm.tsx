@@ -27,6 +27,7 @@ import { SearchHistory } from "@/components/SearchHistory";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import searchDomains from "@/api/domainSearchClient";
 import { generateWildcardSuggestions } from "@/utils/domainGenerator";
+import { supabase } from "@/integrations/supabase/client";
 
 interface Domain {
   name: string;
@@ -103,6 +104,43 @@ const FlipScore = ({ score }: { score: number }) => {
   );
 };
 
+// Static blocklist for domains that are definitely not purchasable
+const DOMAIN_BLOCKLIST = ["ai.com"];
+
+// Helper function to chunk array into batches
+const chunkArray = <T,>(array: T[], size: number): T[][] => {
+  const chunks: T[][] = [];
+  for (let i = 0; i < array.length; i += size) {
+    chunks.push(array.slice(i, i + size));
+  }
+  return chunks;
+};
+
+// Helper function to validate domains in batches
+const validateDomainsInBatches = async (domains: Domain[], batchSize: number = 5): Promise<Domain[]> => {
+  const chunks = chunkArray(domains, batchSize);
+  const validatedDomains: Domain[] = [];
+
+  for (const chunk of chunks) {
+    const validationPromises = chunk.map(async (domain) => {
+      try {
+        const { data } = await supabase.functions.invoke("validate-buy-link", {
+          body: { domain: domain.name }
+        });
+        return data?.ok === true ? domain : null;
+      } catch (error) {
+        console.error(`Validation failed for ${domain.name}:`, error);
+        return null;
+      }
+    });
+
+    const results = await Promise.all(validationPromises);
+    validatedDomains.push(...results.filter(domain => domain !== null));
+  }
+
+  return validatedDomains;
+};
+
 export const DomainSearchForm = forwardRef<DomainSearchFormRef, DomainSearchFormProps>(({ className = "", onResults, onStateChange }, ref) => {
   const [keyword, setKeyword] = useState("");
   const [domains, setDomains] = useState<Domain[]>([]);
@@ -158,12 +196,19 @@ export const DomainSearchForm = forwardRef<DomainSearchFormRef, DomainSearchForm
           trendStrength: Math.floor(Math.random() * 5) + 1
         }));
         
-        setDomains(wildcardDomains);
+        // Filter out blocked domains and validate in batches
+        const unblockedDomains = wildcardDomains.filter(domain => 
+          !DOMAIN_BLOCKLIST.includes(domain.name)
+        );
+        
+        const validatedDomains = await validateDomainsInBatches(unblockedDomains);
+        
+        setDomains(validatedDomains);
         setLastSearchedKeyword(keyword.trim());
         
         // Notify parent with results
         if (onResults) {
-          onResults(wildcardDomains);
+          onResults(validatedDomains);
         }
         if (onStateChange) {
           onStateChange('results');
@@ -186,12 +231,19 @@ export const DomainSearchForm = forwardRef<DomainSearchFormRef, DomainSearchForm
           });
         }
 
-        setDomains(searchResult.domains);
+        // Filter out blocked domains and validate in batches
+        const unblockedDomains = searchResult.domains.filter(domain => 
+          !DOMAIN_BLOCKLIST.includes(domain.name)
+        );
+        
+        const validatedDomains = await validateDomainsInBatches(unblockedDomains);
+        
+        setDomains(validatedDomains);
         setLastSearchedKeyword(keyword.trim());
         
         // Notify parent with results
         if (onResults) {
-          onResults(searchResult.domains);
+          onResults(validatedDomains);
         }
         if (onStateChange) {
           onStateChange('results');
@@ -277,11 +329,18 @@ export const DomainSearchForm = forwardRef<DomainSearchFormRef, DomainSearchForm
           trendStrength: Math.floor(Math.random() * 5) + 1
         }));
         
-        setDomains(wildcardDomains);
+        // Filter out blocked domains and validate in batches
+        const unblockedDomains = wildcardDomains.filter(domain => 
+          !DOMAIN_BLOCKLIST.includes(domain.name)
+        );
+        
+        const validatedDomains = await validateDomainsInBatches(unblockedDomains);
+        
+        setDomains(validatedDomains);
         setLastSearchedKeyword(searchKeyword.trim());
         
         if (onResults) {
-          onResults(wildcardDomains);
+          onResults(validatedDomains);
         }
         if (onStateChange) {
           onStateChange('results');
@@ -304,11 +363,18 @@ export const DomainSearchForm = forwardRef<DomainSearchFormRef, DomainSearchForm
           });
         }
 
-        setDomains(searchResult.domains);
+        // Filter out blocked domains and validate in batches
+        const unblockedDomains = searchResult.domains.filter(domain => 
+          !DOMAIN_BLOCKLIST.includes(domain.name)
+        );
+        
+        const validatedDomains = await validateDomainsInBatches(unblockedDomains);
+
+        setDomains(validatedDomains);
         setLastSearchedKeyword(searchKeyword.trim());
         
         if (onResults) {
-          onResults(searchResult.domains);
+          onResults(validatedDomains);
         }
         if (onStateChange) {
           onStateChange('results');
@@ -398,11 +464,18 @@ export const DomainSearchForm = forwardRef<DomainSearchFormRef, DomainSearchForm
             trendStrength: Math.floor(Math.random() * 5) + 1
           }));
           
-          setDomains(wildcardDomains);
+          // Filter out blocked domains and validate in batches
+          const unblockedDomains = wildcardDomains.filter(domain => 
+            !DOMAIN_BLOCKLIST.includes(domain.name)
+          );
+          
+          const validatedDomains = await validateDomainsInBatches(unblockedDomains);
+          
+          setDomains(validatedDomains);
           
           // Notify parent with results
           if (onResults) {
-            onResults(wildcardDomains);
+            onResults(validatedDomains);
           }
           if (onStateChange) {
             onStateChange('results');
@@ -416,11 +489,18 @@ export const DomainSearchForm = forwardRef<DomainSearchFormRef, DomainSearchForm
         } else {
           // Regular domain search
           const searchResult = await searchDomains(searchKeyword.trim());
-          setDomains(searchResult.domains);
+          // Filter out blocked domains and validate in batches
+          const unblockedDomains = searchResult.domains.filter(domain => 
+            !DOMAIN_BLOCKLIST.includes(domain.name)
+          );
+          
+          const validatedDomains = await validateDomainsInBatches(unblockedDomains);
+          
+          setDomains(validatedDomains);
           
           // Notify parent with results
           if (onResults) {
-            onResults(searchResult.domains);
+            onResults(validatedDomains);
           }
           if (onStateChange) {
             onStateChange('results');
@@ -677,9 +757,20 @@ export const DomainSearchForm = forwardRef<DomainSearchFormRef, DomainSearchForm
                             </div>
                           </div>
                           {domain.available && (
-                            <div className="text-right">
-                              <div className="text-xl font-bold">${domain.price.toFixed(2)}</div>
-                              <div className="text-sm text-muted-foreground">/year</div>
+                            <div className="text-right space-y-2">
+                              <div>
+                                <div className="text-xl font-bold">${domain.price.toFixed(2)}</div>
+                                <div className="text-sm text-muted-foreground">/year</div>
+                              </div>
+                              <a
+                                href={`/api/go/spaceship?d=${encodeURIComponent(domain.name)}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="mt-2 inline-flex items-center justify-center px-3 py-1.5 text-sm font-medium bg-primary text-primary-foreground rounded-md hover:bg-primary/90"
+                                data-testid="buy-button"
+                              >
+                                Buy on Spaceship
+                              </a>
                             </div>
                           )}
                         </div>
