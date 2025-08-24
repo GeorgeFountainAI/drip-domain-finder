@@ -77,14 +77,6 @@ const AppPage: React.FC = () => {
   const [errMsg, setErrMsg] = useState<string | null>(null);
   const { setResults, setLoading, loading } = useSearchStore();
 
-  // Prevent "Back" → login by stabilizing the history state on /app
-  useEffect(() => {
-    try {
-      if (location.pathname !== '/app') {
-        window.history.replaceState(null, '', '/app');
-      }
-    } catch {}
-  }, []);
 
   // Load last query to keep session comfy
   useEffect(() => {
