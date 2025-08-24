@@ -81,7 +81,7 @@ const AppPage: React.FC = () => {
 
           {/* Search History */}
           <div className="mb-8">
-            <SearchHistoryViewer onSearchAgain={(keyword) => {
+            <SearchHistoryViewer onSearchAgain={async (keyword) => {
               // Handle search again functionality
               console.log('Search again:', keyword);
             }} />
