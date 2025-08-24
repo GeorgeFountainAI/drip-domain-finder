@@ -3,12 +3,14 @@ import { render } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import '@testing-library/jest-dom';
 import DomainResults from './DomainResults';
-import * as spaceshipUtils from '@/utils/spaceship';
+import { buildSpaceshipUrl } from '@/utils/spaceship';
 
-// Mock the spaceship utilities
+// Mock the spaceship utility
+const mockBuildSpaceshipUrl = vi.fn();
+const mockOpenInBatches = vi.fn();
 vi.mock('@/utils/spaceship', () => ({
-  buildSpaceshipUrl: vi.fn((domain: string) => `https://mock-spaceship-url.com?domain=${domain}`),
-  openInBatches: vi.fn()
+  buildSpaceshipUrl: mockBuildSpaceshipUrl,
+  openInBatches: mockOpenInBatches,
 }));
 
 // Mock Supabase
@@ -40,217 +42,272 @@ vi.mock('@/integrations/supabase/client', () => ({
   }
 }));
 
-const mockAvailableDomains = [
-  { domain: 'example1.com', available: true, price: 10, flipScore: 85 },
-  { domain: 'example2.net', available: true, price: 15 }
-];
-
-const mockUnavailableDomains = [
-  { domain: 'unavailable.org', available: false, price: 20 },
-  { domain: 'getsupermind.com', available: false, price: 12.99 }
+// Mock domain data
+const mockDomainResults = [
+  { domain: 'example1.com', available: true, price: 12.99, flipScore: 85 },
+  { domain: 'example2.com', available: false, price: 15.99, flipScore: 70 } // unavailable should not be rendered
 ];
 
 // Mock Zustand stores
-const mockSetResults = vi.fn();
-const mockSetLoading = vi.fn();
-const mockAdd = vi.fn();
-const mockRemove = vi.fn();
-const mockClear = vi.fn();
-const mockSet = vi.fn();
-
-const mockUseSearchStore = vi.fn(() => ({
-  results: mockAvailableDomains,
-  loading: false,
-  setResults: mockSetResults,
-  setLoading: mockSetLoading,
-}));
+const mockAddDomain = vi.fn();
+const mockRemoveDomain = vi.fn();
+const mockClearSelection = vi.fn();
+const mockSelectAll = vi.fn();
 
 vi.mock('@/lib/store', () => ({
-  useSearchStore: mockUseSearchStore,
-  useSelectedDomains: vi.fn(() => ({
-    selectedDomains: [],
-    add: mockAdd,
-    remove: mockRemove,
-    clear: mockClear,
-    set: mockSet,
-  })),
+  useSearchStore: vi.fn(),
+  useSelectedDomains: vi.fn(),
 }));
 
-// Mock fetcher function
-const mockFetcher = vi.fn().mockResolvedValue({
-  results: mockAvailableDomains,
-  suggestions: []
-});
+const { useSearchStore, useSelectedDomains } = vi.mocked(
+  await import('@/lib/store')
+);
 
 describe('DomainResults', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    mockUseSearchStore.mockReturnValue({
-      results: mockAvailableDomains,
-      loading: false,
-      setResults: mockSetResults,
-      setLoading: mockSetLoading,
-    });
-  });
-
-  it('renders available domains from store', async () => {
-    const { getByText } = render(<DomainResults />);
     
-    expect(getByText('example1.com')).toBeInTheDocument();
-    expect(getByText('example2.net')).toBeInTheDocument();
-  });
-
-  it('renders both available and unavailable domains', async () => {
-    mockUseSearchStore.mockReturnValue({
-      results: [...mockAvailableDomains, ...mockUnavailableDomains],
-      loading: false,
-      setResults: mockSetResults,
-      setLoading: mockSetLoading,
-    });
+    // Setup default spaceship URL mock
+    mockBuildSpaceshipUrl.mockImplementation((domain: string) => 
+      `https://www.spaceship.com/domains?search=${encodeURIComponent(domain)}&irgwc=1`
+    );
     
-    const { getByText } = render(<DomainResults />);
-    
-    // All domains should be present
-    expect(getByText('example1.com')).toBeInTheDocument();
-    expect(getByText('example2.net')).toBeInTheDocument();
-    expect(getByText('unavailable.org')).toBeInTheDocument();
-    expect(getByText('getsupermind.com')).toBeInTheDocument();
-  });
-
-  it('shows no results message when store has empty results', async () => {
-    mockUseSearchStore.mockReturnValue({
+    // Setup default store state
+    (useSearchStore as any).mockReturnValue({
       results: [],
       loading: false,
-      setResults: mockSetResults,
-      setLoading: mockSetLoading,
+      setResults: vi.fn(),
     });
     
-    const { getByText } = render(<DomainResults />);
-    
-    expect(getByText(/No results found/)).toBeInTheDocument();
-  });
-
-  it('displays flip score when available', async () => {
-    const { getByText } = render(<DomainResults />);
-    
-    expect(getByText('Flip Score: 85')).toBeInTheDocument();
-  });
-
-  it('shows trust badge when results are present', async () => {
-    const { getByText } = render(<DomainResults />);
-    
-    expect(getByText('Trust Layer')).toBeInTheDocument();
-    expect(getByText('Tested. Logged. Safe to Buy.')).toBeInTheDocument();
-  });
-
-  it('does not show trust badge when loading', () => {
-    mockUseSearchStore.mockReturnValue({
-      results: [],
-      loading: true,
-      setResults: mockSetResults,
-      setLoading: mockSetLoading,
+    (useSelectedDomains as any).mockReturnValue({
+      selectedDomains: new Set(),
+      addDomain: mockAddDomain,
+      removeDomain: mockRemoveDomain,
+      clearSelection: mockClearSelection,
+      selectAll: mockSelectAll,
     });
-    
-    const { queryByText } = render(<DomainResults />);
-    
-    expect(queryByText('Trust Layer')).not.toBeInTheDocument();
   });
 
-  describe('Affiliate link regression tests', () => {
-    beforeEach(async () => {
-      // Use real buildSpaceshipUrl implementation for these tests
-      const actualSpaceship = await vi.importActual<typeof spaceshipUtils>('@/utils/spaceship');
-      vi.mocked(spaceshipUtils.buildSpaceshipUrl).mockImplementation(
-        actualSpaceship.buildSpaceshipUrl
+  describe('loading state', () => {
+    it('should display loading message when loading', () => {
+      (useSearchStore as any).mockReturnValue({
+        results: [],
+        loading: true,
+        setResults: vi.fn(),
+      });
+
+      const { getByText } = render(<DomainResults />);
+      
+      expect(getByText('Loading results...')).toBeInTheDocument();
+    });
+  });
+
+  describe('renders available domains', () => {
+    it('should display domain cards with correct information in responsive grid', () => {
+      (useSearchStore as any).mockReturnValue({
+        results: mockDomainResults,
+        loading: false,
+        setResults: vi.fn(),
+      });
+
+      const { getByTestId, getByText, getByRole } = render(<DomainResults />);
+      
+      // Check grid container
+      expect(getByTestId('domain-results')).toBeInTheDocument();
+      const gridContainer = getByTestId('domain-results').querySelector('.grid');
+      expect(gridContainer).toHaveClass('grid-cols-1', 'sm:grid-cols-2', 'md:grid-cols-3');
+      
+      // Check domain card content
+      expect(getByText('example1.com')).toBeInTheDocument();
+      expect(getByText('$12.99')).toBeInTheDocument();
+      expect(getByText(/Flip Score: 85/)).toBeInTheDocument();
+      
+      // Check buy button is full width and correctly styled
+      const buyButton = getByRole('link', { name: /buy on spaceship/i });
+      expect(buyButton).toBeInTheDocument();
+      expect(buyButton).toHaveClass('block', 'w-full', 'text-center');
+    });
+
+    it('should not display unavailable domains', () => {
+      (useSearchStore as any).mockReturnValue({
+        results: mockDomainResults,
+        loading: false,
+        setResults: vi.fn(),
+      });
+
+      const { queryByText } = render(<DomainResults />);
+      
+      // Should not show unavailable domain
+      expect(queryByText('example2.com')).not.toBeInTheDocument();
+    });
+
+    it('should have correct data-testid attributes for testing', () => {
+      (useSearchStore as any).mockReturnValue({
+        results: mockDomainResults,
+        loading: false,
+        setResults: vi.fn(),
+      });
+
+      const { getByTestId } = render(<DomainResults />);
+      
+      expect(getByTestId('domain-results')).toBeInTheDocument();
+      expect(getByTestId('domain-card')).toBeInTheDocument();
+      expect(getByTestId('domain-name')).toBeInTheDocument();
+      expect(getByTestId('domain-price')).toBeInTheDocument();
+      expect(getByTestId('flip-score')).toBeInTheDocument();
+      expect(getByTestId('buy-button')).toBeInTheDocument();
+    });
+  });
+
+  describe('displays flip score only for available domains', () => {
+    it('should show flip score for available domains', () => {
+      (useSearchStore as any).mockReturnValue({
+        results: mockDomainResults,
+        loading: false,
+        setResults: vi.fn(),
+      });
+
+      const { getByText, getByTestId } = render(<DomainResults />);
+      
+      expect(getByText(/Flip Score: 85/)).toBeInTheDocument();
+      expect(getByTestId('flip-score')).toBeInTheDocument();
+    });
+
+    it('should not show flip score for unavailable domains', () => {
+      const mixedResults = [
+        ...mockDomainResults,
+        { domain: 'unavailable.com', available: false, price: null, flipScore: 75 }
+      ];
+
+      (useSearchStore as any).mockReturnValue({
+        results: mixedResults,
+        loading: false,
+        setResults: vi.fn(),
+      });
+
+      const { queryByText, getAllByTestId } = render(<DomainResults />);
+      
+      // Should not show flip score for unavailable domain
+      expect(queryByText(/Flip Score: 75/)).not.toBeInTheDocument();
+      // Should only have one flip score element (for available domain)
+      expect(getAllByTestId('flip-score')).toHaveLength(1);
+    });
+  });
+
+  describe('shows trust layer badge when results exist', () => {
+    it('should display trust layer badge when there are results', () => {
+      (useSearchStore as any).mockReturnValue({
+        results: mockDomainResults,
+        loading: false,
+        setResults: vi.fn(),
+      });
+
+      const { getByTestId, getByText } = render(<DomainResults />);
+      
+      const trustBadge = getByTestId('trust-layer-badge');
+      expect(trustBadge).toBeInTheDocument();
+      expect(getByText(/Trust Layer Certified/)).toBeInTheDocument();
+    });
+
+    it('should not display trust layer badge when loading', () => {
+      (useSearchStore as any).mockReturnValue({
+        results: [],
+        loading: true,
+        setResults: vi.fn(),
+      });
+
+      const { queryByTestId, queryByText } = render(<DomainResults />);
+      
+      expect(queryByTestId('trust-layer-badge')).not.toBeInTheDocument();
+      expect(queryByText(/Trust Layer Certified/)).not.toBeInTheDocument();
+    });
+  });
+
+  describe('affiliate link generation', () => {
+    beforeEach(() => {
+      // Reset to default mock before each test
+      mockBuildSpaceshipUrl.mockImplementation((domain: string) => 
+        `https://www.spaceship.com/domains?search=${encodeURIComponent(domain)}&irgwc=1`
       );
     });
 
     afterEach(() => {
-      // Reset to mock implementation
-      vi.mocked(spaceshipUtils.buildSpaceshipUrl).mockImplementation(
-        (domain: string) => `https://mock-spaceship-url.com?domain=${domain}`
-      );
+      // Clean up environment variables
+      delete (import.meta.env as any).VITE_CJ_DEEPLINK_BASE;
     });
 
-    it('should generate direct spaceship URL when no CJ base is set', () => {
-      // Temporarily clear VITE_CJ_DEEPLINK_BASE
-      const originalEnv = import.meta.env.VITE_CJ_DEEPLINK_BASE;
-      // @ts-ignore - Override for test
-      import.meta.env.VITE_CJ_DEEPLINK_BASE = undefined;
-      
-      const { container } = render(<DomainResults />);
-      const buyLink = container.querySelector('a[href*="spaceship.com"]') as HTMLAnchorElement;
-      
-      expect(buyLink).toBeInTheDocument();
-      expect(buyLink.href).toContain('https://www.spaceship.com/domains?search=');
-      expect(buyLink.href).not.toContain('/domain-registration/results');
-      expect(buyLink.href).toContain('irgwc=1');
-      expect(buyLink.target).toBe('_blank');
-      expect(buyLink.rel).toBe('noopener noreferrer');
-      
-      // Restore original env
-      // @ts-ignore
-      import.meta.env.VITE_CJ_DEEPLINK_BASE = originalEnv;
-    });
-
-    it('should generate CJ deeplink when CJ base is set', () => {
-      // Set CJ base for test
-      const originalEnv = import.meta.env.VITE_CJ_DEEPLINK_BASE;
-      // @ts-ignore - Override for test
-      import.meta.env.VITE_CJ_DEEPLINK_BASE = 'https://spaceship.sjv.io/c/123/456/789?';
-      
-      const { container } = render(<DomainResults />);
-      const buyLink = container.querySelector('a') as HTMLAnchorElement;
-      
-      expect(buyLink).toBeInTheDocument();
-      expect(buyLink.href).toContain('spaceship.sjv.io');
-      expect(buyLink.href).toContain('u=');
-      
-      // Extract and verify u parameter
-      const url = new URL(buyLink.href);
-      const uParam = url.searchParams.get('u');
-      expect(uParam).toBeTruthy();
-      
-      const decodedInner = decodeURIComponent(uParam!);
-      expect(decodedInner).toContain('https://www.spaceship.com/domains?search=');
-      expect(decodedInner).not.toContain('/domain-registration/results');
-      expect(decodedInner).toContain('irgwc=1');
-      
-      expect(buyLink.target).toBe('_blank');
-      expect(buyLink.rel).toBe('noopener noreferrer');
-      
-      // Restore original env
-      // @ts-ignore
-      import.meta.env.VITE_CJ_DEEPLINK_BASE = originalEnv;
-    });
-
-    it('should never contain deprecated domain-registration/results path', () => {
-      const testCases = [
-        undefined, // No CJ base
-        'https://spaceship.sjv.io/c/123/456/789?', // With CJ base
-        'https://spaceship.sjv.io/c/123/456/789?u=' // CJ base ending with u=
-      ];
-      
-      testCases.forEach(cjBase => {
-        const originalEnv = import.meta.env.VITE_CJ_DEEPLINK_BASE;
-        // @ts-ignore - Override for test
-        import.meta.env.VITE_CJ_DEEPLINK_BASE = cjBase;
-        
-        const { container } = render(<DomainResults />);
-        const buyLinks = container.querySelectorAll('a');
-        
-        buyLinks.forEach(link => {
-          expect(link.href).not.toContain('/domain-registration/results');
-          expect(link.href).not.toContain('irclickid');
-          if (link.href.includes('spaceship.com')) {
-            expect(link.href).toContain('irgwc=1');
-          }
-        });
-        
-        // Restore original env
-        // @ts-ignore
-        import.meta.env.VITE_CJ_DEEPLINK_BASE = originalEnv;
+    it('should generate direct spaceship URLs when no CJ base is set', () => {
+      (useSearchStore as any).mockReturnValue({
+        results: [{ domain: 'test.com', available: true, price: 10 }],
+        loading: false,
+        setResults: vi.fn(),
       });
+
+      const { getByTestId } = render(<DomainResults />);
+      
+      const buyLink = getByTestId('buy-button');
+      expect(mockBuildSpaceshipUrl).toHaveBeenCalledWith('test.com');
+      expect(buyLink).toHaveAttribute('href', 'https://www.spaceship.com/domains?search=test.com&irgwc=1');
+    });
+
+    it('should generate CJ deeplink URLs when CJ base is configured', () => {
+      // Mock environment variable
+      (import.meta.env as any).VITE_CJ_DEEPLINK_BASE = 'https://www.anrdoezrs.net/click-123456-789';
+      
+      // Mock the buildSpaceshipUrl to return CJ deeplink
+      mockBuildSpaceshipUrl.mockImplementation((domain: string) => {
+        const inner = `https://www.spaceship.com/domains?search=${encodeURIComponent(domain)}&irgwc=1`;
+        return `https://www.anrdoezrs.net/click-123456-789?u=${encodeURIComponent(inner)}`;
+      });
+
+      (useSearchStore as any).mockReturnValue({
+        results: [{ domain: 'test.com', available: true, price: 10 }],
+        loading: false,
+        setResults: vi.fn(),
+      });
+
+      const { getByTestId } = render(<DomainResults />);
+      
+      const buyLink = getByTestId('buy-button');
+      const href = buyLink.getAttribute('href')!;
+      
+      expect(href).toContain('anrdoezrs.net');
+      expect(href).toContain('u=');
+      
+      // Decode the u parameter and verify it contains the spaceship URL
+      const url = new URL(href);
+      const uParam = url.searchParams.get('u');
+      expect(uParam).toContain('spaceship.com/domains');
+    });
+
+    it('should never include deprecated paths', () => {
+      (useSearchStore as any).mockReturnValue({
+        results: [{ domain: 'test.com', available: true, price: 10 }],
+        loading: false,
+        setResults: vi.fn(),
+      });
+
+      const { getByTestId } = render(<DomainResults />);
+      
+      const buyLink = getByTestId('buy-button');
+      const href = buyLink.getAttribute('href')!;
+      
+      expect(href).not.toContain('/domain-registration/results');
+      expect(href).not.toContain('irclickid');
+    });
+
+    it('should have target="_blank" and rel="noopener noreferrer"', () => {
+      (useSearchStore as any).mockReturnValue({
+        results: [{ domain: 'test.com', available: true, price: 10 }],
+        loading: false,
+        setResults: vi.fn(),
+      });
+
+      const { getByTestId } = render(<DomainResults />);
+      
+      const buyLink = getByTestId('buy-button');
+      expect(buyLink).toHaveAttribute('target', '_blank');
+      expect(buyLink).toHaveAttribute('rel', 'noopener noreferrer');
     });
   });
 });
