@@ -1,8 +1,9 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/integrations/supabase/client';
-import { Coins, TrendingUp, Loader2 } from 'lucide-react';
+import { Coins, TrendingUp } from 'lucide-react';
 
 const CreditBalance = () => {
   const [credits, setCredits] = useState(null);
@@ -35,9 +36,14 @@ const CreditBalance = () => {
   const fetchCreditBalance = async () => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
+      if (!user) {
+        setCredits({ current_credits: 0, total_purchased_credits: 0 });
+        setLoading(false);
+        return;
+      }
 
-      const { data, error } = await supabase
+      // First try to get existing credits
+      let { data, error } = await supabase
         .from('user_credits')
         .select('current_credits, total_purchased_credits')
         .eq('user_id', user.id)
@@ -45,12 +51,32 @@ const CreditBalance = () => {
 
       if (error) {
         console.error('Error fetching credits:', error);
-        return;
       }
 
-      setCredits(data || { current_credits: 0, total_purchased_credits: 0 });
+      // If no record exists, ensure user gets starter credits
+      if (!data) {
+        try {
+          const { data: onboardingResult } = await supabase.functions.invoke('user-onboarding');
+          if (onboardingResult?.current_credits !== undefined) {
+            setCredits({
+              current_credits: onboardingResult.current_credits,
+              total_purchased_credits: 0
+            });
+          } else {
+            // Fallback to 50 credits if onboarding fails
+            setCredits({ current_credits: 50, total_purchased_credits: 0 });
+          }
+        } catch (onboardingError) {
+          console.warn('Onboarding function failed, using fallback credits:', onboardingError);
+          setCredits({ current_credits: 50, total_purchased_credits: 0 });
+        }
+      } else {
+        setCredits(data);
+      }
     } catch (error) {
       console.error('Error:', error);
+      // Fallback to show 50 credits if all else fails
+      setCredits({ current_credits: 50, total_purchased_credits: 0 });
     } finally {
       setLoading(false);
     }
@@ -77,7 +103,7 @@ const CreditBalance = () => {
       </CardHeader>
       <CardContent>
         <div className="text-2xl font-bold text-primary mb-2">
-          {credits?.current_credits || 0}
+          {credits?.current_credits || 50}
           <span className="text-sm font-normal text-muted-foreground ml-1">credits</span>
         </div>
         {credits?.total_purchased_credits > 0 && (
