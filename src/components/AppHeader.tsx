@@ -11,6 +11,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import CreditBalance from "@/components/CreditBalance";
 import CreditPurchase from "@/components/CreditPurchase";
+import { useUser } from "@/lib/supabaseClient";
 import type { User as SupabaseUser } from '@supabase/supabase-js';
 
 interface AppHeaderProps {
@@ -20,26 +21,13 @@ interface AppHeaderProps {
 export const AppHeader = ({ user }: AppHeaderProps) => {
   const { toast } = useToast();
   const location = useLocation();
-  const [currentUser, setCurrentUser] = useState<SupabaseUser | null>(user);
+  const { user: hookUser } = useUser();
   const [showCreditPurchase, setShowCreditPurchase] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
   const [isCheckingAdmin, setIsCheckingAdmin] = useState(true);
 
-  // Subscribe to auth state changes
-  useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
-        setCurrentUser(session?.user ?? null);
-      }
-    );
-
-    // Initialize with current session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setCurrentUser(session?.user ?? null);
-    });
-
-    return () => subscription.unsubscribe();
-  }, []);
+  // Use prop user if provided, otherwise fall back to hook
+  const currentUser = user || hookUser;
 
   // Listen for custom event to open credit purchase modal
   useEffect(() => {
@@ -167,16 +155,6 @@ export const AppHeader = ({ user }: AppHeaderProps) => {
                 <span className="sm:hidden">Credits</span>
               </Button>
 
-              <div className="flex items-center gap-2">
-                <User className="h-4 w-4 text-muted-foreground" />
-                <Badge variant="outline" className="hidden sm:inline-flex">
-                  {currentUser.email}
-                </Badge>
-                <span className="text-sm text-muted-foreground sm:hidden">
-                  {currentUser.email?.split('@')[0]}
-                </span>
-              </div>
-
               {/* Admin Tools Dropdown */}
               {isAdmin && !isCheckingAdmin && (
                 <DropdownMenu>
@@ -214,20 +192,45 @@ export const AppHeader = ({ user }: AppHeaderProps) => {
                 </DropdownMenu>
               )}
 
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleLogout}
-                className="gap-2"
-              >
-                <LogOut className="h-4 w-4" />
-                <span className="hidden sm:inline">Logout</span>
-              </Button>
+              {/* User Menu Dropdown */}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" size="sm" className="gap-2">
+                    <User className="h-4 w-4" />
+                    <span className="hidden sm:inline">{currentUser.email?.split('@')[0]}</span>
+                    <ChevronDown className="h-3 w-3" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-48">
+                  <div className="p-2 border-b">
+                    <p className="text-sm font-medium">{currentUser.email}</p>
+                  </div>
+                  <DropdownMenuItem asChild>
+                    <Link to="/app" className="flex items-center gap-2 cursor-pointer">
+                      <User className="h-4 w-4" />
+                      My Account
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem 
+                    onClick={handleLogout}
+                    className="flex items-center gap-2 cursor-pointer text-destructive focus:text-destructive"
+                  >
+                    <LogOut className="h-4 w-4" />
+                    Logout
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </>
           ) : (
-            <Button asChild variant="default" size="sm">
-              <Link to="/auth">Sign In</Link>
-            </Button>
+            <div className="flex items-center gap-2">
+              <Button asChild variant="outline" size="sm">
+                <Link to="/signin">Sign In</Link>
+              </Button>
+              <Button asChild variant="default" size="sm">
+                <Link to="/signup">Get Started</Link>
+              </Button>
+            </div>
           )}
         </div>
       </div>

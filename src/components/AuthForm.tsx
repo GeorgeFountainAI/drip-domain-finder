@@ -11,9 +11,10 @@ import { useNavigate } from "react-router-dom";
 
 interface AuthFormProps {
   onAuthSuccess?: () => void;
+  initialTab?: "login" | "signup";
 }
 
-export const AuthForm = ({ onAuthSuccess }: AuthFormProps) => {
+export const AuthForm = ({ onAuthSuccess, initialTab }: AuthFormProps) => {
   const [isLoading, setIsLoading] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -223,7 +224,7 @@ export const AuthForm = ({ onAuthSuccess }: AuthFormProps) => {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <Tabs defaultValue="login" onValueChange={resetForm}>
+            <Tabs defaultValue={initialTab ?? "login"} onValueChange={resetForm}>
               <TabsList className="grid w-full grid-cols-2">
                 <TabsTrigger value="login">Login</TabsTrigger>
                 <TabsTrigger value="signup">Sign Up</TabsTrigger>
