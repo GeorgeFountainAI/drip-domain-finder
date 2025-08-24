@@ -67,7 +67,7 @@ export const AuthForm = ({ onAuthSuccess }: AuthFormProps) => {
       if (onAuthSuccess) {
         onAuthSuccess();
       } else {
-        navigate('/app');
+        navigate('/');
       }
     } catch (err) {
       setError("An unexpected error occurred. Please try again.");
@@ -133,7 +133,7 @@ export const AuthForm = ({ onAuthSuccess }: AuthFormProps) => {
         if (onAuthSuccess) {
           onAuthSuccess();
         } else {
-          navigate('/app');
+          navigate('/');
         }
       }
 
