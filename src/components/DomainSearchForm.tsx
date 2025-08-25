@@ -107,6 +107,10 @@ const FlipScore = ({ score }: { score: number }) => {
 // Static blocklist for domains that are definitely not purchasable
 const DOMAIN_BLOCKLIST = ["ai.com"];
 
+// TODO: Temporary flag to bypass validation for wildcard searches
+// Set to false to fix wildcard search display issues - can be re-enabled later
+const WILDCARD_VALIDATION_ENABLED = false;
+
 // Helper function to chunk array into batches
 const chunkArray = <T,>(array: T[], size: number): T[][] => {
   const chunks: T[][] = [];
@@ -196,12 +200,14 @@ export const DomainSearchForm = forwardRef<DomainSearchFormRef, DomainSearchForm
           trendStrength: Math.floor(Math.random() * 5) + 1
         }));
         
-        // Filter out blocked domains and validate in batches
-        const unblockedDomains = wildcardDomains.filter(domain => 
-          !DOMAIN_BLOCKLIST.includes(domain.name)
-        );
+        // Filter out blocked domains and validate in batches (temporary bypass for wildcard)
+        const unblockedDomains = WILDCARD_VALIDATION_ENABLED 
+          ? wildcardDomains.filter(domain => !DOMAIN_BLOCKLIST.includes(domain.name))
+          : wildcardDomains; // Bypass blocklist for wildcard searches
         
-        const validatedDomains = await validateDomainsInBatches(unblockedDomains);
+        const validatedDomains = WILDCARD_VALIDATION_ENABLED 
+          ? await validateDomainsInBatches(unblockedDomains)
+          : unblockedDomains; // Bypass validation for wildcard searches
         
         setDomains(validatedDomains);
         setLastSearchedKeyword(keyword.trim());
@@ -329,12 +335,14 @@ export const DomainSearchForm = forwardRef<DomainSearchFormRef, DomainSearchForm
           trendStrength: Math.floor(Math.random() * 5) + 1
         }));
         
-        // Filter out blocked domains and validate in batches
-        const unblockedDomains = wildcardDomains.filter(domain => 
-          !DOMAIN_BLOCKLIST.includes(domain.name)
-        );
+        // Filter out blocked domains and validate in batches (temporary bypass for wildcard)
+        const unblockedDomains = WILDCARD_VALIDATION_ENABLED 
+          ? wildcardDomains.filter(domain => !DOMAIN_BLOCKLIST.includes(domain.name))
+          : wildcardDomains; // Bypass blocklist for wildcard searches
         
-        const validatedDomains = await validateDomainsInBatches(unblockedDomains);
+        const validatedDomains = WILDCARD_VALIDATION_ENABLED 
+          ? await validateDomainsInBatches(unblockedDomains)
+          : unblockedDomains; // Bypass validation for wildcard searches
         
         setDomains(validatedDomains);
         setLastSearchedKeyword(searchKeyword.trim());
@@ -464,12 +472,14 @@ export const DomainSearchForm = forwardRef<DomainSearchFormRef, DomainSearchForm
             trendStrength: Math.floor(Math.random() * 5) + 1
           }));
           
-          // Filter out blocked domains and validate in batches
-          const unblockedDomains = wildcardDomains.filter(domain => 
-            !DOMAIN_BLOCKLIST.includes(domain.name)
-          );
+          // Filter out blocked domains and validate in batches (temporary bypass for wildcard)
+          const unblockedDomains = WILDCARD_VALIDATION_ENABLED 
+            ? wildcardDomains.filter(domain => !DOMAIN_BLOCKLIST.includes(domain.name))
+            : wildcardDomains; // Bypass blocklist for wildcard searches
           
-          const validatedDomains = await validateDomainsInBatches(unblockedDomains);
+          const validatedDomains = WILDCARD_VALIDATION_ENABLED 
+            ? await validateDomainsInBatches(unblockedDomains)
+            : unblockedDomains; // Bypass validation for wildcard searches
           
           setDomains(validatedDomains);
           
