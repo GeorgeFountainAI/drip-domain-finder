@@ -106,6 +106,9 @@ export const AuthForm = ({ onAuthSuccess, initialTab }: AuthFormProps) => {
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
+        options: {
+          emailRedirectTo: `${window.location.origin}/app`,
+        }
       });
 
       if (error) {
@@ -151,6 +154,7 @@ export const AuthForm = ({ onAuthSuccess, initialTab }: AuthFormProps) => {
       setPassword("");
       setConfirmPassword("");
     } catch (err) {
+      console.error('Signup error:', err);
       setError("An unexpected error occurred. Please try again.");
     } finally {
       setIsLoading(false);
