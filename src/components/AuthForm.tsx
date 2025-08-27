@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -75,6 +76,9 @@ export const AuthForm = ({ onAuthSuccess, initialTab }: AuthFormProps) => {
         }
       }
     } catch (err) {
+      if (process.env.NODE_ENV === 'development') {
+        console.error('Login error:', err);
+      }
       setError("An unexpected error occurred. Please try again.");
     } finally {
       setIsLoading(false);
@@ -103,6 +107,7 @@ export const AuthForm = ({ onAuthSuccess, initialTab }: AuthFormProps) => {
     setIsLoading(true);
 
     try {
+      // Create the user account - triggers will handle profile and credits creation
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
@@ -112,32 +117,34 @@ export const AuthForm = ({ onAuthSuccess, initialTab }: AuthFormProps) => {
       });
 
       if (error) {
+        if (process.env.NODE_ENV === 'development') {
+          console.error('Signup error:', error);
+        }
+        
         if (error.message.includes("User already registered")) {
           setError("An account with this email already exists. Please try logging in instead.");
+        } else if (error.message.includes("signup_disabled")) {
+          setError("Account creation is currently disabled. Please contact support.");
         } else {
-          setError(error.message);
+          setError("Account could not be created. Please try again.");
         }
         return;
       }
 
-      // User should be automatically logged in after signup
+      // User creation successful
       if (data.user) {
-        try {
-          // Call the ensure starter credits function for new users
-          await supabase.rpc('ensure_user_starter_credits', {
-            target_user_id: data.user.id
-          });
-        } catch (creditError) {
-          console.error('Error granting starter credits:', creditError);
-          // Don't block signup for credit errors, just log them
-        }
-
+        // Don't make additional RPC calls - the triggers handle everything
         toast({
           title: "Account created!",
-          description: "Welcome! You've received 50 starter credits to begin searching for domains.",
+          description: "Welcome! You've received starter credits to begin searching for domains.",
         });
 
-        // Navigate to app since user is now logged in
+        // Clear form
+        setEmail("");
+        setPassword("");
+        setConfirmPassword("");
+
+        // Navigate to app since user should be logged in
         if (onAuthSuccess) {
           onAuthSuccess();
         } else {
@@ -148,14 +155,11 @@ export const AuthForm = ({ onAuthSuccess, initialTab }: AuthFormProps) => {
           }
         }
       }
-
-      // Clear form
-      setEmail("");
-      setPassword("");
-      setConfirmPassword("");
     } catch (err) {
-      console.error('Signup error:', err);
-      setError("An unexpected error occurred. Please try again.");
+      if (process.env.NODE_ENV === 'development') {
+        console.error('Unexpected signup error:', err);
+      }
+      setError("Account could not be created. Please try again.");
     } finally {
       setIsLoading(false);
     }
@@ -179,7 +183,10 @@ export const AuthForm = ({ onAuthSuccess, initialTab }: AuthFormProps) => {
       });
 
       if (error) {
-        setError(error.message);
+        if (process.env.NODE_ENV === 'development') {
+          console.error('Password reset error:', error);
+        }
+        setError("Failed to send reset email. Please try again.");
         return;
       }
 
@@ -191,6 +198,9 @@ export const AuthForm = ({ onAuthSuccess, initialTab }: AuthFormProps) => {
       setShowForgotPassword(false);
       setEmail("");
     } catch (err) {
+      if (process.env.NODE_ENV === 'development') {
+        console.error('Unexpected password reset error:', err);
+      }
       setError("An unexpected error occurred. Please try again.");
     } finally {
       setIsLoading(false);
