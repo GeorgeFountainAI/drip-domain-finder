@@ -7,6 +7,7 @@ import { SearchHistoryViewer } from '@/components/SearchHistoryViewer';
 import { supabase } from '@/integrations/supabase/client';
 import { useNavigate } from 'react-router-dom';
 import type { User } from '@supabase/supabase-js';
+import { ensureProfileAndCredits } from '@/lib/postAuthSetup';
 
 const AppPage: React.FC = () => {
   const [user, setUser] = useState<User | null>(null);
@@ -30,6 +31,15 @@ const AppPage: React.FC = () => {
       (event, session) => {
         if (session?.user) {
           setUser(session.user);
+          
+          // Ensure profile and credits are set up for authenticated users (eventual consistency)
+          setTimeout(() => {
+            ensureProfileAndCredits(session.user).catch(error => {
+              if (import.meta.env.DEV) {
+                console.error('Background profile/credits setup failed:', error);
+              }
+            });
+          }, 0);
         } else {
           // Redirect to auth if logged out
           navigate('/auth');

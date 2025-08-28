@@ -9,6 +9,7 @@ import { AlertCircle, Loader2, Mail, Lock, Sparkles } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
+import { ensureProfileAndCredits } from "@/lib/postAuthSetup";
 
 interface AuthFormProps {
   onAuthSuccess?: () => void;
@@ -46,18 +47,34 @@ export const AuthForm = ({ onAuthSuccess, initialTab }: AuthFormProps) => {
     setIsLoading(true);
 
     try {
-      const { error } = await supabase.auth.signInWithPassword({
+      const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
 
       if (error) {
+        if (import.meta.env.DEV) {
+          console.error('Login error:', error);
+        }
+        
         if (error.message.includes("Invalid login credentials")) {
           setError("Invalid email or password");
         } else {
-          setError(error.message);
+          setError("Unable to sign in. Please try again.");
         }
         return;
+      }
+
+      // Ensure profile and credits are set up (idempotent healing)
+      if (data.user) {
+        try {
+          await ensureProfileAndCredits(data.user);
+        } catch (setupError) {
+          if (import.meta.env.DEV) {
+            console.error('Post-login setup error:', setupError);
+          }
+          // Continue anyway - triggers will handle it
+        }
       }
 
       toast({
@@ -76,8 +93,8 @@ export const AuthForm = ({ onAuthSuccess, initialTab }: AuthFormProps) => {
         }
       }
     } catch (err) {
-      if (process.env.NODE_ENV === 'development') {
-        console.error('Login error:', err);
+      if (import.meta.env.DEV) {
+        console.error('Login catch error:', err);
       }
       setError("An unexpected error occurred. Please try again.");
     } finally {
@@ -107,59 +124,80 @@ export const AuthForm = ({ onAuthSuccess, initialTab }: AuthFormProps) => {
     setIsLoading(true);
 
     try {
-      // Create the user account - triggers will handle profile and credits creation
+      const redirectUrl = `${window.location.origin}/app`;
+      
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
         options: {
-          emailRedirectTo: `${window.location.origin}/app`,
+          emailRedirectTo: redirectUrl,
         }
       });
 
       if (error) {
-        if (process.env.NODE_ENV === 'development') {
+        if (import.meta.env.DEV) {
           console.error('Signup error:', error);
         }
         
-        if (error.message.includes("User already registered")) {
-          setError("An account with this email already exists. Please try logging in instead.");
+        // Map errors to user-friendly messages
+        let userMessage = "Account could not be created. Please try again.";
+        if (error.message.includes("User already registered") || 
+            error.message.includes("already been registered")) {
+          userMessage = "An account with this email already exists. Please sign in instead.";
         } else if (error.message.includes("signup_disabled")) {
-          setError("Account creation is currently disabled. Please contact support.");
-        } else {
-          setError("Account could not be created. Please try again.");
+          userMessage = "Account creation is currently disabled. Please contact support.";
         }
+        
+        setError(userMessage);
         return;
       }
 
-      // User creation successful
-      if (data.user) {
-        // Don't make additional RPC calls - the triggers handle everything
+      if (!data.user) {
+        setError("Account could not be created. Please try again.");
+        return;
+      }
+
+      // Ensure profile and credits are set up
+      try {
+        await ensureProfileAndCredits(data.user);
+        
         toast({
           title: "Account created!",
           description: "Welcome! You've received starter credits to begin searching for domains.",
         });
+        
+      } catch (setupError) {
+        if (import.meta.env.DEV) {
+          console.error("Post-signup setup error:", setupError);
+        }
+        
+        // Show friendly message but don't block the flow
+        toast({
+          title: "Account created!",
+          description: "Your account setup is still in progress. Please refresh in a moment if you encounter any issues.",
+        });
+      }
 
-        // Clear form
-        setEmail("");
-        setPassword("");
-        setConfirmPassword("");
+      // Clear form
+      setEmail("");
+      setPassword("");
+      setConfirmPassword("");
 
-        // Navigate to app since user should be logged in
-        if (onAuthSuccess) {
-          onAuthSuccess();
-        } else {
-          navigate('/app');
-          // Dev check: ensure we land on app page after signup
-          if (process.env.NODE_ENV === 'development') {
-            setTimeout(() => console.assert(window.location.pathname === '/app', 'Post-signup should redirect to "/app"'), 50);
-          }
+      // Navigate to app since user should be logged in
+      if (onAuthSuccess) {
+        onAuthSuccess();
+      } else {
+        navigate('/app');
+        // Dev check: ensure we land on app page after signup
+        if (process.env.NODE_ENV === 'development') {
+          setTimeout(() => console.assert(window.location.pathname === '/app', 'Post-signup should redirect to "/app"'), 50);
         }
       }
     } catch (err) {
-      if (process.env.NODE_ENV === 'development') {
+      if (import.meta.env.DEV) {
         console.error('Unexpected signup error:', err);
       }
-      setError("Account could not be created. Please try again.");
+      setError("An unexpected error occurred. Please try again.");
     } finally {
       setIsLoading(false);
     }
