@@ -176,12 +176,12 @@ export const SearchHistory: React.FC<SearchHistoryProps> = ({ onSearchAgain, cur
         <CollapsibleTrigger asChild>
           <Button
             variant="ghost"
-            className="w-full justify-between p-4 h-auto hover:bg-muted/50"
+            className="w-full justify-between p-3 md:p-4 h-auto hover:bg-muted/50 mobile-touch-target"
             onClick={handleToggle}
           >
             <div className="flex items-center gap-2">
               <History className="h-4 w-4 text-muted-foreground" />
-              <span className="font-medium text-foreground">Search History</span>
+              <span className="font-medium text-foreground text-sm md:text-base">Search History</span>
               {searchHistory.length > 0 && (
                 <span className="text-xs text-muted-foreground bg-muted px-2 py-1 rounded-full">
                   {searchHistory.length}
@@ -197,7 +197,7 @@ export const SearchHistory: React.FC<SearchHistoryProps> = ({ onSearchAgain, cur
         </CollapsibleTrigger>
         
         <CollapsibleContent className="transition-all duration-300 ease-in-out overflow-hidden data-[state=closed]:animate-collapsible-up data-[state=open]:animate-collapsible-down">
-          <CardContent className="pt-0 pb-4">
+          <CardContent className="pt-0 pb-3 md:pb-4 px-3 md:px-4">
             {isLoading ? (
               <div className="text-center py-4 text-muted-foreground">
                 Loading history...
@@ -210,10 +210,11 @@ export const SearchHistory: React.FC<SearchHistoryProps> = ({ onSearchAgain, cur
                     variant="ghost"
                     size="sm"
                     onClick={clearHistory}
-                    className="text-muted-foreground hover:text-destructive gap-1"
+                    className="text-muted-foreground hover:text-destructive gap-1 mobile-touch-target"
                   >
                     <Trash2 className="h-3 w-3" />
-                    Clear History
+                    <span className="hidden sm:inline">Clear History</span>
+                    <span className="sm:hidden">Clear</span>
                   </Button>
                 </div>
 
@@ -222,11 +223,11 @@ export const SearchHistory: React.FC<SearchHistoryProps> = ({ onSearchAgain, cur
                   {searchHistory.map((item) => (
                     <div
                       key={item.id}
-                      className="flex items-center justify-between p-3 rounded-lg border border-border hover:bg-muted/50 transition-colors"
+                      className="flex items-center justify-between gap-2 p-2 md:p-3 rounded-lg border border-border hover:bg-muted/50 transition-colors"
                     >
-                      <div className="flex-1">
+                      <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2">
-                          <span className="font-medium text-foreground bg-primary/10 px-2 py-1 rounded text-sm">
+                          <span className="font-medium text-foreground bg-primary/10 px-2 py-1 rounded text-sm truncate">
                             {item.keyword}
                           </span>
                         </div>
@@ -238,10 +239,11 @@ export const SearchHistory: React.FC<SearchHistoryProps> = ({ onSearchAgain, cur
                         variant="outline"
                         size="sm"
                         onClick={() => handleSearchAgain(item.keyword)}
-                        className="gap-1 text-xs"
+                        className="gap-1 text-xs shrink-0 mobile-touch-target"
                       >
                         <Search className="h-3 w-3" />
-                        Search Again
+                        <span className="hidden sm:inline">Search Again</span>
+                        <span className="sm:hidden">Search</span>
                       </Button>
                     </div>
                   ))}

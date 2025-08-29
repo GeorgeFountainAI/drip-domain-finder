@@ -99,22 +99,22 @@ export const AppHeader = ({ user }: AppHeaderProps) => {
   return (
     <>
     <header className="sticky top-0 z-40 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="container flex h-16 items-center justify-between">
-        <div className="flex items-center gap-6">
-          <Link to="/" className="flex items-center gap-3 hover:opacity-80 transition-opacity">
+      <div className="container flex h-16 items-center justify-between px-4">
+        <div className="flex items-center gap-2 md:gap-6">
+          <Link to="/" className="flex items-center gap-2 md:gap-3 hover:opacity-80 transition-opacity">
             <div className="relative">
               <img 
                 src={paintSplatterLogo} 
                 alt="DomainDrip Paint Splatter Logo" 
-                className="h-10 w-10"
+                className="h-8 w-8 md:h-10 md:w-10"
               />
             </div>
-            <span className="text-xl font-bold bg-gradient-primary bg-clip-text text-transparent">
+            <span className="text-lg md:text-xl font-bold bg-gradient-primary bg-clip-text text-transparent">
               DomainDrip
             </span>
           </Link>
           
-          <nav className="flex items-center gap-2">
+          <nav className="hidden md:flex items-center gap-2">
             <Button
               asChild
               variant={location.pathname === "/" ? "default" : "ghost"}
@@ -139,7 +139,7 @@ export const AppHeader = ({ user }: AppHeaderProps) => {
           </nav>
         </div>
 
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-2 md:gap-4">
           {currentUser ? (
             <>
               <CreditBalance />
@@ -148,11 +148,11 @@ export const AppHeader = ({ user }: AppHeaderProps) => {
                 variant="outline"
                 size="sm"
                 onClick={() => setShowCreditPurchase(true)}
-                className="gap-2"
+                className="gap-1 md:gap-2 mobile-touch-target"
               >
                 <CreditCard className="h-4 w-4" />
                 <span className="hidden sm:inline">Buy Credits</span>
-                <span className="sm:hidden">Credits</span>
+                <span className="sm:hidden text-xs">Credits</span>
               </Button>
 
               {/* Admin Tools Dropdown */}
@@ -168,7 +168,7 @@ export const AppHeader = ({ user }: AppHeaderProps) => {
                   </DropdownMenuTrigger>
                   <DropdownMenuContent 
                     align="end" 
-                    className="w-48 bg-background border shadow-elevated z-50"
+                    className="w-48 mobile-dropdown"
                   >
                     <DropdownMenuItem asChild>
                       <Link to="/admin/deploy" className="flex items-center gap-2 cursor-pointer">
@@ -201,7 +201,7 @@ export const AppHeader = ({ user }: AppHeaderProps) => {
                     <ChevronDown className="h-3 w-3" />
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-48">
+                <DropdownMenuContent align="end" className="w-48 mobile-dropdown">
                   <div className="p-2 border-b">
                     <p className="text-sm font-medium">{currentUser.email}</p>
                   </div>

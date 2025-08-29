@@ -19,12 +19,12 @@ export default function DomainResults() {
         return (
           <div
             key={domain.domain}
-            className="bg-card border border-border rounded-xl p-4 shadow-sm hover:bg-accent/50 transition-colors"
+            className="bg-card border border-border rounded-xl p-3 md:p-4 shadow-sm hover:bg-accent/50 transition-colors"
             data-testid="domain-card"
           >
             <div className="space-y-3">
               {/* Domain Name */}
-              <div className="font-bold text-lg text-foreground truncate" data-testid="domain-name">
+              <div className="font-bold text-base md:text-lg text-foreground break-all" data-testid="domain-name">
                 {domain.domain}
               </div>
 
@@ -53,7 +53,7 @@ export default function DomainResults() {
                     href={url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="mt-3 inline-flex w-full items-center justify-center px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 text-sm font-medium transition-colors"
+                    className="mt-3 inline-flex w-full items-center justify-center px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 text-sm font-medium transition-colors mobile-touch-target"
                     data-testid="buy-button"
                   >
                     Buy on Spaceship

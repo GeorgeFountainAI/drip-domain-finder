@@ -617,14 +617,14 @@ export const DomainSearchForm = forwardRef<DomainSearchFormRef, DomainSearchForm
             {hasSearched && domains.length > 0 && !isLoading && (
               <div className="mt-6 p-4 bg-muted/30 rounded-lg border">
                 <h3 className="text-sm font-medium mb-3">Filter Results</h3>
-                <div className="flex flex-wrap gap-4">
-                  <div className="flex-1 min-w-[200px]">
+                <div className="flex flex-col sm:flex-row gap-3 md:gap-4">
+                  <div className="flex-1 min-w-0">
                     <label className="text-xs text-muted-foreground mb-1 block">Domain Ranking</label>
                     <Select value={rankingFilter} onValueChange={setRankingFilter}>
-                      <SelectTrigger className="h-9">
+                      <SelectTrigger className="h-9 mobile-touch-target">
                         <SelectValue placeholder="All Rankings" />
                       </SelectTrigger>
-                      <SelectContent>
+                      <SelectContent className="mobile-dropdown">
                         <SelectItem value="all">All Rankings</SelectItem>
                         <SelectItem value="Pro">🏆 Pro (Premium quality)</SelectItem>
                         <SelectItem value="Trendy">🔥 Trendy (High demand)</SelectItem>
@@ -635,13 +635,13 @@ export const DomainSearchForm = forwardRef<DomainSearchFormRef, DomainSearchForm
                       </SelectContent>
                     </Select>
                   </div>
-                  <div className="flex-1 min-w-[150px]">
+                  <div className="flex-1 min-w-0">
                     <label className="text-xs text-muted-foreground mb-1 block">Domain Extension</label>
                     <Select value={tldFilter} onValueChange={setTldFilter}>
-                      <SelectTrigger className="h-9">
+                      <SelectTrigger className="h-9 mobile-touch-target">
                         <SelectValue placeholder="All TLDs" />
                       </SelectTrigger>
-                      <SelectContent>
+                      <SelectContent className="mobile-dropdown">
                         <SelectItem value="all">All Extensions</SelectItem>
                         <SelectItem value="com">.com</SelectItem>
                         <SelectItem value="net">.net</SelectItem>
@@ -654,7 +654,7 @@ export const DomainSearchForm = forwardRef<DomainSearchFormRef, DomainSearchForm
                       </SelectContent>
                     </Select>
                   </div>
-                  <div className="flex items-end">
+                  <div className="flex items-end w-full sm:w-auto">
                     <Button 
                       variant="outline" 
                       size="sm"
@@ -662,7 +662,7 @@ export const DomainSearchForm = forwardRef<DomainSearchFormRef, DomainSearchForm
                         setRankingFilter("all");
                         setTldFilter("all");
                       }}
-                      className="h-9"
+                      className="h-9 w-full sm:w-auto mobile-touch-target"
                     >
                       Clear Filters
                     </Button>

@@ -153,30 +153,68 @@
     animation: collapsible-up 0.3s ease-out;
   }
 }
-/* Force darker readable text for body content */
+/* Mobile-First Typography & Input Fixes */
 body, p, span, li, small {
-  color: #1f2937 !important; /* Tailwind slate-800 (dark gray) */
+  color: hsl(var(--foreground)) !important;
 }
-/* === Force all faint text darker (FAQ, subtitles, small gray text) === */
-.text-muted-foreground,
-.text-secondary-foreground,
-.text-gray-400,
-.text-gray-500,
-.text-sm,
-.prose,
-.prose p,
-.prose span,
-.prose a {
-  color: #111827 !important; /* Tailwind slate-900 */
+
+/* Remove problematic text color overrides that cause mobile visibility issues */
+.text-muted-foreground {
+  color: hsl(var(--muted-foreground)) !important;
 }
-/* TEST: make literally ALL text red */
-/* Force FAQ subtitles and links darker */
-.faq-subtitle,
-.faq-heading,
-.faq,
-.accordion,
-.accordion p,
-.accordion span,
-.accordion a {
-  color: #111827 !important; /* Tailwind slate-900 */
+
+.text-secondary-foreground {
+  color: hsl(var(--secondary-foreground)) !important;
+}
+
+/* Mobile input and form styling */
+input, textarea, select {
+  font-size: 16px !important; /* Prevents zoom on iOS */
+  color: hsl(var(--foreground)) !important;
+  background-color: hsl(var(--input)) !important;
+}
+
+/* Mobile-first responsive containers */
+.mobile-container {
+  padding: 1rem;
+  width: 100%;
+  max-width: 100vw;
+  overflow-x: hidden;
+}
+
+/* Mobile touch targets */
+.mobile-touch-target {
+  min-height: 44px;
+  min-width: 44px;
+}
+
+/* Mobile dropdown fixes */
+.mobile-dropdown {
+  background-color: hsl(var(--background)) !important;
+  border: 1px solid hsl(var(--border)) !important;
+  box-shadow: var(--shadow-elevated) !important;
+  z-index: 9999 !important;
+}
+
+@media (max-width: 480px) {
+  /* Mobile-specific adjustments */
+  .container {
+    padding-left: 1rem !important;
+    padding-right: 1rem !important;
+  }
+  
+  /* Stack layout for mobile */
+  .mobile-stack {
+    flex-direction: column !important;
+    gap: 0.75rem !important;
+  }
+  
+  /* Responsive text sizing */
+  .text-5xl {
+    font-size: 2.5rem !important;
+  }
+  
+  .text-7xl {
+    font-size: 3rem !important;
+  }
 }

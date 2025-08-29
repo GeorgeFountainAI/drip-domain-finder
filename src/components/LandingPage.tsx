@@ -44,22 +44,22 @@ export const LandingPage = () => {
       <AppHeader user={user} />
       
       {/* Hero Section */}
-      <section className="relative overflow-hidden bg-gradient-hero py-20 sm:py-32">
-        <div className="container mx-auto px-4">
+      <section className="relative overflow-hidden bg-gradient-hero py-12 sm:py-20 md:py-32">
+        <div className="container mx-auto px-4 mobile-container">
           <div className="mx-auto max-w-4xl text-center">
-            <Badge variant="secondary" className="mb-6 gap-2">
+            <Badge variant="secondary" className="mb-4 md:mb-6 gap-2">
               <Sparkles className="h-4 w-4" />
               AI-Powered Domain Discovery
             </Badge>
-            <h1 className="text-5xl font-bold tracking-tight bg-gradient-primary bg-clip-text text-transparent sm:text-7xl mb-6">
+            <h1 className="text-3xl md:text-5xl lg:text-7xl font-bold tracking-tight bg-gradient-primary bg-clip-text text-transparent mb-4 md:mb-6">
               Find Your Perfect Domain with AI
             </h1>
-            <p className="text-xl text-muted-foreground max-w-2xl mx-auto mb-8">
+            <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto mb-6 md:mb-8 px-4">
               Discover available domains with our intelligent FlipScore system. 
               Get trend analysis, availability checks, and direct purchase links instantly.
             </p>
             
-            <div className="flex flex-col sm:flex-row gap-4 justify-center mb-12">
+            <div className="flex flex-col sm:flex-row gap-3 md:gap-4 justify-center mb-8 md:mb-12 mobile-stack">
               {user ? (
                 <Button asChild size="lg" className="gap-2">
                   <Link to="/app">
@@ -86,7 +86,7 @@ export const LandingPage = () => {
             </div>
 
             {/* Stats */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-8 max-w-2xl mx-auto">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 md:gap-8 max-w-2xl mx-auto px-4">
               <div className="text-center">
                 <div className="text-3xl font-bold text-primary mb-2">50+</div>
                 <div className="text-sm text-muted-foreground">Free Credits</div>
