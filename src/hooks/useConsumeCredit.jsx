@@ -6,7 +6,7 @@ export const useConsumeCredit = () => {
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
 
-  const consumeCredit = async (creditsToConsume = 1) => {
+  const consumeCredit = async (creditsToConsume = 2) => {
     try {
       setLoading(true);
 

@@ -14,7 +14,7 @@ const SignupPage = () => {
             Create Your Free Account
           </h1>
           <p className="text-lg text-muted-foreground max-w-md mx-auto">
-            Join DomainDrip today and get 50 free credits to start finding perfect domain names with AI-powered search.
+            Join DomainDrip today and get 10 free credits to start finding perfect domain names with AI-powered search.
           </p>
         </div>
         <AuthForm initialTab="signup" />

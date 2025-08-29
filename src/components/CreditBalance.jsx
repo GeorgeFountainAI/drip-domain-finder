@@ -63,20 +63,20 @@ const CreditBalance = () => {
               total_purchased_credits: 0
             });
           } else {
-            // Fallback to 50 credits if onboarding fails
-            setCredits({ current_credits: 50, total_purchased_credits: 0 });
+            // Fallback to 10 credits if onboarding fails
+            setCredits({ current_credits: 10, total_purchased_credits: 0 });
           }
         } catch (onboardingError) {
           console.warn('Onboarding function failed, using fallback credits:', onboardingError);
-          setCredits({ current_credits: 50, total_purchased_credits: 0 });
+          setCredits({ current_credits: 10, total_purchased_credits: 0 });
         }
       } else {
         setCredits(data);
       }
     } catch (error) {
       console.error('Error:', error);
-      // Fallback to show 50 credits if all else fails
-      setCredits({ current_credits: 50, total_purchased_credits: 0 });
+      // Fallback to show 10 credits if all else fails
+      setCredits({ current_credits: 10, total_purchased_credits: 0 });
     } finally {
       setLoading(false);
     }
@@ -103,7 +103,7 @@ const CreditBalance = () => {
       </CardHeader>
       <CardContent>
         <div className="text-2xl font-bold text-primary mb-2">
-          {credits?.current_credits || 50}
+          {credits?.current_credits || 10}
           <span className="text-sm font-normal text-muted-foreground ml-1">credits</span>
         </div>
         {credits?.total_purchased_credits > 0 && (

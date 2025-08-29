@@ -182,10 +182,10 @@ export const DomainSearchForm = forwardRef<DomainSearchFormRef, DomainSearchForm
 
     // Admin users bypass credit checks
     if (!isAdmin) {
-      const creditResult = await consumeCredit(1);
+      const creditResult = await consumeCredit(2);
       if (!creditResult.success) {
         setIsLoading(false);
-        setError("Unable to deduct credit for search");
+        setError("Unable to deduct credits for search");
         return;
       }
     } else {
@@ -319,10 +319,10 @@ export const DomainSearchForm = forwardRef<DomainSearchFormRef, DomainSearchForm
 
     // Admin users bypass credit checks
     if (!isAdmin) {
-      const creditResult = await consumeCredit(1);
+      const creditResult = await consumeCredit(2);
       if (!creditResult.success) {
         setIsLoading(false);
-        setError("Unable to deduct credit for search");
+        setError("Unable to deduct credits for search");
         return;
       }
     }
@@ -542,7 +542,7 @@ export const DomainSearchForm = forwardRef<DomainSearchFormRef, DomainSearchForm
   }), [toast, onResults, onStateChange]);
 
   return (
-    <RequireCredits credits={isAdmin ? 0 : 1} action="search domains" showAlert={hasSearched && !isAdmin}>
+    <RequireCredits credits={isAdmin ? 0 : 2} action="search domains" showAlert={hasSearched && !isAdmin}>
       <TooltipProvider>
         <div className={`max-w-6xl mx-auto space-y-8 ${className}`} data-testid="domain-search-form">
           {/* Search Form */}

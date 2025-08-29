@@ -8,7 +8,7 @@ import { AlertTriangle, CreditCard } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 
 const RequireCredits = ({ 
-  credits = 1, 
+  credits = 2, 
   children, 
   redirectTo = '/credits',
   showAlert = true,

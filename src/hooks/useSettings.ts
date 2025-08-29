@@ -6,8 +6,8 @@ interface SettingsData {
 }
 
 const DEFAULT_SETTINGS: SettingsData = {
-  starter_credits: 20,
-  free_trial_credits: 20
+  starter_credits: 10,
+  free_trial_credits: 10
 };
 
 export const useSettings = () => {
@@ -37,7 +37,7 @@ export const useSettings = () => {
 
       if (data && data.length > 0) {
         const settingsObj = data.reduce((acc, setting) => {
-          acc[setting.key] = setting.value || DEFAULT_SETTINGS[setting.key] || 20;
+          acc[setting.key] = setting.value || DEFAULT_SETTINGS[setting.key] || 10;
           return acc;
         }, {} as SettingsData);
 
@@ -57,7 +57,7 @@ export const useSettings = () => {
     }
   };
 
-  const getSetting = (key: string, defaultValue = 20) => {
+  const getSetting = (key: string, defaultValue = 10) => {
     return settings[key] || defaultValue;
   };
 

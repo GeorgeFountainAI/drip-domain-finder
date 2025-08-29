@@ -54,12 +54,12 @@ export const useCredits = () => {
 
         if (starterError) {
           console.warn('Error ensuring starter credits, using fallback:', starterError);
-          // Fallback: Create basic user credits record with default 20 credits
+          // Fallback: Create basic user credits record with default 10 credits
           const { data: fallbackData, error: fallbackError } = await supabase
             .from('user_credits')
             .upsert({ 
               user_id: user.id, 
-              current_credits: 20, 
+              current_credits: 10, 
               total_purchased_credits: 0 
             }, { 
               onConflict: 'user_id' 
@@ -69,7 +69,7 @@ export const useCredits = () => {
 
           if (fallbackError) {
             console.warn('Fallback also failed, using default values:', fallbackError);
-            setCredits({ current_credits: 20, total_purchased_credits: 0 });
+            setCredits({ current_credits: 10, total_purchased_credits: 0 });
             setError(null); // Clear error as we have fallback values
             return;
           }
@@ -88,14 +88,14 @@ export const useCredits = () => {
 
         if (error) {
           console.warn('Error fetching credits, using fallback:', error);
-          setCredits({ current_credits: 20, total_purchased_credits: 0 });
+          setCredits({ current_credits: 10, total_purchased_credits: 0 });
           setError(null);
           return;
         }
 
         if (!data) {
           // No credits record found, use default
-          setCredits({ current_credits: 20, total_purchased_credits: 0 });
+          setCredits({ current_credits: 10, total_purchased_credits: 0 });
           setError(null);
           return;
         }
@@ -104,19 +104,19 @@ export const useCredits = () => {
         setError(null);
       } catch (apiError) {
         console.warn('API call failed, using fallback credits:', apiError);
-        setCredits({ current_credits: 20, total_purchased_credits: 0 });
+        setCredits({ current_credits: 10, total_purchased_credits: 0 });
         setError(null);
       }
     } catch (err) {
       console.warn('Authentication or network error, using fallback:', err);
-      setCredits({ current_credits: 20, total_purchased_credits: 0 });
+      setCredits({ current_credits: 10, total_purchased_credits: 0 });
       setError(null);
     } finally {
       setLoading(false);
     }
   };
 
-  const hasCredits = (requiredCredits = 1) => {
+  const hasCredits = (requiredCredits = 2) => {
     return credits?.current_credits >= requiredCredits;
   };
 
