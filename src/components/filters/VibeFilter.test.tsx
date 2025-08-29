@@ -5,14 +5,15 @@ import { describe, test, expect } from "vitest";
 import VibeFilter from "./VibeFilter";
 
 describe("VibeFilter", () => {
-  test("renders Vibe label, tooltip, chips, and toggles state", async () => {
+  test("renders VibeFilter with select dropdown", async () => {
     const user = userEvent.setup();
     const { getByText, getByRole } = render(<VibeFilter />);
-    const heading = getByText("Style & Vibe");
+    const heading = getByText("Choose Style & Vibe (optional)");
     expect(heading).toBeInTheDocument();
-    const chip = getByRole("button", { name: "Urban" });
-    expect(chip).toHaveAttribute("aria-pressed", "false");
-    await user.click(chip);
-    expect(chip).toHaveAttribute("aria-pressed", "true");
+    const select = getByRole("combobox");
+    expect(select).toBeInTheDocument();
+    await user.click(select);
+    const urbanOption = getByText("Urban");
+    expect(urbanOption).toBeInTheDocument();
   });
 });

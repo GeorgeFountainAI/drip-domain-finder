@@ -36,12 +36,15 @@ export default function VibeFilter({
           </Tooltip>
         </div>
 
-        <Select value={selected} onValueChange={onChange}>
+        <Select 
+          value={selected || "none"} 
+          onValueChange={(value) => onChange?.(value === "none" ? "" : value)}
+        >
           <SelectTrigger className="mobile-touch-target">
             <SelectValue placeholder="Select style (optional)" />
           </SelectTrigger>
           <SelectContent className="mobile-dropdown">
-            <SelectItem value="">None (all styles)</SelectItem>
+            <SelectItem value="none">None (all styles)</SelectItem>
             {VIBES.map(vibe => (
               <SelectItem key={vibe} value={vibe}>{vibe}</SelectItem>
             ))}
