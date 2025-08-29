@@ -55,14 +55,22 @@ export const SearchHistory: React.FC<SearchHistoryProps> = ({ onSearchAgain, cur
         .select('id, keyword, created_at')
         .eq('user_id', user.id)
         .order('created_at', { ascending: false })
-        .limit(10);
+        .limit(5);
 
       if (error) {
         console.error('Error loading search history:', error);
         return;
       }
 
-      setSearchHistory(data || []);
+      // Filter to unique keywords and take only last 5
+      const uniqueSearches = data?.reduce((acc: SearchHistoryItem[], current) => {
+        if (!acc.find(item => item.keyword === current.keyword)) {
+          acc.push(current);
+        }
+        return acc;
+      }, []).slice(0, 5) || [];
+
+      setSearchHistory(uniqueSearches);
     } catch (error) {
       console.error('Error loading search history:', error);
     } finally {

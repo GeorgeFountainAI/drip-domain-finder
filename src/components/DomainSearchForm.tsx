@@ -11,7 +11,7 @@
  * - Responsive design with modern UI components
  */
 import { useState, forwardRef, useImperativeHandle, useEffect } from "react";
-import VibeFilter, { Vibe } from "./filters/VibeFilter";
+import VibeFilter from "./filters/VibeFilter";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -19,6 +19,7 @@ import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Loader2, Search, Check, X, AlertCircle, Star, TrendingUp, HelpCircle } from "lucide-react";
+import { LoadingSparkles } from "@/components/LoadingSparkles";
 import { useToast } from "@/hooks/use-toast";
 import { useConsumeCredit } from "@/hooks/useConsumeCredit";
 import { useAdminBypass } from "@/hooks/useAdminBypass";
@@ -156,7 +157,8 @@ export const DomainSearchForm = forwardRef<DomainSearchFormRef, DomainSearchForm
   const [rankingFilter, setRankingFilter] = useState<string>("all");
   const [tldFilter, setTldFilter] = useState<string>("all");
   const [lastSearchedKeyword, setLastSearchedKeyword] = useState<string>("");
-  const [selectedVibes, setSelectedVibes] = useState<Vibe[]>([]);
+  const [selectedVibe, setSelectedVibe] = useState<string>("");
+  const [oneWordOnly, setOneWordOnly] = useState(false);
   
   const { toast } = useToast();
   const { consumeCredit, loading: creditLoading } = useConsumeCredit();
@@ -166,7 +168,11 @@ export const DomainSearchForm = forwardRef<DomainSearchFormRef, DomainSearchForm
     e.preventDefault();
     
     if (!keyword.trim()) {
-      setError("Please enter a keyword");
+      toast({
+        title: "Search Required",
+        description: "Please enter a keyword to search.",
+        variant: "destructive",
+      });
       return;
     }
 
@@ -551,60 +557,58 @@ export const DomainSearchForm = forwardRef<DomainSearchFormRef, DomainSearchForm
             </CardHeader>
             <CardContent className="space-y-6">
               <div data-testid="search-section">
-                <form onSubmit={handleSubmit} className="relative">
-                  <div className="flex gap-3">
-                    <div className="flex-1 relative">
-                      <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-muted-foreground h-5 w-5" />
-                      <Input
-                        type="text"
-                        placeholder="Search by keyword or *wildcard (e.g., ai*)..."
-                        value={keyword}
-                        onChange={handleKeywordChange}
-                        className="pl-12 pr-12 h-14 text-base font-medium border-2 focus:border-primary/50 bg-background shadow-card"
-                        disabled={isLoading}
-                      />
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <button
-                            type="button"
-                            className="absolute right-4 top-1/2 transform -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
-                          >
-                            <HelpCircle className="h-4 w-4" />
-                            <span className="sr-only">Wildcard search help</span>
-                          </button>
-                        </TooltipTrigger>
-                        <TooltipContent side="top" className="max-w-xs">
-                          <div className="text-sm">
-                            <strong>Wildcard Tips:</strong>
-                            <ul className="mt-1 space-y-1">
-                              <li>• ai* → starts with ai</li>
-                              <li>• *bot → ends with bot</li>
-                              <li>• black*beauty → contains both</li>
-                            </ul>
-                          </div>
-                        </TooltipContent>
-                      </Tooltip>
+                <form onSubmit={handleSubmit} className="w-full max-w-4xl mx-auto">
+                  <div className="relative mb-6">
+                    <Search className="absolute left-6 top-1/2 transform -translate-y-1/2 text-muted-foreground h-6 w-6 z-10" />
+                    <Input
+                      type="text"
+                      placeholder="Enter keywords to find your perfect domain..."
+                      value={keyword}
+                      onChange={handleKeywordChange}
+                      className="w-full pl-16 pr-6 py-6 text-xl font-medium border-4 border-primary/20 focus:border-primary rounded-xl bg-background shadow-xl focus:shadow-2xl transition-all duration-300"
+                      style={{ fontSize: '20px' }}
+                      disabled={isLoading}
+                    />
+                  </div>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                    <VibeFilter selected={selectedVibe} onChange={setSelectedVibe} />
+                    
+                    <div className="space-y-2">
+                       <label className="text-sm font-medium text-foreground flex items-center gap-2">
+                         <Checkbox 
+                           checked={oneWordOnly} 
+                           onCheckedChange={(checked) => setOneWordOnly(checked === true)}
+                           className="mobile-touch-target"
+                         />
+                        One-word domains only
+                      </label>
+                      <p className="text-xs text-muted-foreground">
+                        Filter results to show only single-word domain names
+                      </p>
                     </div>
+                  </div>
+                  
+                  <div className="text-center">
                     <Button 
                       type="submit" 
                       size="lg" 
                       disabled={isLoading || !keyword.trim()}
-                      className="h-14 px-8 text-base font-semibold shadow-elevated bg-primary hover:bg-primary/90 rounded-md"
+                      className="h-16 px-12 text-xl font-semibold shadow-xl bg-primary hover:bg-primary/90 rounded-xl transition-all duration-300 mobile-touch-target"
                     >
                       {isLoading ? (
-                        <>
-                          <Loader2 className="mr-2 h-5 w-5 animate-spin" data-testid="loading-spinner" /> 
-                          Searching...
-                        </>
+                        <LoadingSparkles />
                       ) : (
-                        <>Search Domains</>
+                        <>
+                          <Search className="mr-3 h-6 w-6" />
+                          Search Domains
+                        </>
                       )}
                     </Button>
                   </div>
                 </form>
               </div>
 
-            <VibeFilter selected={selectedVibes} onChange={setSelectedVibes} />
 
             {error && (
               <div className="flex items-center gap-2 text-destructive bg-destructive/5 p-4 rounded-lg border border-destructive/20">
