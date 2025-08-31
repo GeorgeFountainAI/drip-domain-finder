@@ -243,23 +243,39 @@ export const DomainSearchForm = forwardRef<DomainSearchFormRef, DomainSearchForm
           });
         }
 
-        // Filter out blocked domains and validate in batches
+        // Filter out blocked domains and make validation non-blocking
         const unblockedDomains = searchResult.domains.filter(domain => 
           !DOMAIN_BLOCKLIST.includes(domain.name)
         );
         
-        const validatedDomains = await validateDomainsInBatches(unblockedDomains);
-        
-        setDomains(validatedDomains);
+        // First set unvalidated results so user always sees domains
+        setDomains(unblockedDomains);
         setLastSearchedKeyword(keyword.trim());
         
-        // Notify parent with results
+        // Notify parent with unvalidated results immediately
         if (onResults) {
-          onResults(validatedDomains);
+          onResults(unblockedDomains);
         }
         if (onStateChange) {
           onStateChange('results');
         }
+        
+        // Run validation in background - only filter if validation succeeds
+        try {
+          const validatedDomains = await validateDomainsInBatches(unblockedDomains);
+          if (validatedDomains.length > 0) {
+            // Only update if validation found valid domains
+            setDomains(validatedDomains);
+            if (onResults) {
+              onResults(validatedDomains);
+            }
+          }
+          // If validation returns zero results, keep the original unvalidated list
+        } catch (validationError) {
+          console.warn('Domain validation failed, keeping unvalidated results:', validationError);
+          // Continue with unvalidated results
+        }
+        
         
         if (searchResult.isDemo) {
           toast({
@@ -377,21 +393,37 @@ export const DomainSearchForm = forwardRef<DomainSearchFormRef, DomainSearchForm
           });
         }
 
-        // Filter out blocked domains and validate in batches
+        // Filter out blocked domains and make validation non-blocking
         const unblockedDomains = searchResult.domains.filter(domain => 
           !DOMAIN_BLOCKLIST.includes(domain.name)
         );
         
-        const validatedDomains = await validateDomainsInBatches(unblockedDomains);
-
-        setDomains(validatedDomains);
+        // First set unvalidated results so user always sees domains
+        setDomains(unblockedDomains);
         setLastSearchedKeyword(searchKeyword.trim());
         
+        // Notify parent with unvalidated results immediately
         if (onResults) {
-          onResults(validatedDomains);
+          onResults(unblockedDomains);
         }
         if (onStateChange) {
           onStateChange('results');
+        }
+        
+        // Run validation in background - only filter if validation succeeds
+        try {
+          const validatedDomains = await validateDomainsInBatches(unblockedDomains);
+          if (validatedDomains.length > 0) {
+            // Only update if validation found valid domains
+            setDomains(validatedDomains);
+            if (onResults) {
+              onResults(validatedDomains);
+            }
+          }
+          // If validation returns zero results, keep the original unvalidated list
+        } catch (validationError) {
+          console.warn('Domain validation failed, keeping unvalidated results:', validationError);
+          // Continue with unvalidated results
         }
         
         if (searchResult.isDemo) {
@@ -483,18 +515,30 @@ export const DomainSearchForm = forwardRef<DomainSearchFormRef, DomainSearchForm
             ? wildcardDomains.filter(domain => !DOMAIN_BLOCKLIST.includes(domain.name))
             : wildcardDomains; // Bypass blocklist for wildcard searches
           
-          const validatedDomains = WILDCARD_VALIDATION_ENABLED 
-            ? await validateDomainsInBatches(unblockedDomains)
-            : unblockedDomains; // Bypass validation for wildcard searches
+          // For wildcard searches, set unvalidated results immediately
+          setDomains(unblockedDomains);
           
-          setDomains(validatedDomains);
-          
-          // Notify parent with results
+          // Notify parent with unvalidated results immediately
           if (onResults) {
-            onResults(validatedDomains);
+            onResults(unblockedDomains);
           }
           if (onStateChange) {
             onStateChange('results');
+          }
+          
+          // Run validation in background if enabled
+          if (WILDCARD_VALIDATION_ENABLED) {
+            try {
+              const validatedDomains = await validateDomainsInBatches(unblockedDomains);
+              if (validatedDomains.length > 0) {
+                setDomains(validatedDomains);
+                if (onResults) {
+                  onResults(validatedDomains);
+                }
+              }
+            } catch (validationError) {
+              console.warn('Wildcard validation failed, keeping unvalidated results:', validationError);
+            }
           }
           
           toast({

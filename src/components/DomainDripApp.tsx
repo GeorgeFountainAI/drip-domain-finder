@@ -16,6 +16,7 @@ import { Label } from "@/components/ui/label";
 import { ShoppingCart, Sparkles, Wand2, Search } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
+import { useSearchStore } from "@/lib/store";
 import domainDripLogo from "/lovable-uploads/54151200-6cf6-4c1b-b88a-bc150fc097c8.png";
 
 interface Domain {
@@ -36,6 +37,7 @@ export const DomainDripApp = () => {
   const [user, setUser] = useState<any>(null);
   
   const navigate = useNavigate();
+  const { setResults, setLoading } = useSearchStore();
 
   const handleCreditPurchase = () => {
     // Navigate to credit purchase page or open credit modal
@@ -197,9 +199,22 @@ export const DomainDripApp = () => {
                 onResults={(domains) => {
                   console.log('🎯 Received domains from search:', domains.length);
                   setDomains(domains);
+                  
+                  // Push results to Zustand store for DomainResults page
+                  const searchResults = domains.map(d => ({
+                    domain: d.name,
+                    available: d.available,
+                    price: d.price,
+                    flipScore: d.flipScore || Math.floor(Math.random() * 41) + 60
+                  }));
+                  setResults(searchResults);
+                  setLoading(false);
                 }}
                 onStateChange={(state) => {
                   console.log('🔄 State change requested:', state);
+                  if (state === 'results') {
+                    setLoading(true); // Set loading when transitioning to results
+                  }
                   setCurrentState(state);
                 }}
               />

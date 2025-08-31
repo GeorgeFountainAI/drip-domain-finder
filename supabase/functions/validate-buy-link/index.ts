@@ -36,19 +36,20 @@ serve(async (req) => {
     const cartUrl = `https://www.spaceship.com/domain-registration?search=${encodeURIComponent(domain)}`;
     const searchUrl = `https://www.spaceship.com/domain-search?query=${encodeURIComponent(domain)}`;
     
-    // Try cart URL first
+    // Try cart URL first using GET for better CDN compatibility
     try {
       const response = await fetch(cartUrl, {
-        method: 'HEAD',
+        method: 'GET',
         redirect: 'follow'
       });
       
       if (response.status === 404) {
         // Cart URL failed, try search URL as fallback
         try {
-          const searchResponse = await fetch(searchUrl, { method: 'HEAD', redirect: 'follow' });
+          const searchResponse = await fetch(searchUrl, { method: 'GET', redirect: 'follow' });
           
-          if (searchResponse.ok) {
+          // Treat 2xx and 3xx as success for search URL
+          if (searchResponse.ok || (searchResponse.status >= 300 && searchResponse.status < 400)) {
             // Search URL works, use it instead
             return new Response(
               JSON.stringify({ ok: true, url: searchUrl }),
@@ -76,8 +77,9 @@ serve(async (req) => {
         );
       }
       
-      if (!response.ok) {
-        // Log other HTTP errors
+      // Treat 2xx and 3xx as success for cart URL
+      if (!response.ok && !(response.status >= 300 && response.status < 400)) {
+        // Log HTTP errors (but allow redirects)
         await logValidation(supabaseService, domain, 'buy_link', 'error', 
           `Cart URL returned ${response.status}: ${cartUrl}`);
         

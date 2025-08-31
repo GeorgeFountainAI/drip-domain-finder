@@ -106,21 +106,18 @@ serve(async (req) => {
     domains.sort((a, b) => (b.flipScore || 0) - (a.flipScore || 0));
 
     // Server-side fallback: If no domains found, generate realistic results
-    if (domains.length === 0) {
-      console.log(`No domains found for "${keyword}", generating fallback results`);
-      const fallbackDomains = generateFallbackDomains(cleanKeyword);
-      
-      return new Response(
-        JSON.stringify({ domains: fallbackDomains }),
-        { 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          status: 200 
-        }
-      );
+    const fallbackUsed = domains.length === 0;
+    const finalDomains = fallbackUsed ? generateFallbackDomains(cleanKeyword) : domains.slice(0, 15);
+    
+    // Log search attempt with results summary
+    console.log(`🏁 Domain search completed: keyword="${keyword}", realDomains=${domains.length}, fallbackUsed=${fallbackUsed}, finalCount=${finalDomains.length}`);
+    
+    if (fallbackUsed) {
+      console.log(`No domains found for "${keyword}", using fallback results`);
     }
 
     return new Response(
-      JSON.stringify({ domains: domains.slice(0, 15) }),
+      JSON.stringify({ domains: finalDomains }),
       { 
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 200 
