@@ -219,4 +219,67 @@ describe('AuthForm Redirect Tests', () => {
       expect(mockNavigate).not.toHaveBeenCalled();
     });
   });
+
+  describe('Role-based email UX', () => {
+    it('shows inline warning for role-based emails on signup', async () => {
+      render(
+        <BrowserRouter>
+          <AuthForm />
+        </BrowserRouter>
+      );
+      
+      // Switch to signup tab
+      fireEvent.click(screen.getByRole('tab', { name: /sign up/i }));
+      
+      // Type a role-based email
+      fireEvent.change(screen.getByLabelText(/email/i), { 
+        target: { value: 'support@fig-io.com' }
+      });
+      
+      expect(screen.getByText(/shared or team email/i)).toBeInTheDocument();
+    });
+
+    it('maps Supabase invalid email to role-based message when applicable', async () => {
+      mockSignUp.mockResolvedValue({ 
+        error: { message: 'email_address_invalid' } 
+      });
+
+      render(
+        <BrowserRouter>
+          <AuthForm />
+        </BrowserRouter>
+      );
+      
+      // Switch to signup tab
+      fireEvent.click(screen.getByRole('tab', { name: /sign up/i }));
+
+      // Fill with role-based email
+      const emailInput = screen.getByLabelText(/email/i);
+      const passwordInput = screen.getByLabelText(/^password$/i);
+      const confirmInput = screen.getByLabelText(/confirm password/i);
+
+      fireEvent.change(emailInput, { target: { value: 'support@fig-io.com' } });
+      fireEvent.change(passwordInput, { target: { value: 'password123' } });
+      fireEvent.change(confirmInput, { target: { value: 'password123' } });
+
+      fireEvent.click(screen.getByRole('button', { name: /create account/i }));
+
+      await waitFor(() => {
+        expect(screen.getByText(/role-based emails.*aren't supported/i)).toBeInTheDocument();
+      });
+    });
+
+    it('shows helper text on signup tab', async () => {
+      render(
+        <BrowserRouter>
+          <AuthForm />
+        </BrowserRouter>
+      );
+      
+      // Switch to signup tab
+      fireEvent.click(screen.getByRole('tab', { name: /sign up/i }));
+      
+      expect(screen.getByText(/we currently only support personal email/i)).toBeInTheDocument();
+    });
+  });
 });

@@ -26,6 +26,10 @@ export const AuthForm = ({ onAuthSuccess, initialTab }: AuthFormProps) => {
   const { toast } = useToast();
   const navigate = useNavigate();
 
+  // Role-based email detection
+  const roleEmailRegex = /^(support|info|admin|contact|help|sales|hello|billing|team|security|no-?reply)@/i;
+  const isRoleEmail = roleEmailRegex.test(email);
+
   const validateEmail = (email: string) => {
     return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
   };
@@ -146,6 +150,11 @@ export const AuthForm = ({ onAuthSuccess, initialTab }: AuthFormProps) => {
           userMessage = "An account with this email already exists. Please sign in instead.";
         } else if (error.message.includes("signup_disabled")) {
           userMessage = "Account creation is currently disabled. Please contact support.";
+        } else if (
+          isRoleEmail &&
+          /email_address_invalid|invalid|role/i.test(error.message || "")
+        ) {
+          userMessage = "Oops! Role-based emails like support@ aren't supported. Please sign up with a personal email instead.";
         }
         
         setError(userMessage);
@@ -406,6 +415,9 @@ export const AuthForm = ({ onAuthSuccess, initialTab }: AuthFormProps) => {
               </TabsContent>
 
               <TabsContent value="signup">
+                <p className="text-sm text-muted-foreground mb-4">
+                  We currently only support personal email addresses (e.g., name@gmail.com).
+                </p>
                 <form onSubmit={handleSignup} className="space-y-4">
                   <div className="space-y-2">
                     <Label htmlFor="signup-email">Email</Label>
@@ -422,6 +434,11 @@ export const AuthForm = ({ onAuthSuccess, initialTab }: AuthFormProps) => {
                         required
                       />
                     </div>
+                    {isRoleEmail && (
+                      <div className="mt-1 text-xs text-amber-700">
+                        This looks like a shared or team email. Please use a personal address (e.g., name@gmail.com).
+                      </div>
+                    )}
                   </div>
 
                   <div className="space-y-2">
