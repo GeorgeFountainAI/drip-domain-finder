@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { buildSpaceshipUrl, chunk, openInBatches } from './spaceship';
+import { buildSpaceshipUrl, buildFallbackSearchUrl, chunk, openInBatches } from './spaceship';
 
 // Mock import.meta.env
 const mockEnv = {
@@ -125,6 +125,18 @@ describe('chunk', () => {
   });
 });
 
+describe('buildFallbackSearchUrl', () => {
+  it('should generate fallback search URL', () => {
+    const result = buildFallbackSearchUrl('example.com');
+    expect(result).toBe('https://www.spaceship.com/search?q=example.com');
+  });
+
+  it('should encode special characters in domain', () => {
+    const result = buildFallbackSearchUrl('my-domain@test.com');
+    expect(result).toBe('https://www.spaceship.com/search?q=my-domain%40test.com');
+  });
+});
+
 describe('openInBatches', () => {
   let mockOpenFn: ReturnType<typeof vi.fn>;
 
@@ -173,5 +185,23 @@ describe('openInBatches', () => {
     
     const expectedUrl = buildSpaceshipUrl('test.com');
     expect(mockOpenFn).toHaveBeenCalledWith(expectedUrl);
+  });
+
+  it('should handle errors with fallback URL', async () => {
+    const domains = ['example.com'];
+    let fallbackUsed = false;
+    
+    const errorOpenFn = vi.fn((url: string) => {
+      if (url.includes('domains?search=')) {
+        throw new Error('Affiliate link failed');
+      } else if (url.includes('search?q=')) {
+        fallbackUsed = true;
+      }
+    });
+
+    await openInBatches(domains, 1, 0, errorOpenFn);
+    
+    expect(errorOpenFn).toHaveBeenCalledTimes(2); // Original + fallback
+    expect(fallbackUsed).toBe(true);
   });
 });

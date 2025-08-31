@@ -1,12 +1,16 @@
 import React from 'react';
 import { useSearchStore } from '../lib/store';
-import { buildSpaceshipUrl } from '@/utils/spaceship';
+import { buildSpaceshipUrl, buildFallbackSearchUrl } from '@/utils/spaceship';
 
 export default function DomainResults() {
   const { results, loading } = useSearchStore();
 
   if (loading) return <div className="text-center mt-6">Loading results...</div>;
   if (!results || results.length === 0) return null;
+
+  const isValidPriceAndAvailable = (domain: any) => {
+    return domain.available && domain.price && domain.price > 0;
+  };
 
   return (
     <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 px-4" data-testid="domain-results">
@@ -49,15 +53,27 @@ export default function DomainResults() {
               {/* Buy Button */}
               <div className="w-full">
                 {isAvailable ? (
-                  <a
-                    href={url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="mt-3 inline-flex w-full items-center justify-center px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 text-sm font-medium transition-colors mobile-touch-target"
-                    data-testid="buy-button"
-                  >
-                    Buy on Spaceship
-                  </a>
+                  isValidPriceAndAvailable(domain) ? (
+                    <a
+                      href={url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="mt-3 inline-flex w-full items-center justify-center px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 text-sm font-medium transition-colors mobile-touch-target"
+                      data-testid="buy-button"
+                    >
+                      Buy on Spaceship
+                    </a>
+                  ) : (
+                    <a
+                      href={buildFallbackSearchUrl(domain.domain)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="mt-3 inline-flex w-full items-center justify-center px-4 py-2 border border-primary text-primary rounded-md hover:bg-primary/10 text-sm font-medium transition-colors mobile-touch-target"
+                      data-testid="check-availability-button"
+                    >
+                      Check Availability
+                    </a>
+                  )
                 ) : (
                   <span className="block w-full text-center text-destructive text-sm font-medium py-2" data-testid="unavailable-label">
                     Unavailable

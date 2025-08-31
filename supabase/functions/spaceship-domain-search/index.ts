@@ -68,6 +68,13 @@ serve(async (req) => {
     const tlds = ['com', 'net', 'org', 'io', 'ai', 'app', 'dev', 'tech', 'co', 'xyz', 'online', 'store'];
     const cleanKeyword = keyword.toLowerCase().replace(/[^a-z0-9]/g, '');
     
+    // Filter out misleading domain prefixes
+    const blockedNames = ['hub', 'shift', 'scope', 'lab'];
+    const isBlockedDomain = (name: string) => {
+      const baseName = name.split('.')[0].toLowerCase();
+      return blockedNames.includes(baseName);
+    };
+    
     const variations = [
       cleanKeyword,
       `get${cleanKeyword}`,
@@ -83,6 +90,13 @@ serve(async (req) => {
     for (const variation of variations.slice(0, 3)) {
       for (const tld of tlds.slice(0, 8)) {
         const domainName = `${variation}.${tld}`;
+        
+        // Skip blocked domains
+        if (isBlockedDomain(domainName)) {
+          await logValidation(supabaseService, domainName, 'filter', 'blocked', 
+            `Domain filtered out due to misleading prefix: ${variation}`);
+          continue;
+        }
         
         // Check availability with strict validation
         const availabilityResult = await checkDomainAvailability(domainName, spaceshipApiKey, supabaseService);
