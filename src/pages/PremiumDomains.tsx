@@ -114,7 +114,7 @@ const PremiumDomains = () => {
         {user && <ModernHeader user={user} />}
         
         {!user && (
-          <header className="sticky top-0 z-40 w-full border-b border-primary/20 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+          <header className="sticky top-0 z-40 w-full border-b border-primary/20 bg-background shadow-sm">
             <div className="container flex h-16 items-center justify-between px-4">
               <Button asChild variant="ghost" size="sm">
                 <Link to="/">

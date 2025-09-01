@@ -37,7 +37,7 @@ export const ModernHeader = ({ user, onCreditPurchase }: ModernHeaderProps) => {
   };
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+    <header className="sticky top-0 z-50 w-full border-b bg-background shadow-sm">
       <div className="container flex h-16 items-center justify-between">
         {/* Logo Section */}
         <div className="flex items-center gap-3">
@@ -92,7 +92,7 @@ export const ModernHeader = ({ user, onCreditPurchase }: ModernHeaderProps) => {
             </Button>
 
             {showUserMenu && (
-              <div className="absolute right-0 top-full mt-2 w-56 rounded-md border bg-popover p-1 shadow-md">
+              <div className="absolute right-0 top-full mt-2 w-56 rounded-md border bg-background p-1 shadow-md z-50">
                 <div className="px-3 py-2 border-b">
                   <p className="text-sm font-medium">{user?.email}</p>
                   <p className="text-xs text-muted-foreground">

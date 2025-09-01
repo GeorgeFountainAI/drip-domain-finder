@@ -103,7 +103,7 @@ const DripApps = () => {
   return (
     <div className="min-h-screen bg-background text-foreground">
       {/* Navigation Header */}
-      <header className="sticky top-0 z-50 w-full border-b border-primary/20 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+      <header className="sticky top-0 z-50 w-full border-b border-primary/20 bg-background shadow-sm">
         <div className="container flex h-16 items-center justify-between px-4">
           <Link to="/" className="flex items-center gap-2 text-lg font-semibold text-primary hover:text-primary/80 transition-colors">
             <Home className="h-5 w-5" />
