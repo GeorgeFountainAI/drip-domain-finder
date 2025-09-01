@@ -1,6 +1,5 @@
 import React from 'react';
 import { useSearchStore } from '../lib/store';
-import { buildSpaceshipUrl, buildFallbackSearchUrl } from '@/utils/spaceship';
 
 export default function DomainResults() {
   const { results, loading } = useSearchStore();
@@ -15,9 +14,9 @@ export default function DomainResults() {
   return (
     <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 px-4" data-testid="domain-results">
       {results.map((domain) => {
-        const url = buildSpaceshipUrl(domain.domain);
+        const apiRedirect = `/api/go/spaceship?d=${encodeURIComponent(domain.domain)}`;
         const isAvailable = domain.available;
-        const price = domain.price ? `$${domain.price.toFixed(2)}` : 'Price N/A';
+        const price = domain.price ? `$${domain.price.toFixed(2)}` : null;
         const flipScore = domain.flipScore ?? Math.floor(Math.random() * 41) + 60; // fallback 60–100
 
         return (
@@ -32,9 +31,26 @@ export default function DomainResults() {
                 {domain.domain}
               </div>
 
-              {/* Price */}
+              {/* Price & Status */}
               <div className="text-sm text-muted-foreground" data-testid="domain-price">
-                {price}
+                {isAvailable ? (
+                  price ? (
+                    <div className="flex items-center gap-2">
+                      <span className="inline-flex items-center rounded-full bg-green-100 px-2 py-0.5 text-green-800 text-xs">
+                        Available
+                      </span>
+                      <span>{price}</span>
+                    </div>
+                  ) : (
+                    <span className="inline-flex items-center rounded-full bg-gray-100 px-2 py-0.5 text-gray-800 text-xs">
+                      Status unknown — verify on Spaceship
+                    </span>
+                  )
+                ) : (
+                  <span className="inline-flex items-center rounded-full bg-red-100 px-2 py-0.5 text-red-800 text-xs">
+                    Unavailable
+                  </span>
+                )}
               </div>
 
               {/* Flip Score Badge */}
@@ -52,33 +68,15 @@ export default function DomainResults() {
 
               {/* Buy Button */}
               <div className="w-full">
-                {isAvailable ? (
-                  isValidPriceAndAvailable(domain) ? (
-                    <a
-                      href={url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="mt-3 inline-flex w-full items-center justify-center px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 text-sm font-medium transition-colors mobile-touch-target"
-                      data-testid="buy-button"
-                    >
-                      Buy on Spaceship
-                    </a>
-                  ) : (
-                    <a
-                      href={buildFallbackSearchUrl(domain.domain)}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="mt-3 inline-flex w-full items-center justify-center px-4 py-2 border border-primary text-primary rounded-md hover:bg-primary/10 text-sm font-medium transition-colors mobile-touch-target"
-                      data-testid="check-availability-button"
-                    >
-                      Check Availability
-                    </a>
-                  )
-                ) : (
-                  <span className="block w-full text-center text-destructive text-sm font-medium py-2" data-testid="unavailable-label">
-                    Unavailable
-                  </span>
-                )}
+                <a
+                  href={apiRedirect}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="mt-3 inline-flex w-full items-center justify-center px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 text-sm font-medium transition-colors mobile-touch-target"
+                  data-testid="buy-button"
+                >
+                  Buy on Spaceship
+                </a>
               </div>
             </div>
           </div>

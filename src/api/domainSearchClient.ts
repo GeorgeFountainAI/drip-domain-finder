@@ -4,7 +4,7 @@ import { domainScoringService } from "@/services/domainScoring";
 interface Domain {
   name: string;
   available: boolean;
-  price: number;
+  price: number | null;
   tld: string;
   flipScore?: number; // 1-100, brandability + resale potential
   trendStrength?: number; // 1-5 stars, keyword trends
@@ -23,8 +23,8 @@ const generateMockDomains = (keyword: string): Domain[] => {
   
   return tlds.map(tld => ({
     name: `${cleanKeyword}.${tld}`,
-    available: Math.random() > 0.4, // 60% chance of being available
-    price: parseFloat((9.99 + Math.random() * 20).toFixed(2)),
+    available: false, // Untrusted availability
+    price: null, // No fabricated price
     tld
   }));
 };
@@ -50,8 +50,8 @@ const generateEnhancedMockDomains = (keyword: string): Domain[] => {
     tlds.slice(0, 3).forEach(tld => {
       domains.push({
         name: `${variation}.${tld}`,
-        available: Math.random() > 0.3,
-        price: parseFloat((9.99 + Math.random() * 25).toFixed(2)),
+        available: false, // Untrusted availability
+        price: null, // No fabricated price
         tld
       });
     });

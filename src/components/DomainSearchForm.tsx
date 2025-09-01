@@ -33,10 +33,11 @@ import { supabase } from "@/integrations/supabase/client";
 interface Domain {
   name: string;
   available: boolean;
-  price: number;
+  price: number | null;
   tld: string;
   flipScore?: number; // 1-100, brandability + resale potential
   trendStrength?: number; // 1-5 stars, keyword trends
+  validated?: boolean; // Whether the domain has been validated
 }
 
 interface DomainSearchFormProps {
@@ -197,14 +198,14 @@ export const DomainSearchForm = forwardRef<DomainSearchFormRef, DomainSearchForm
       if (keyword.trim().includes('*')) {
         // Handle wildcard search
         const wildcardSuggestions = generateWildcardSuggestions(keyword.trim().replace(/\*/g, ''));
-        const wildcardDomains: Domain[] = wildcardSuggestions.map((suggestion, index) => ({
-          name: `${suggestion}.com`,
-          available: Math.random() > 0.3, // Mock availability
-          price: 12.99 + Math.random() * 20,
-          tld: 'com',
-          flipScore: 60 + Math.floor(Math.random() * 30),
-          trendStrength: Math.floor(Math.random() * 5) + 1
-        }));
+          const wildcardDomains: Domain[] = wildcardSuggestions.map((suggestion, index) => ({
+            name: `${suggestion}.com`,
+            available: false, // Untrusted for wildcards
+            price: null, // No fabricated price
+            tld: 'com',
+            flipScore: 60 + Math.floor(Math.random() * 30),
+            trendStrength: Math.floor(Math.random() * 5) + 1
+          }));
         
         // Filter out blocked domains and validate in batches (temporary bypass for wildcard)
         const unblockedDomains = WILDCARD_VALIDATION_ENABLED 
@@ -253,8 +254,9 @@ export const DomainSearchForm = forwardRef<DomainSearchFormRef, DomainSearchForm
         setLastSearchedKeyword(keyword.trim());
         
         // Notify parent with unvalidated results immediately
+        const unvalidatedResults = unblockedDomains.map(d => ({ ...d, validated: false }));
         if (onResults) {
-          onResults(unblockedDomains);
+          onResults(unvalidatedResults);
         }
         if (onStateChange) {
           onStateChange('results');
@@ -266,8 +268,9 @@ export const DomainSearchForm = forwardRef<DomainSearchFormRef, DomainSearchForm
           if (validatedDomains.length > 0) {
             // Only update if validation found valid domains
             setDomains(validatedDomains);
+            const validatedResults = validatedDomains.map(d => ({ ...d, validated: true }));
             if (onResults) {
-              onResults(validatedDomains);
+              onResults(validatedResults);
             }
           }
           // If validation returns zero results, keep the original unvalidated list
@@ -348,14 +351,14 @@ export const DomainSearchForm = forwardRef<DomainSearchFormRef, DomainSearchForm
       if (searchKeyword.trim().includes('*')) {
         // Handle wildcard search
         const wildcardSuggestions = generateWildcardSuggestions(searchKeyword.trim().replace(/\*/g, ''));
-        const wildcardDomains: Domain[] = wildcardSuggestions.map((suggestion, index) => ({
-          name: `${suggestion}.com`,
-          available: Math.random() > 0.3,
-          price: 12.99 + Math.random() * 20,
-          tld: 'com',
-          flipScore: 60 + Math.floor(Math.random() * 30),
-          trendStrength: Math.floor(Math.random() * 5) + 1
-        }));
+          const wildcardDomains: Domain[] = wildcardSuggestions.map((suggestion, index) => ({
+            name: `${suggestion}.com`,
+            available: false, // Untrusted for wildcards
+            price: null, // No fabricated price
+            tld: 'com',
+            flipScore: 60 + Math.floor(Math.random() * 30),
+            trendStrength: Math.floor(Math.random() * 5) + 1
+          }));
         
         // Filter out blocked domains and validate in batches (temporary bypass for wildcard)
         const unblockedDomains = WILDCARD_VALIDATION_ENABLED 
@@ -403,8 +406,9 @@ export const DomainSearchForm = forwardRef<DomainSearchFormRef, DomainSearchForm
         setLastSearchedKeyword(searchKeyword.trim());
         
         // Notify parent with unvalidated results immediately
+        const unvalidatedResults = unblockedDomains.map(d => ({ ...d, validated: false }));
         if (onResults) {
-          onResults(unblockedDomains);
+          onResults(unvalidatedResults);
         }
         if (onStateChange) {
           onStateChange('results');
@@ -416,8 +420,9 @@ export const DomainSearchForm = forwardRef<DomainSearchFormRef, DomainSearchForm
           if (validatedDomains.length > 0) {
             // Only update if validation found valid domains
             setDomains(validatedDomains);
+            const validatedResults = validatedDomains.map(d => ({ ...d, validated: true }));
             if (onResults) {
-              onResults(validatedDomains);
+              onResults(validatedResults);
             }
           }
           // If validation returns zero results, keep the original unvalidated list
@@ -503,8 +508,8 @@ export const DomainSearchForm = forwardRef<DomainSearchFormRef, DomainSearchForm
           const wildcardSuggestions = generateWildcardSuggestions(searchKeyword.trim().replace(/\*/g, ''));
           const wildcardDomains: Domain[] = wildcardSuggestions.map((suggestion, index) => ({
             name: `${suggestion}.com`,
-            available: Math.random() > 0.3, // Mock availability
-            price: 12.99 + Math.random() * 20,
+            available: false, // Untrusted for wildcards
+            price: null, // No fabricated price
             tld: 'com',
             flipScore: 60 + Math.floor(Math.random() * 30),
             trendStrength: Math.floor(Math.random() * 5) + 1
@@ -816,10 +821,12 @@ export const DomainSearchForm = forwardRef<DomainSearchFormRef, DomainSearchForm
                           </div>
                           {domain.available && (
                             <div className="text-right space-y-2">
-                              <div>
-                                <div className="text-xl font-bold">${domain.price.toFixed(2)}</div>
-                                <div className="text-sm text-muted-foreground">/year</div>
-                              </div>
+                              {domain.price !== null && (
+                                <div>
+                                  <div className="text-xl font-bold">${domain.price.toFixed(2)}</div>
+                                  <div className="text-sm text-muted-foreground">/year</div>
+                                </div>
+                              )}
                               <a
                                 href={`/api/go/spaceship?d=${encodeURIComponent(domain.name)}`}
                                 target="_blank"

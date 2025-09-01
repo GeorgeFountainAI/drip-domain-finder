@@ -3,7 +3,7 @@ import { create } from 'zustand';
 type SearchResult = {
   domain: string;
   available: boolean;
-  price: number;
+  price: number | null;
   flipScore?: number;
 };
 

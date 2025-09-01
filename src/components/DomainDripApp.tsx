@@ -201,12 +201,16 @@ export const DomainDripApp = () => {
                   setDomains(domains);
                   
                   // Push results to Zustand store for DomainResults page
-                  const searchResults = domains.map(d => ({
-                    domain: d.name,
-                    available: d.available,
-                    price: d.price,
-                    flipScore: d.flipScore || Math.floor(Math.random() * 41) + 60
-                  }));
+                  const searchResults = domains.map(d => {
+                    // Treat a domain as trusted only if validated === true && available === true
+                    const trusted = d.validated === true && d.available === true;
+                    return {
+                      domain: d.name,
+                      available: trusted, // Use as "trusted availability" 
+                      price: trusted ? d.price : null, // Only show price for trusted domains
+                      flipScore: d.flipScore || Math.floor(Math.random() * 41) + 60
+                    };
+                  });
                   setResults(searchResults);
                   setLoading(false);
                 }}
