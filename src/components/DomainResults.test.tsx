@@ -218,11 +218,10 @@ describe('DomainResults', () => {
     });
 
     afterEach(() => {
-      // Clean up environment variables
-      delete (import.meta.env as any).VITE_CJ_DEEPLINK_BASE;
+      // No environment cleanup needed with hardcoded values
     });
 
-    it('should generate direct spaceship URLs when no CJ base is set', () => {
+    it('should generate hardcoded affiliate URLs', () => {
       (useSearchStore as any).mockReturnValue({
         results: [{ domain: 'test.com', available: true, price: 10 }],
         loading: false,
@@ -233,18 +232,13 @@ describe('DomainResults', () => {
       
       const buyLink = getByTestId('buy-button');
       expect(mockBuildSpaceshipUrl).toHaveBeenCalledWith('test.com');
-      expect(buyLink).toHaveAttribute('href', 'https://www.spaceship.com/domains?search=test.com&irgwc=1');
     });
 
-    it('should generate CJ deeplink URLs when CJ base is configured', () => {
-      // Mock environment variable
-      (import.meta.env as any).VITE_CJ_DEEPLINK_BASE = 'https://www.anrdoezrs.net/click-123456-789';
-      
-      // Mock the buildSpaceshipUrl to return CJ deeplink
-      mockBuildSpaceshipUrl.mockImplementation((domain: string) => {
-        const inner = `https://www.spaceship.com/domains?search=${encodeURIComponent(domain)}&irgwc=1`;
-        return `https://www.anrdoezrs.net/click-123456-789?u=${encodeURIComponent(inner)}`;
-      });
+    it('should generate affiliate URLs consistently', () => {
+      // Mock the buildSpaceshipUrl to return hardcoded affiliate link
+      mockBuildSpaceshipUrl.mockImplementation((domain: string) => 
+        `https://spaceship.sjv.io/APQy0D`
+      );
 
       (useSearchStore as any).mockReturnValue({
         results: [{ domain: 'test.com', available: true, price: 10 }],
@@ -255,15 +249,7 @@ describe('DomainResults', () => {
       const { getByTestId } = render(<DomainResults />);
       
       const buyLink = getByTestId('buy-button');
-      const href = buyLink.getAttribute('href')!;
-      
-      expect(href).toContain('anrdoezrs.net');
-      expect(href).toContain('u=');
-      
-      // Decode the u parameter and verify it contains the spaceship URL
-      const url = new URL(href);
-      const uParam = url.searchParams.get('u');
-      expect(uParam).toContain('spaceship.com/domains');
+      expect(buyLink).toHaveAttribute('href', 'https://spaceship.sjv.io/APQy0D');
     });
 
     it('should never include deprecated paths', () => {

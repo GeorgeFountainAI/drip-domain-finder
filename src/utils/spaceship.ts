@@ -12,8 +12,8 @@ export const buildSpaceshipUrl = (domain: string): string => {
     // Build inner Spaceship search URL
     const inner = `https://www.spaceship.com/domains?search=${encodeURIComponent(domain)}&irgwc=1`;
     
-    // Try to use CJ deeplink base from environment
-    const cjBase = import.meta.env.VITE_CJ_DEEPLINK_BASE;
+    // Use hardcoded affiliate link
+    const cjBase = 'https://spaceship.sjv.io/APQy0D';
     
     if (cjBase) {
       let href: string;

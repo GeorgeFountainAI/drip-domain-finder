@@ -13,7 +13,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.status(400).json({ error: 'Invalid domain format', domain });
     }
 
-    const aff = process.env.NEXT_PUBLIC_SPACESHIP_AFFILIATE_ID?.trim();
+    const aff = 'https://spaceship.sjv.io/APQy0D';
     const url = new URL('https://www.spaceship.com/domains/search');
     url.searchParams.set('query', domain);
     if (aff) url.searchParams.set('aff', aff);
