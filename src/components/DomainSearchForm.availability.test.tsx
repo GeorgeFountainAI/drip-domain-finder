@@ -25,10 +25,19 @@ vi.mock('@/hooks/use-toast', () => ({
   useToast: () => ({ toast: vi.fn() })
 }));
 
-vi.mock('@/hooks/useConsumeCredit', () => ({
-  useConsumeCredit: () => ({ 
-    consumeCredit: vi.fn().mockResolvedValue({ success: true }),
+vi.mock('@/hooks/useConsumeCreditRPC', () => ({
+  useConsumeCreditRPC: () => ({ 
+    consumeCredits: vi.fn().mockResolvedValue(10),
     loading: false
+  })
+}));
+
+vi.mock('@/hooks/useGetCreditBalance', () => ({
+  useGetCreditBalance: () => ({ 
+    credits: 20,
+    loading: false,
+    error: null,
+    refetch: vi.fn()
   })
 }));
 
@@ -36,9 +45,7 @@ vi.mock('@/hooks/useAdminBypass', () => ({
   useAdminBypass: () => ({ isAdmin: false })
 }));
 
-vi.mock('@/components/RequireCredits', () => ({
-  default: ({ children }: { children: React.ReactNode }) => <div>{children}</div>
-}));
+// Remove RequireCredits mock since it's no longer used
 
 vi.mock('@/components/SearchHistory', () => ({
   SearchHistory: () => <div>Search History</div>

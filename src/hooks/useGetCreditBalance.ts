@@ -1,0 +1,60 @@
+import { useState, useEffect } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+
+export const useGetCreditBalance = () => {
+  const [credits, setCredits] = useState<number>(0);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<Error | null>(null);
+
+  const fetchCredits = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      
+      const { data, error: rpcError } = await supabase.rpc('get_credit_balance');
+      
+      if (rpcError) {
+        throw new Error(rpcError.message);
+      }
+      
+      setCredits(data || 0);
+    } catch (err) {
+      console.error('Error fetching credit balance:', err);
+      setError(err instanceof Error ? err : new Error('Unknown error'));
+      // Don't set credits to 0 on error, keep existing value
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchCredits();
+    
+    // Set up real-time subscription for credit updates
+    const channel = supabase
+      .channel('user-credits-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'user_credits'
+        },
+        () => {
+          fetchCredits();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, []);
+
+  return {
+    credits,
+    loading,
+    error,
+    refetch: fetchCredits
+  };
+};

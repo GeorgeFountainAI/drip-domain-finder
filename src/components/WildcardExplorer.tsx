@@ -5,9 +5,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Loader2, Search, Wand2, TrendingUp, Star } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { useConsumeCredit } from "@/hooks/useConsumeCredit";
+import { useConsumeCreditRPC } from '@/hooks/useConsumeCreditRPC';
+import { useGetCreditBalance } from '@/hooks/useGetCreditBalance';
 import { useAdminBypass } from "@/hooks/useAdminBypass";
-import RequireCredits from "@/components/RequireCredits";
+import { APP_CONFIG } from '@/lib/constants';
 import { generateWildcardSuggestions } from "@/utils/domainGenerator";
 
 interface WildcardExplorerProps {
@@ -39,7 +40,8 @@ const WildcardExplorer = ({ className = "" }: WildcardExplorerProps) => {
   const [hasSearched, setHasSearched] = useState(false);
   
   const { toast } = useToast();
-  const { consumeCredit } = useConsumeCredit();
+  const { consumeCredits, loading: consumingCredit } = useConsumeCreditRPC();
+  const { credits, loading: creditsLoading } = useGetCreditBalance();
   const { isAdmin } = useAdminBypass();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -67,16 +69,33 @@ const WildcardExplorer = ({ className = "" }: WildcardExplorerProps) => {
     setIsLoading(true);
     setHasSearched(true);
 
-    // Admin users bypass credit checks, regular users need 3 credits
+    // Check credits and consume if not admin
     if (!isAdmin) {
-      const creditResult = await consumeCredit(3);
-      if (!creditResult.success) {
-        setIsLoading(false);
+      if (credits < APP_CONFIG.CREDITS_PER_WILDCARD) {
         toast({
-          title: "Insufficient Credits",
-          description: "Wildcard searches require 3 credits. Purchase more credits to continue.",
+          title: "Insufficient credits",
+          description: `You need ${APP_CONFIG.CREDITS_PER_WILDCARD} credits for wildcard search.`,
           variant: "destructive",
         });
+        setIsLoading(false);
+        return;
+      }
+
+      try {
+        await consumeCredits(
+          APP_CONFIG.CREDITS_PER_WILDCARD,
+          'wildcard_search',
+          { pattern, timestamp: new Date().toISOString() }
+        );
+      } catch (error) {
+        if (error instanceof Error && error.message === 'insufficient_credits') {
+          toast({
+            title: "Insufficient credits",
+            description: `You need ${APP_CONFIG.CREDITS_PER_WILDCARD} credits for wildcard search.`,
+            variant: "destructive",
+          });
+        }
+        setIsLoading(false);
         return;
       }
     } else {
@@ -112,9 +131,23 @@ const WildcardExplorer = ({ className = "" }: WildcardExplorerProps) => {
     setPattern(e.target.value);
   };
 
+  // Show loading while credits are being fetched
+  if (creditsLoading) {
+    return (
+      <Card className={`w-full ${className}`}>
+        <CardContent className="p-6">
+          <div className="animate-pulse space-y-4">
+            <div className="h-4 bg-muted rounded w-1/4"></div>
+            <div className="h-10 bg-muted rounded"></div>
+            <div className="h-10 bg-muted rounded"></div>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
   return (
-    <RequireCredits credits={isAdmin ? 0 : 3} action="explore wildcard patterns" showAlert={hasSearched && !isAdmin}>
-      <div className={`max-w-6xl mx-auto space-y-6 ${className}`}>
+    <div className={`max-w-6xl mx-auto space-y-6 ${className}`}>
         {/* Wildcard Search Form */}
         <Card className="border-2 border-accent/20 bg-gradient-to-br from-accent/5 to-transparent">
           <CardHeader className="text-center">
@@ -154,7 +187,7 @@ const WildcardExplorer = ({ className = "" }: WildcardExplorerProps) => {
               <Button 
                 type="submit" 
                 size="lg" 
-                disabled={isLoading || !pattern.trim()}
+                disabled={isLoading || !pattern.trim() || (!isAdmin && credits < APP_CONFIG.CREDITS_PER_WILDCARD)}
                 className="px-8 py-6 text-lg"
                 variant="default"
               >
@@ -163,6 +196,8 @@ const WildcardExplorer = ({ className = "" }: WildcardExplorerProps) => {
                     <Loader2 className="mr-2 h-5 w-5 animate-spin" /> 
                     Exploring...
                   </>
+                ) : (!isAdmin && credits < APP_CONFIG.CREDITS_PER_WILDCARD) ? (
+                  <>Need {APP_CONFIG.CREDITS_PER_WILDCARD} Credits</>
                 ) : (
                   <><Search className="mr-2 h-5 w-5" /> Explore Pattern</>
                 )}
@@ -228,8 +263,7 @@ const WildcardExplorer = ({ className = "" }: WildcardExplorerProps) => {
           </div>
         )}
       </div>
-    </RequireCredits>
-  );
-};
-
-export default WildcardExplorer;
+    );
+  };
+  
+  export default WildcardExplorer;

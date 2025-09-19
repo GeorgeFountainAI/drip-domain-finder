@@ -21,4 +21,5 @@ export const APP_CONFIG = {
   
   // App settings
   CREDITS_PER_SEARCH: 2,
+  CREDITS_PER_WILDCARD: 3,
 } as const;

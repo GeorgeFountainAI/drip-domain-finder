@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { User, LogOut, CreditCard, Settings, Menu, ShieldCheck } from "lucide-react";
-import { useCredits } from "@/hooks/useCredits";
+import { useGetCreditBalance } from "@/hooks/useGetCreditBalance";
 import { useAdminBypass } from "@/hooks/useAdminBypass";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -15,7 +15,7 @@ interface ModernHeaderProps {
 }
 
 export const ModernHeader = ({ user, onCreditPurchase }: ModernHeaderProps) => {
-  const { credits } = useCredits();
+  const { credits } = useGetCreditBalance();
   const { isAdmin } = useAdminBypass();
   const { toast } = useToast();
   const [showUserMenu, setShowUserMenu] = useState(false);

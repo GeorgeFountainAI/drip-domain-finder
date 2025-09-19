@@ -225,6 +225,10 @@ export type Database = {
         Args: { credits: number; stripe_session_id: string; user_id: string }
         Returns: Json
       }
+      consume_credits: {
+        Args: { meta?: Json; reason: string; required: number }
+        Returns: number
+      }
       ensure_user_starter_credits: {
         Args: { target_user_id: string }
         Returns: Json
@@ -239,6 +243,10 @@ export type Database = {
           total_purchased_credits: number
           user_id: string
         }[]
+      }
+      get_credit_balance: {
+        Args: Record<PropertyKey, never>
+        Returns: number
       }
       is_admin: {
         Args: { user_id?: string }

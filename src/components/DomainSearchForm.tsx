@@ -21,9 +21,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Loader2, Search, Check, X, AlertCircle, Star, TrendingUp, HelpCircle } from "lucide-react";
 import { LoadingSparkles } from "@/components/LoadingSparkles";
 import { useToast } from "@/hooks/use-toast";
-import { useConsumeCredit } from "@/hooks/useConsumeCredit";
+import { useConsumeCreditRPC } from '@/hooks/useConsumeCreditRPC';
+import { useGetCreditBalance } from '@/hooks/useGetCreditBalance';
 import { useAdminBypass } from "@/hooks/useAdminBypass";
-import RequireCredits from "@/components/RequireCredits";
+import { APP_CONFIG } from '@/lib/constants';
 import { SearchHistory } from "@/components/SearchHistory";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import searchDomains from "@/api/domainSearchClient";
@@ -162,7 +163,8 @@ export const DomainSearchForm = forwardRef<DomainSearchFormRef, DomainSearchForm
   const [oneWordOnly, setOneWordOnly] = useState(false);
   
   const { toast } = useToast();
-  const { consumeCredit, loading: creditLoading } = useConsumeCredit();
+  const { consumeCredits, loading: consumingCredit } = useConsumeCreditRPC();
+  const { credits, loading: creditsLoading } = useGetCreditBalance();
   const { isAdmin } = useAdminBypass();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -181,12 +183,33 @@ export const DomainSearchForm = forwardRef<DomainSearchFormRef, DomainSearchForm
     setError(null);
     setHasSearched(true);
 
-    // Admin users bypass credit checks
+    // Check credits and consume if not admin
     if (!isAdmin) {
-      const creditResult = await consumeCredit(2);
-      if (!creditResult.success) {
+      if (credits < APP_CONFIG.CREDITS_PER_SEARCH) {
+        toast({
+          title: "Insufficient credits",
+          description: `You need ${APP_CONFIG.CREDITS_PER_SEARCH} credits to perform a search.`,
+          variant: "destructive",
+        });
         setIsLoading(false);
-        setError("Unable to deduct credits for search");
+        return;
+      }
+
+      try {
+        await consumeCredits(
+          APP_CONFIG.CREDITS_PER_SEARCH,
+          'search',
+          { query: keyword.trim(), vibe: selectedVibe, timestamp: new Date().toISOString() }
+        );
+      } catch (error) {
+        if (error instanceof Error && error.message === 'insufficient_credits') {
+          toast({
+            title: "Insufficient credits",
+            description: `You need ${APP_CONFIG.CREDITS_PER_SEARCH} credits to perform a search.`,
+            variant: "destructive",
+          });
+        }
+        setIsLoading(false);
         return;
       }
     } else {
@@ -336,12 +359,33 @@ export const DomainSearchForm = forwardRef<DomainSearchFormRef, DomainSearchForm
     setError(null);
     setHasSearched(true);
 
-    // Admin users bypass credit checks
+    // Check credits and consume if not admin
     if (!isAdmin) {
-      const creditResult = await consumeCredit(2);
-      if (!creditResult.success) {
+      if (credits < APP_CONFIG.CREDITS_PER_SEARCH) {
+        toast({
+          title: "Insufficient credits",
+          description: `You need ${APP_CONFIG.CREDITS_PER_SEARCH} credits to perform a search.`,
+          variant: "destructive",
+        });
         setIsLoading(false);
-        setError("Unable to deduct credits for search");
+        return;
+      }
+
+      try {
+        await consumeCredits(
+          APP_CONFIG.CREDITS_PER_SEARCH,
+          'search',
+          { query: searchKeyword.trim(), timestamp: new Date().toISOString() }
+        );
+      } catch (error) {
+        if (error instanceof Error && error.message === 'insufficient_credits') {
+          toast({
+            title: "Insufficient credits",
+            description: `You need ${APP_CONFIG.CREDITS_PER_SEARCH} credits to perform a search.`,
+            variant: "destructive",
+          });
+        }
+        setIsLoading(false);
         return;
       }
     }
@@ -591,9 +635,8 @@ export const DomainSearchForm = forwardRef<DomainSearchFormRef, DomainSearchForm
   }), [toast, onResults, onStateChange]);
 
   return (
-    <RequireCredits credits={isAdmin ? 0 : 2} action="search domains" showAlert={hasSearched && !isAdmin}>
-      <TooltipProvider>
-        <div className={`max-w-6xl mx-auto space-y-8 ${className}`} data-testid="domain-search-form">
+    <TooltipProvider>
+      <div className={`max-w-6xl mx-auto space-y-8 ${className}`} data-testid="domain-search-form">
           {/* Search Form */}
           <Card className="border-2 shadow-elevated bg-card backdrop-blur-sm">
             <CardHeader className="text-center pb-4">
@@ -851,11 +894,10 @@ export const DomainSearchForm = forwardRef<DomainSearchFormRef, DomainSearchForm
                 </CardContent>
               </Card>
             )}
-          </div>
-          )}
         </div>
-      </TooltipProvider>
-    </RequireCredits>
+      )}
+    </div>
+  </TooltipProvider>
   );
 });
 
