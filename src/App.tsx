@@ -12,6 +12,7 @@ import PremiumDomains from "./pages/PremiumDomains";
 import FeaturedDomains from "./pages/FeaturedDomains";
 import FAQ from "./pages/FAQ";
 
+import BuyCredits from "./pages/BuyCredits";
 import Admin from "./pages/Admin";
 import AdminCredits from "./pages/AdminCredits";
 import AdminDeploy from "./pages/AdminDeploy";
@@ -45,6 +46,7 @@ const App = () => (
             <Route path="/app" element={<AppPage />} />
             <Route path="/search" element={<AppPage />} />
             <Route path="/checkout" element={<Checkout />} />
+            <Route path="/buy-credits" element={<BuyCredits />} />
             <Route path="/premium-domains" element={<PremiumDomains />} />
             <Route path="/featured-domains" element={<FeaturedDomains />} />
             <Route path="/faq" element={<FAQ />} />

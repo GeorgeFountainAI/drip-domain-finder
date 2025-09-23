@@ -18,7 +18,7 @@ export const CREDIT_PACKS: CreditPack[] = [
     name: '10 Credits',
     priceUsd: 5,
     credits: 10,
-    stripePriceId: 'price_1234567890', // Replace with actual Stripe Price ID
+    stripePriceId: import.meta.env.VITE_STRIPE_PRICE_ID_5_USD || 'price_1234567890',
     description: 'Perfect for getting started'
   }
 ];

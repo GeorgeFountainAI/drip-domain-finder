@@ -58,7 +58,8 @@ serve(async (req) => {
         {
           id: 'pack_10',
           credits: 10,
-          priceUsd: 5
+          priceUsd: 5,
+          stripePriceId: Deno.env.get('STRIPE_PRICE_ID_5_USD') || 'price_1QVhBzGzNKcEgtoG5JK0c1FJVTKKBDNRjyN7o6fZWNPB2nNBb0MvbB8l0kA0kFJq00qBJ3KOmx'
         }
       ];
 

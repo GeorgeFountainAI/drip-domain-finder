@@ -42,7 +42,7 @@ serve(async (req) => {
         name: '10 Credits',
         priceUsd: 5,
         credits: 10,
-        stripePriceId: 'price_1234567890' // Replace with actual Stripe Price ID
+        stripePriceId: Deno.env.get('STRIPE_PRICE_ID_5_USD') || 'price_1QVhBzGzNKcEgtoG5JK0c1FJVTKKBDNRjyN7o6fZWNPB2nNBb0MvbB8l0kA0kFJq00qBJ3KOmx'
       }
     ];
 
