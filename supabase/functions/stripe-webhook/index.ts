@@ -46,10 +46,32 @@ serve(async (req) => {
 
       const userId = session.metadata.user_id;
       const credits = parseInt(session.metadata.credits);
+      const packageId = session.metadata.package;
 
-      if (!userId || !credits) {
+      if (!userId || !credits || !packageId) {
         console.error("Missing metadata in session:", session.metadata);
         throw new Error("Missing required metadata");
+      }
+
+      // Validate package ID against our single pack configuration
+      const CREDIT_PACKS = [
+        {
+          id: 'pack_10',
+          credits: 10,
+          priceUsd: 5
+        }
+      ];
+
+      const validPackage = CREDIT_PACKS.find(pack => pack.id === packageId);
+      if (!validPackage) {
+        console.error("Invalid package ID:", packageId);
+        throw new Error(`Invalid package ID: ${packageId}`);
+      }
+
+      // Validate credits match the package
+      if (credits !== validPackage.credits) {
+        console.error("Credits mismatch:", { expected: validPackage.credits, received: credits });
+        throw new Error(`Credits mismatch for package ${packageId}`);
       }
 
       // Initialize Supabase with service role key

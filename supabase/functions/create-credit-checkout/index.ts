@@ -33,18 +33,22 @@ serve(async (req) => {
     console.log("Creating checkout session for user:", user.id);
 
     // Get request body
-    const { creditPackage } = await req.json();
+    const { packId } = await req.json();
     
-    // Define credit packages - $5 = 10 credits
-    const packages = {
-      basic: { credits: 10, price: 500, name: "10 Credits" }, // $5.00
-      value: { credits: 25, price: 1250, name: "25 Credits" }, // $12.50
-      premium: { credits: 50, price: 2500, name: "50 Credits" }, // $25.00
-    };
+    // Single credit package configuration - $5 = 10 credits
+    const CREDIT_PACKS = [
+      {
+        id: 'pack_10',
+        name: '10 Credits',
+        priceUsd: 5,
+        credits: 10,
+        stripePriceId: 'price_1234567890' // Replace with actual Stripe Price ID
+      }
+    ];
 
-    const selectedPackage = packages[creditPackage];
+    const selectedPackage = CREDIT_PACKS.find(pack => pack.id === packId);
     if (!selectedPackage) {
-      throw new Error("Invalid credit package");
+      throw new Error(`Invalid credit package: ${packId}`);
     }
 
     // Initialize Stripe
@@ -55,7 +59,7 @@ serve(async (req) => {
     // Create Stripe checkout session
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ["card"],
-      line_items: [
+        line_items: [
         {
           price_data: {
             currency: "usd",
@@ -63,7 +67,7 @@ serve(async (req) => {
               name: selectedPackage.name,
               description: `Purchase ${selectedPackage.credits} credits for your account`,
             },
-            unit_amount: selectedPackage.price,
+            unit_amount: selectedPackage.priceUsd * 100, // Convert to cents
           },
           quantity: 1,
         },
@@ -74,7 +78,7 @@ serve(async (req) => {
       metadata: {
         user_id: user.id,
         credits: selectedPackage.credits.toString(),
-        package: creditPackage,
+        package: packId,
       },
     });
 
@@ -93,7 +97,7 @@ serve(async (req) => {
         user_id: user.id,
         stripe_session_id: session.id,
         credits: selectedPackage.credits,
-        amount: selectedPackage.price,
+        amount: selectedPackage.priceUsd * 100, // Store in cents
         status: "pending",
         created_at: new Date().toISOString()
       });

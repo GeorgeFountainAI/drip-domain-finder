@@ -12,8 +12,8 @@ export const APP_CONFIG = {
   // Affiliate links
   SPACESHIP_AFFILIATE_LINK: 'https://spaceship.sjv.io/APQy0D',
   
-  // Stripe (test keys)
-  STRIPE_PUBLISHABLE_KEY: 'pk_test_...',
+  // Stripe (test keys) 
+  STRIPE_PUBLISHABLE_KEY: 'pk_test_51QVhBzGzNKcEgtoGvcyAudLOs7WViSJns6SLGu3NLfQcSclOPE8JYGJLf6qvutRfEmZhUjKH4FUyM2FT9o9BXdMJ007gIdOSJd',
   
   // Feature flags
   ENABLE_ANALYTICS: false,

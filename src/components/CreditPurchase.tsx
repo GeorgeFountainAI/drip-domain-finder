@@ -3,8 +3,8 @@
  * 
  * Features:
  * - Stripe integration for secure payment processing
- * - Demo mode toggle for investor presentations
- * - Three-tier pricing structure ($5 = 10 credits)
+ * - Demo mode toggle for investor presentations  
+ * - Single pack: $5 for 10 credits
  * - Real-time authentication and session management
  * - Comprehensive error handling and user feedback
  * - Responsive design with modern UI components
@@ -12,48 +12,20 @@
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { CreditCard, Zap, Star } from 'lucide-react';
+import { CreditCard } from 'lucide-react';
+import { CREDIT_PACKS } from '@/config/credits';
 
 const CreditPurchase = () => {
   const [loadingPackage, setLoadingPackage] = useState<string | null>(null);
   const [demoMode, setDemoMode] = useState(false);
   const { toast } = useToast();
 
-  const creditPackages = [
-    {
-      id: 'basic',
-      name: '10 Credits',
-      price: '$5.00',
-      credits: 10,
-      icon: CreditCard,
-      description: 'Perfect for getting started',
-      pricePerCredit: '$0.50'
-    },
-    {
-      id: 'value',
-      name: '25 Credits',
-      price: '$12.50',
-      credits: 25,
-      icon: Zap,
-      description: 'Best value for regular users',
-      popular: true,
-      pricePerCredit: '$0.50'
-    },
-    {
-      id: 'premium',
-      name: '50 Credits',
-      price: '$25.00',
-      credits: 50,
-      icon: Star,
-      description: 'For power users',
-      pricePerCredit: '$0.50'
-    }
-  ];
+  // Use single credit pack from config
+  const creditPack = CREDIT_PACKS[0]; // Single pack only
 
   const handlePurchase = async (packageId: string) => {
     try {
@@ -87,7 +59,7 @@ const CreditPurchase = () => {
 
       // Call the create-credit-checkout function
       const { data, error } = await supabase.functions.invoke('create-credit-checkout', {
-        body: { creditPackage: packageId },
+        body: { packId: packageId },
         headers: {
           'Authorization': `Bearer ${session.access_token}`,
         }
@@ -135,47 +107,34 @@ const CreditPurchase = () => {
         </Label>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {creditPackages.map((pkg) => {
-          const IconComponent = pkg.icon;
-          const isLoading = loadingPackage === pkg.id;
-          
-          return (
-            <Card key={pkg.id} className={`relative ${pkg.popular ? 'border-primary' : ''}`}>
-              {pkg.popular && (
-                <Badge className="absolute -top-2 left-1/2 transform -translate-x-1/2">
-                  Most Popular
-                </Badge>
+      <div className="flex justify-center">
+        <Card className="w-full max-w-md">
+          <CardHeader className="text-center pb-4">
+            <div className="mx-auto mb-4 p-3 bg-primary/10 rounded-full w-fit">
+              <CreditCard className="h-6 w-6 text-primary" />
+            </div>
+            <CardTitle className="text-xl">{creditPack.name}</CardTitle>
+            <div className="text-3xl font-bold text-primary">${creditPack.priceUsd.toFixed(2)}</div>
+            <p className="text-sm text-muted-foreground">${(creditPack.priceUsd / creditPack.credits).toFixed(2)} per credit</p>
+          </CardHeader>
+          <CardContent className="text-center space-y-4">
+            <p className="text-muted-foreground">{creditPack.description}</p>
+            <div className="text-lg font-semibold">
+              {creditPack.credits} Credits
+            </div>
+            <Button
+              onClick={() => handlePurchase(creditPack.id)}
+              disabled={loadingPackage === creditPack.id}
+              className="w-full"
+            >
+              {loadingPackage === creditPack.id ? (
+                "Processing..."
+              ) : (
+                `Purchase Credits`
               )}
-              <CardHeader className="text-center pb-4">
-                <div className="mx-auto mb-4 p-3 bg-primary/10 rounded-full w-fit">
-                  <IconComponent className="h-6 w-6 text-primary" />
-                </div>
-                <CardTitle className="text-xl">{pkg.name}</CardTitle>
-                <div className="text-3xl font-bold text-primary">{pkg.price}</div>
-                <p className="text-sm text-muted-foreground">{pkg.pricePerCredit} per credit</p>
-              </CardHeader>
-              <CardContent className="text-center space-y-4">
-                <p className="text-muted-foreground">{pkg.description}</p>
-                <div className="text-lg font-semibold">
-                  {pkg.credits} Credits
-                </div>
-                <Button
-                  onClick={() => handlePurchase(pkg.id)}
-                  disabled={isLoading}
-                  className="w-full"
-                  variant={pkg.popular ? "default" : "outline"}
-                >
-                  {isLoading ? (
-                    "Processing..."
-                  ) : (
-                    `Purchase Credits`
-                  )}
-                </Button>
-              </CardContent>
-            </Card>
-          );
-        })}
+            </Button>
+          </CardContent>
+        </Card>
       </div>
     </div>
   );
