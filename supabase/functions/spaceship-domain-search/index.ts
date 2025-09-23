@@ -158,14 +158,22 @@ async function checkDomainAvailability(domainName: string, spaceshipApiKey: stri
       await logValidation(supabaseService, domainName, 'spaceship', 'error', 'No Spaceship API key configured');
       return { available: false, price: null };
     }
+
+    // Parse API key and secret from the SPACESHIP_API_KEY environment variable
+    // Format: "key:secret" or just use the key with empty secret for now
+    const [apiKey, apiSecret = ''] = spaceshipApiKey.split(':');
     
-    // Call Spaceship API
-    const response = await fetch(`https://api.spaceship.com/domains/v1/availability?domain=${encodeURIComponent(domainName)}`, {
-      method: 'GET',
+    // Call Spaceship API with correct URL and headers
+    const response = await fetch(`https://spaceship.dev/api/v1/domains/availability`, {
+      method: 'POST',
       headers: {
-        'Authorization': `Bearer ${spaceshipApiKey}`,
+        'X-API-Key': apiKey,
+        'X-API-Secret': apiSecret,
         'Content-Type': 'application/json',
-      }
+      },
+      body: JSON.stringify({
+        domains: [domainName]
+      })
     });
 
     if (!response.ok) {
@@ -177,18 +185,25 @@ async function checkDomainAvailability(domainName: string, spaceshipApiKey: stri
     const data = await response.json();
     spaceshipResult = data;
     
-    // Strict parsing - domain must pass ALL availability checks
-    const isSpaceshipAvailable = 
-      data && 
-      data.available === true && 
-      (!data.status || (data.status.toLowerCase() !== 'taken' && data.status.toLowerCase() !== 'registered')) &&
-      data.registered !== true;
+    // Parse the response - Spaceship returns an array with domain results
+    const domainResult = data.domains && data.domains[0];
+    if (!domainResult) {
+      await logValidation(supabaseService, domainName, 'spaceship', 'error', 
+        'No domain result in API response');
+      return { available: false, price: null };
+    }
+    
+    // Check if domain is available based on Spaceship response format
+    const isSpaceshipAvailable = domainResult.result === 'available';
     
     if (!isSpaceshipAvailable) {
       // Domain is definitely not available according to Spaceship - log it
       await logValidation(supabaseService, domainName, 'spaceship', 'unavailable', 
-        `Spaceship API marked unavailable: available=${data?.available}, status=${data?.status}, registered=${data?.registered}`);
-      return { available: false, price: data?.price };
+        `Spaceship API marked unavailable: result=${domainResult.result}`);
+      return { 
+        available: false, 
+        price: domainResult.premiumPricing && domainResult.premiumPricing[0]?.price 
+      };
     }
     
     // Spaceship says it's available - double-check with RDAP
@@ -198,11 +213,17 @@ async function checkDomainAvailability(domainName: string, spaceshipApiKey: stri
       // RDAP override - log the mismatch
       await logValidation(supabaseService, domainName, 'rdap', 'mismatch', 
         `Spaceship marked available but RDAP shows registered: ${rdapResult.message}`);
-      return { available: false, price: data?.price };
+      return { 
+        available: false, 
+        price: domainResult.premiumPricing && domainResult.premiumPricing[0]?.price 
+      };
     }
     
     // Both Spaceship and RDAP confirm availability
-    return { available: true, price: data?.price };
+    return { 
+      available: true, 
+      price: domainResult.premiumPricing && domainResult.premiumPricing[0]?.price 
+    };
     
   } catch (error) {
     console.error(`Error checking domain ${domainName}:`, error);
