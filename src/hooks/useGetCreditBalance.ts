@@ -17,6 +17,30 @@ export const useGetCreditBalance = () => {
         throw new Error(rpcError.message);
       }
       
+      // If user has 0 credits and this might be a broken account, try healing
+      if (data === 0) {
+        try {
+          const { data: { user } } = await supabase.auth.getUser();
+          if (user) {
+            // Try to heal broken account with 0 credits
+            const { data: healResult, error: healError } = await supabase.rpc('ensure_user_starter_credits', { 
+              target_user_id: user.id 
+            });
+            
+            if (!healError && healResult && typeof healResult === 'object') {
+              const result = healResult as { healed?: boolean; current_credits?: number };
+              if (result.healed) {
+                console.log('Healed user account with 0 credits:', healResult);
+                setCredits(result.current_credits || 0);
+                return;
+              }
+            }
+          }
+        } catch (healError) {
+          console.warn('Could not attempt healing:', healError);
+        }
+      }
+      
       setCredits(data || 0);
     } catch (err) {
       console.error('Error fetching credit balance:', err);

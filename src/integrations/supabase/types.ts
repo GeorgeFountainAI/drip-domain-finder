@@ -217,6 +217,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      admin_heal_zero_credit_users: {
+        Args: Record<PropertyKey, never>
+        Returns: Json
+      }
       admin_update_user_credits: {
         Args: { credit_change: number; target_user_id: string }
         Returns: Json

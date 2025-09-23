@@ -6,6 +6,29 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
+/**
+ * Get starter credits from settings with fallback
+ */
+async function getStarterCredits(supabaseClient: any): Promise<number> {
+  try {
+    const { data, error } = await supabaseClient
+      .from('settings')
+      .select('value')
+      .eq('key', 'starter_credits')
+      .single()
+    
+    if (error || !data) {
+      console.warn('Could not fetch starter_credits from settings, using fallback:', error)
+      return 10 // Fallback value matching settings table
+    }
+    
+    return data.value || 10
+  } catch (error) {
+    console.warn('Error fetching starter_credits:', error)
+    return 10 // Fallback value
+  }
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders })
@@ -36,13 +59,16 @@ serve(async (req) => {
       if (error) {
         console.warn('RPC function failed, trying direct insert fallback:', error)
         
-        // Fallback: Try direct upsert with default credits
+        // Get starter credits from settings
+        const starterCredits = await getStarterCredits(supabaseClient)
+        
+        // Fallback: Try direct upsert with settings value
         const { data: fallbackResult, error: fallbackError } = await supabaseClient
           .from('user_credits')
           .upsert(
             { 
               user_id: user.id, 
-              current_credits: 20, 
+              current_credits: starterCredits, 
               total_purchased_credits: 0 
             },
             { onConflict: 'user_id' }
@@ -52,13 +78,13 @@ serve(async (req) => {
 
         if (fallbackError) {
           console.warn('Fallback also failed, returning default response:', fallbackError)
-          // Return success with default values even if DB operations fail
+          // Return success with settings value even if DB operations fail
           return new Response(
             JSON.stringify({
               success: true,
-              credits_granted: 20,
+              credits_granted: starterCredits,
               new_user: true,
-              current_credits: 20,
+              current_credits: starterCredits,
               fallback_used: true
             }),
             {
@@ -71,7 +97,7 @@ serve(async (req) => {
         return new Response(
           JSON.stringify({
             success: true,
-            credits_granted: 20,
+            credits_granted: starterCredits,
             new_user: true,
             current_credits: fallbackResult.current_credits,
             fallback_used: true
@@ -92,13 +118,17 @@ serve(async (req) => {
       )
     } catch (dbError) {
       console.warn('Database operations failed, returning default response:', dbError)
-      // Even if all database operations fail, return success with defaults
+      
+      // Get starter credits from settings for fallback
+      const starterCredits = await getStarterCredits(supabaseClient)
+      
+      // Even if all database operations fail, return success with settings value
       return new Response(
         JSON.stringify({
           success: true,
-          credits_granted: 20,
+          credits_granted: starterCredits,
           new_user: true,
-          current_credits: 20,
+          current_credits: starterCredits,
           fallback_used: true,
           error: 'Database unavailable, using defaults'
         }),
@@ -126,7 +156,7 @@ serve(async (req) => {
     return new Response(
       JSON.stringify({ 
         error: 'Service temporarily unavailable',
-        fallback_credits: 20
+        fallback_credits: 10 // Use 10 to match settings table default
       }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },

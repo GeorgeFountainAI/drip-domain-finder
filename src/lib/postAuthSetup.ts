@@ -2,6 +2,29 @@ import { supabase } from '@/integrations/supabase/client';
 import type { User } from '@supabase/supabase-js';
 
 /**
+ * Get starter credits from settings with fallback
+ */
+async function getStarterCredits(): Promise<number> {
+  try {
+    const { data, error } = await supabase
+      .from('settings')
+      .select('value')
+      .eq('key', 'starter_credits')
+      .single();
+    
+    if (error || !data) {
+      console.warn('Could not fetch starter_credits from settings, using fallback:', error);
+      return 10; // Fallback value
+    }
+    
+    return data.value || 10;
+  } catch (error) {
+    console.warn('Error fetching starter_credits:', error);
+    return 10; // Fallback value
+  }
+}
+
+/**
  * Idempotent post-authentication setup that ensures user has:
  * 1. A profile record in public.profiles
  * 2. Starter credits in public.user_credits
@@ -32,7 +55,7 @@ export async function ensureProfileAndCredits(user: User): Promise<void> {
       // Don't throw - profile creation is handled by trigger, this is just insurance
     }
 
-    // Ensure starter credits using the existing RPC function
+    // Ensure starter credits using the existing RPC function (now handles healing)
     const { data: creditsResult, error: creditsError } = await supabase
       .rpc('ensure_user_starter_credits', { 
         target_user_id: user.id 
@@ -41,12 +64,15 @@ export async function ensureProfileAndCredits(user: User): Promise<void> {
     if (creditsError) {
       console.error('Credits RPC failed, trying fallback:', creditsError);
       
-      // Fallback: direct upsert with safe default
+      // Get starter credits from settings for fallback
+      const starterCredits = await getStarterCredits();
+      
+      // Fallback: direct upsert with settings value
       const { error: fallbackError } = await supabase
         .from('user_credits')
         .upsert({
           user_id: user.id,
-          current_credits: 20,
+          current_credits: starterCredits,
           total_purchased_credits: 0,
           updated_at: new Date().toISOString()
         }, {
