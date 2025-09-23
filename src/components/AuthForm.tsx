@@ -59,6 +59,10 @@ export const AuthForm = ({ onAuthSuccess, initialTab }: AuthFormProps) => {
         
         if (error.message.includes("Invalid login credentials")) {
           setError("Invalid email or password");
+        } else if (error.message.includes("Email not confirmed")) {
+          setError("Please check your email and click the confirmation link before signing in.");
+        } else if (error.message.includes("signup_disabled")) {
+          setError("Account creation is currently disabled. Please contact support.");
         } else {
           setError("Unable to sign in. Please try again.");
         }
@@ -152,45 +156,62 @@ export const AuthForm = ({ onAuthSuccess, initialTab }: AuthFormProps) => {
         return;
       }
 
+      // Check if email confirmation is required
+      if (!data.session && data.user && !data.user.email_confirmed_at) {
+        toast({
+          title: "Account created!",
+          description: "Please check your email and click the confirmation link to complete your registration.",
+        });
+        
+        // Clear form but don't navigate - user needs to confirm email first
+        setEmail("");
+        setPassword("");
+        setConfirmPassword("");
+        return;
+      }
+
       if (!data.user) {
         setError("Account could not be created. Please try again.");
         return;
       }
 
-      // Ensure profile and credits are set up
-      try {
-        await ensureProfileAndCredits(data.user);
-        
-        toast({
-          title: "Account created!",
-          description: "Welcome! You've received starter credits to begin searching for domains.",
-        });
-        
-      } catch (setupError) {
-        if (import.meta.env.DEV) {
-          console.error("Post-signup setup error:", setupError);
+      // If user is immediately logged in (no email confirmation required)
+      if (data.session) {
+        // Ensure profile and credits are set up
+        try {
+          await ensureProfileAndCredits(data.user);
+          
+          toast({
+            title: "Account created!",
+            description: "Welcome! You've received starter credits to begin searching for domains.",
+          });
+          
+        } catch (setupError) {
+          if (import.meta.env.DEV) {
+            console.error("Post-signup setup error:", setupError);
+          }
+          
+          // Show friendly message but don't block the flow
+          toast({
+            title: "Account created!",
+            description: "Your account setup is still in progress. Please refresh in a moment if you encounter any issues.",
+          });
         }
-        
-        // Show friendly message but don't block the flow
-        toast({
-          title: "Account created!",
-          description: "Your account setup is still in progress. Please refresh in a moment if you encounter any issues.",
-        });
-      }
 
-      // Clear form
-      setEmail("");
-      setPassword("");
-      setConfirmPassword("");
+        // Clear form
+        setEmail("");
+        setPassword("");
+        setConfirmPassword("");
 
-      // Navigate to app since user should be logged in
-      if (onAuthSuccess) {
-        onAuthSuccess();
-      } else {
-        navigate('/app');
-        // Dev check: ensure we land on app page after signup
-        if (process.env.NODE_ENV === 'development') {
-          setTimeout(() => console.assert(window.location.pathname === '/app', 'Post-signup should redirect to "/app"'), 50);
+        // Navigate to app since user is logged in
+        if (onAuthSuccess) {
+          onAuthSuccess();
+        } else {
+          navigate('/app');
+          // Dev check: ensure we land on app page after signup
+          if (process.env.NODE_ENV === 'development') {
+            setTimeout(() => console.assert(window.location.pathname === '/app', 'Post-signup should redirect to "/app"'), 50);
+          }
         }
       }
     } catch (err) {
@@ -340,7 +361,7 @@ export const AuthForm = ({ onAuthSuccess, initialTab }: AuthFormProps) => {
                     )}
                   </Button>
 
-                  <div className="text-center">
+                  <div className="text-center space-y-2">
                     <Button
                       type="button"
                       variant="link"
@@ -349,6 +370,43 @@ export const AuthForm = ({ onAuthSuccess, initialTab }: AuthFormProps) => {
                       disabled={isLoading}
                     >
                       Forgot your password?
+                    </Button>
+                    <br />
+                    <Button
+                      type="button"
+                      variant="link"
+                      className="text-sm text-muted-foreground hover:text-primary"
+                      onClick={async () => {
+                        if (!validateEmail(email)) {
+                          setError("Please enter a valid email address");
+                          return;
+                        }
+                        setIsLoading(true);
+                        try {
+                          const { error } = await supabase.auth.resend({
+                            type: 'signup',
+                            email: email,
+                            options: {
+                              emailRedirectTo: `${window.location.origin}/app`
+                            }
+                          });
+                          if (error) {
+                            setError("Failed to resend confirmation email.");
+                          } else {
+                            toast({
+                              title: "Confirmation email sent",
+                              description: "Please check your email for the confirmation link.",
+                            });
+                          }
+                        } catch (err) {
+                          setError("Failed to resend confirmation email.");
+                        } finally {
+                          setIsLoading(false);
+                        }
+                      }}
+                      disabled={isLoading || !email}
+                    >
+                      Resend confirmation email
                     </Button>
                   </div>
                 </form>
