@@ -2,35 +2,9 @@ import { supabase } from '@/integrations/supabase/client';
 import type { User } from '@supabase/supabase-js';
 
 /**
- * Get starter credits from settings with fallback
- */
-async function getStarterCredits(): Promise<number> {
-  try {
-    const { data, error } = await supabase
-      .from('settings')
-      .select('value')
-      .eq('key', 'starter_credits')
-      .single();
-    
-    if (error || !data) {
-      console.warn('Could not fetch starter_credits from settings, using fallback:', error);
-      return 10; // Fallback value
-    }
-    
-    return data.value || 10;
-  } catch (error) {
-    console.warn('Error fetching starter_credits:', error);
-    return 10; // Fallback value
-  }
-}
-
-/**
- * Idempotent post-authentication setup that ensures user has:
+ * Post-authentication setup that ensures user has:
  * 1. A profile record in public.profiles
- * 2. Starter credits in public.user_credits
- * 
- * This function can be called multiple times safely and will heal
- * any missing data from previous failed signups or inconsistent states.
+ * 2. Starter credits via RPC function
  */
 export async function ensureProfileAndCredits(user: User): Promise<void> {
   if (!user?.id || !user?.email) {
@@ -38,7 +12,7 @@ export async function ensureProfileAndCredits(user: User): Promise<void> {
   }
 
   try {
-    // Upsert profile - this will create or update the profile record
+    // Upsert profile
     const { error: profileError } = await supabase
       .from('profiles')
       .upsert({
@@ -52,45 +26,19 @@ export async function ensureProfileAndCredits(user: User): Promise<void> {
 
     if (profileError) {
       console.error('Profile upsert failed:', profileError);
-      // Don't throw - profile creation is handled by trigger, this is just insurance
     }
 
-    // Ensure starter credits using the existing RPC function (now handles healing)
-    const { data: creditsResult, error: creditsError } = await supabase
+    // Ensure starter credits using RPC
+    const { error: creditsError } = await supabase
       .rpc('ensure_user_starter_credits', { 
         target_user_id: user.id 
       });
 
     if (creditsError) {
-      console.error('Credits RPC failed, trying fallback:', creditsError);
-      
-      // Get starter credits from settings for fallback
-      const starterCredits = await getStarterCredits();
-      
-      // Fallback: direct upsert with settings value
-      const { error: fallbackError } = await supabase
-        .from('user_credits')
-        .upsert({
-          user_id: user.id,
-          current_credits: starterCredits,
-          total_purchased_credits: 0,
-          updated_at: new Date().toISOString()
-        }, {
-          onConflict: 'user_id'
-        });
-
-      if (fallbackError) {
-        console.error('Credits fallback failed:', fallbackError);
-        // Don't throw - credits will be handled by triggers
-      }
-    }
-
-    if (import.meta.env.DEV && creditsResult) {
-      console.log('Credits setup result:', creditsResult);
+      console.error('Credits RPC failed:', creditsError);
     }
 
   } catch (error) {
     console.error('Post-auth setup failed:', error);
-    // Don't throw - let the app continue, triggers will handle the rest
   }
 }
