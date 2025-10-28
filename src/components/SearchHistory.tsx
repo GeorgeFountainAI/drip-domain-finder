@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { ChevronDown, ChevronUp, History, Search, Trash2 } from 'lucide-react';
+import { ChevronDown, ChevronUp, History, Search, Trash2, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -13,7 +13,7 @@ interface SearchHistoryItem {
 }
 
 interface SearchHistoryProps {
-  onSearchAgain: (keyword: string) => void;
+  onSearchAgain: (keyword: string) => Promise<void>;
   currentKeyword?: string;
 }
 
@@ -37,6 +37,7 @@ export const SearchHistory: React.FC<SearchHistoryProps> = ({ onSearchAgain, cur
   const [isOpen, setIsOpen] = useState(false);
   const [searchHistory, setSearchHistory] = useState<SearchHistoryItem[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [searchingKeyword, setSearchingKeyword] = useState<string | null>(null);
   const { toast } = useToast();
 
   // Load search history from Supabase
@@ -150,9 +151,21 @@ export const SearchHistory: React.FC<SearchHistoryProps> = ({ onSearchAgain, cur
   };
 
   // Handle search again
-  const handleSearchAgain = (keyword: string) => {
+  const handleSearchAgain = async (keyword: string) => {
     console.log(`🔄 Re-running search: ${keyword}`);
-    onSearchAgain(keyword);
+    setSearchingKeyword(keyword);
+    try {
+      await onSearchAgain(keyword);
+      // Scroll to results after search completes
+      setTimeout(() => {
+        const resultsElement = document.querySelector('[data-testid="domain-results"]');
+        if (resultsElement) {
+          resultsElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      }, 100);
+    } finally {
+      setSearchingKeyword(null);
+    }
   };
 
   // Handle toggle
@@ -247,11 +260,20 @@ export const SearchHistory: React.FC<SearchHistoryProps> = ({ onSearchAgain, cur
                         variant="outline"
                         size="sm"
                         onClick={() => handleSearchAgain(item.keyword)}
+                        disabled={searchingKeyword === item.keyword}
                         className="gap-1 text-xs shrink-0 mobile-touch-target"
                       >
-                        <Search className="h-3 w-3" />
-                        <span className="hidden sm:inline">Search Again</span>
-                        <span className="sm:hidden">Search</span>
+                        {searchingKeyword === item.keyword ? (
+                          <Loader2 className="h-3 w-3 animate-spin" />
+                        ) : (
+                          <Search className="h-3 w-3" />
+                        )}
+                        <span className="hidden sm:inline">
+                          {searchingKeyword === item.keyword ? 'Searching...' : 'Search Again'}
+                        </span>
+                        <span className="sm:hidden">
+                          {searchingKeyword === item.keyword ? '...' : 'Search'}
+                        </span>
                       </Button>
                     </div>
                   ))}

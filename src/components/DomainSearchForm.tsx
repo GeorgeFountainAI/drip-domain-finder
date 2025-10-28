@@ -347,7 +347,9 @@ export const DomainSearchForm = forwardRef<DomainSearchFormRef, DomainSearchForm
 
   // Handle search again from history
   const handleSearchAgain = async (searchKeyword: string) => {
-    setKeyword(searchKeyword);
+    // Normalize keyword: lowercase and trim
+    const normalizedKeyword = searchKeyword.toLowerCase().trim();
+    setKeyword(normalizedKeyword);
     
     // Create a synthetic form event and trigger search
     const syntheticEvent = {
@@ -375,7 +377,7 @@ export const DomainSearchForm = forwardRef<DomainSearchFormRef, DomainSearchForm
         await consumeCredits(
           APP_CONFIG.CREDITS_PER_SEARCH,
           'search',
-          { query: searchKeyword.trim(), timestamp: new Date().toISOString() }
+          { query: normalizedKeyword, timestamp: new Date().toISOString() }
         );
       } catch (error) {
         if (error instanceof Error && error.message === 'insufficient_credits') {
@@ -392,9 +394,9 @@ export const DomainSearchForm = forwardRef<DomainSearchFormRef, DomainSearchForm
 
     try {
       // Check if wildcard search
-      if (searchKeyword.trim().includes('*')) {
+      if (normalizedKeyword.includes('*')) {
         // Handle wildcard search
-        const wildcardSuggestions = generateWildcardSuggestions(searchKeyword.trim().replace(/\*/g, ''));
+        const wildcardSuggestions = generateWildcardSuggestions(normalizedKeyword.replace(/\*/g, ''));
           const wildcardDomains: Domain[] = wildcardSuggestions.map((suggestion, index) => ({
             name: `${suggestion}.com`,
             available: false, // Untrusted for wildcards
@@ -414,7 +416,7 @@ export const DomainSearchForm = forwardRef<DomainSearchFormRef, DomainSearchForm
           : unblockedDomains; // Bypass validation for wildcard searches
         
         setDomains(validatedDomains);
-        setLastSearchedKeyword(searchKeyword.trim());
+        setLastSearchedKeyword(normalizedKeyword);
         
         if (onResults) {
           onResults(validatedDomains);
@@ -430,7 +432,7 @@ export const DomainSearchForm = forwardRef<DomainSearchFormRef, DomainSearchForm
         });
       } else {
         // Regular domain search
-        const searchResult = await searchDomains(searchKeyword.trim());
+        const searchResult = await searchDomains(normalizedKeyword);
         
         if (searchResult.error) {
           toast({
@@ -447,7 +449,7 @@ export const DomainSearchForm = forwardRef<DomainSearchFormRef, DomainSearchForm
         
         // First set unvalidated results so user always sees domains
         setDomains(unblockedDomains);
-        setLastSearchedKeyword(searchKeyword.trim());
+        setLastSearchedKeyword(normalizedKeyword);
         
         // Notify parent with unvalidated results immediately
         const unvalidatedResults = unblockedDomains.map(d => ({ ...d, validated: false }));
