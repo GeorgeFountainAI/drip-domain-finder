@@ -2,6 +2,9 @@ import React, { useEffect, useState } from 'react';
 import { useSearchStore } from '../lib/store';
 import { useCheckDomain } from '@/hooks/useCheckDomain';
 
+// In-memory cache for domain checks to avoid duplicate API calls
+const domainCheckCache = new Map<string, { status: string; price?: number | null }>();
+
 export default function DomainResults() {
   const { results, loading } = useSearchStore();
   const [domainStatuses, setDomainStatuses] = useState<Record<string, { status: string; price?: number | null }>>({});
@@ -12,24 +15,41 @@ export default function DomainResults() {
     
     const checkAllDomains = async () => {
       const statuses: Record<string, { status: string; price?: number | null }> = {};
+      const toCheck: string[] = [];
       
+      // First, check cache
       for (const domain of results) {
-        const result = await checkDomain(domain.domain);
-        if (result) {
-          statuses[domain.domain] = { 
-            status: result.status,
-            price: result.priceUsd 
-          };
+        const cached = domainCheckCache.get(domain.domain);
+        if (cached) {
+          statuses[domain.domain] = cached;
         } else {
-          statuses[domain.domain] = { status: 'unknown' };
+          toCheck.push(domain.domain);
         }
       }
       
-      setDomainStatuses(statuses);
+      // Update state with cached results immediately
+      if (Object.keys(statuses).length > 0) {
+        setDomainStatuses(prev => ({ ...prev, ...statuses }));
+      }
+      
+      // Check uncached domains
+      for (const domainName of toCheck) {
+        const result = await checkDomain(domainName);
+        const status = result ? { 
+          status: result.status,
+          price: result.priceUsd 
+        } : { status: 'unknown' };
+        
+        // Cache the result
+        domainCheckCache.set(domainName, status);
+        
+        // Update state
+        setDomainStatuses(prev => ({ ...prev, [domainName]: status }));
+      }
     };
     
     checkAllDomains();
-  }, [results]);
+  }, [results, checkDomain]);
 
   if (loading) return <div className="text-center mt-6">Loading results...</div>;
   if (!results || results.length === 0) return null;
