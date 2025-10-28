@@ -6,11 +6,8 @@ const corsHeaders = {
 };
 
 type CheckResult = {
-  domain: string;
-  available: boolean;
-  registeredAt?: string | null;
-  registrar?: string | null;
-  source: "rdap" | "whoisxml" | "assumed";
+  status: "available" | "registered" | "unknown";
+  createdAt?: string | null;
   priceUsd?: number | null;
 };
 
@@ -44,27 +41,54 @@ async function rdapLookup(domain: string): Promise<CheckResult | null> {
   try {
     const r = await fetch(RDAP_ENDPOINT(domain));
     
+    // RDAP 404 → domain is available
     if (r.status === 404) {
-      // not found in RDAP -> available
-      return { domain, available: true, registeredAt: null, registrar: null, source: "rdap" };
+      return { status: "available", createdAt: null };
     }
     
-    if (!r.ok) return null;
+    // Non-OK responses → unknown
+    if (!r.ok) {
+      return { status: "unknown", createdAt: null };
+    }
     
     const data = await r.json();
     
-    // If RDAP returns a domain object, it exists -> unavailable
-    const registrar = data?.registrar || 
-      data?.entities?.find((e: any) => e?.roles?.includes("registrar"))
-        ?.vcardArray?.[1]?.find((v: any[]) => v[0] === "fn")?.[3] || null;
+    // Check for registration indicators:
+    // 1. events contains "registration" (case-insensitive)
+    const hasRegistrationEvent = data?.events?.some((e: any) => 
+      e?.eventAction?.toLowerCase() === "registration"
+    );
     
-    const created = data?.events?.find((e: any) => e?.eventAction === "registration")?.eventDate ||
-      data?.events?.find((e: any) => e?.eventAction === "creation")?.eventDate || null;
-
-    return { domain, available: false, registeredAt: created, registrar, source: "rdap" };
+    // 2. nameservers is a non-empty array
+    const hasNameservers = Array.isArray(data?.nameservers) && data.nameservers.length > 0;
+    
+    // 3. entities contains registrar/registrant role
+    const hasRegistrarEntity = data?.entities?.some((e: any) => 
+      Array.isArray(e?.roles) && e.roles.some((role: string) => 
+        ["registrar", "registrant"].includes(role.toLowerCase())
+      )
+    );
+    
+    // If any indicator holds → registered
+    if (hasRegistrationEvent || hasNameservers || hasRegistrarEntity) {
+      // Find earliest registration date
+      const registrationDates = data?.events
+        ?.filter((e: any) => e?.eventAction?.toLowerCase() === "registration")
+        ?.map((e: any) => e?.eventDate)
+        ?.filter(Boolean) || [];
+      
+      const createdAt = registrationDates.length > 0 
+        ? registrationDates.sort()[0] 
+        : null;
+      
+      return { status: "registered", createdAt };
+    }
+    
+    // No clear indicators → unknown
+    return { status: "unknown", createdAt: null };
   } catch (error) {
     console.error("RDAP lookup error:", error);
-    return null;
+    return { status: "unknown", createdAt: null };
   }
 }
 
@@ -79,7 +103,11 @@ async function whoisXmlFallback(domain: string): Promise<CheckResult | null> {
     const data = await r.json();
     const avail = data?.domainAvailability === "AVAILABLE";
     
-    return { domain, available: !!avail, registeredAt: null, registrar: null, source: "whoisxml" };
+    if (avail) {
+      return { status: "available", createdAt: null };
+    } else {
+      return { status: "registered", createdAt: null };
+    }
   } catch (error) {
     console.error("WhoisXML fallback error:", error);
     return null;
@@ -109,28 +137,22 @@ serve(async (req) => {
     let result = await rdapLookup(domain);
 
     // 2) Fallback to WHOISXML availability (optional)
-    if (!result) {
-      result = await whoisXmlFallback(domain);
+    if (!result || result.status === "unknown") {
+      const fallback = await whoisXmlFallback(domain);
+      if (fallback) result = fallback;
     }
 
-    // 3) If still nothing, assume unavailable to be safe
+    // 3) If still nothing, return unknown
     if (!result) {
-      result = { 
-        domain, 
-        available: false, 
-        registeredAt: null, 
-        registrar: null, 
-        source: "assumed" 
-      };
+      result = { status: "unknown", createdAt: null };
     }
 
-    // 4) Only fetch price if actually available
-    if (result.available) {
+    // 4) Only fetch price if available
+    if (result.status === "available") {
       result.priceUsd = await getPriceIfAvailable(domain);
-    } else {
-      result.priceUsd = null;
     }
 
+    // Always return 200 with the status JSON shape
     return new Response(
       JSON.stringify(result),
       { 
@@ -141,11 +163,12 @@ serve(async (req) => {
 
   } catch (error) {
     console.error("Check domain error:", error);
+    // Always return 200 with unknown status on errors
     return new Response(
-      JSON.stringify({ error: "Domain check failed" }),
+      JSON.stringify({ status: "unknown", createdAt: null }),
       { 
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 500 
+        status: 200 
       }
     );
   }

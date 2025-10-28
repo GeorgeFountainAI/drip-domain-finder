@@ -24,19 +24,12 @@ export function useCheckDomain() {
         throw functionError;
       }
 
-      // Transform edge function response to requested format
+      // Edge function now returns { status, createdAt, priceUsd }
       const rawData = data as any;
-      let status: 'available' | 'registered' | 'reserved' | 'unknown' = 'unknown';
       
-      if (rawData.available === true) {
-        status = 'available';
-      } else if (rawData.available === false) {
-        status = 'registered';
-      }
-
       return {
-        status,
-        createdAt: rawData.registeredAt || undefined,
+        status: rawData.status || 'unknown',
+        createdAt: rawData.createdAt || undefined,
         priceUsd: rawData.priceUsd || null
       };
     } catch (err) {
