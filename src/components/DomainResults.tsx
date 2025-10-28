@@ -72,7 +72,7 @@ export default function DomainResults() {
                   </div>
                 ) : (
                   <span className="inline-flex items-center rounded-full bg-gray-100 px-2 py-0.5 text-gray-800 text-xs">
-                    Checking...
+                    Check manually
                   </span>
                 )}
               </div>
