@@ -112,6 +112,24 @@ export const searchDomains = async (keyword: string, forceDemoMode = false): Pro
     return { domains: [], error: 'Keyword is required' };
   }
   
+  // Direct lookup mode: if input matches full domain pattern, return only that domain
+  const fullDomainPattern = /^[a-z0-9-]+\.[a-z]{2,}$/i;
+  if (fullDomainPattern.test(cleanKeyword)) {
+    const exactDomain = cleanKeyword.toLowerCase();
+    const tld = exactDomain.split('.').pop() || '';
+    
+    await logSearchAttempt(cleanKeyword, true);
+    
+    return {
+      domains: [{
+        name: exactDomain,
+        available: false, // Will be checked by useCheckDomain hook
+        price: null,
+        tld
+      }],
+      isDemo: false
+    };
+  }
   
   // Only use demo mode if explicitly forced (for presentations)
   const demoMode = forceDemoMode;
