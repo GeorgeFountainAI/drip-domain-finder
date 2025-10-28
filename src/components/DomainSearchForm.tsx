@@ -540,7 +540,8 @@ export const DomainSearchForm = forwardRef<DomainSearchFormRef, DomainSearchForm
   // Expose methods through ref
   useImperativeHandle(ref, () => ({
     searchKeyword: async (searchKeyword: string) => {
-      setKeyword(searchKeyword);
+      const normalizedKeyword = searchKeyword.toLowerCase().trim();
+      setKeyword(normalizedKeyword);
       setIsLoading(true);
       setError(null);
       setHasSearched(true);
@@ -549,9 +550,9 @@ export const DomainSearchForm = forwardRef<DomainSearchFormRef, DomainSearchForm
 
       try {
         // Check if wildcard search
-        if (searchKeyword.trim().includes('*')) {
+        if (normalizedKeyword.includes('*')) {
           // Handle wildcard search
-          const wildcardSuggestions = generateWildcardSuggestions(searchKeyword.trim().replace(/\*/g, ''));
+          const wildcardSuggestions = generateWildcardSuggestions(normalizedKeyword.replace(/\*/g, ''));
           const wildcardDomains: Domain[] = wildcardSuggestions.map((suggestion, index) => ({
             name: `${suggestion}.com`,
             available: false, // Untrusted for wildcards
@@ -599,7 +600,7 @@ export const DomainSearchForm = forwardRef<DomainSearchFormRef, DomainSearchForm
           });
         } else {
           // Regular domain search
-          const searchResult = await searchDomains(searchKeyword.trim());
+          const searchResult = await searchDomains(normalizedKeyword);
           // Filter out blocked domains and validate in batches
           const unblockedDomains = searchResult.domains.filter(domain => 
             !DOMAIN_BLOCKLIST.includes(domain.name)

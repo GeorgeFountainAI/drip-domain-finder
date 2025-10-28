@@ -120,6 +120,14 @@ export const SearchHistoryViewer = ({ onSearchAgain }: SearchHistoryViewerProps)
     try {
       await onSearchAgain(keyword);
       
+      // Smooth-scroll to results after search completes
+      setTimeout(() => {
+        const resultsElement = document.querySelector('[data-testid="domain-results"]');
+        if (resultsElement) {
+          resultsElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      }, 100);
+      
       toast({
         title: "Search triggered",
         description: `Searching for "${keyword}" again...`,
