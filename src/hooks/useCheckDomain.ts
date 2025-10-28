@@ -2,11 +2,8 @@ import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 
 type CheckResult = {
-  domain: string;
-  available: boolean;
-  registeredAt?: string | null;
-  registrar?: string | null;
-  source: "rdap" | "whoisxml" | "assumed";
+  status: 'available' | 'registered' | 'reserved' | 'unknown';
+  createdAt?: string;
   priceUsd?: number | null;
 };
 
@@ -27,7 +24,21 @@ export function useCheckDomain() {
         throw functionError;
       }
 
-      return data as CheckResult;
+      // Transform edge function response to requested format
+      const rawData = data as any;
+      let status: 'available' | 'registered' | 'reserved' | 'unknown' = 'unknown';
+      
+      if (rawData.available === true) {
+        status = 'available';
+      } else if (rawData.available === false) {
+        status = 'registered';
+      }
+
+      return {
+        status,
+        createdAt: rawData.registeredAt || undefined,
+        priceUsd: rawData.priceUsd || null
+      };
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Domain check failed';
       setError(errorMessage);

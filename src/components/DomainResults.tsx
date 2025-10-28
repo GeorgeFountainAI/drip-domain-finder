@@ -1,23 +1,49 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useSearchStore } from '../lib/store';
+import { useCheckDomain } from '@/hooks/useCheckDomain';
 
 export default function DomainResults() {
   const { results, loading } = useSearchStore();
+  const [domainStatuses, setDomainStatuses] = useState<Record<string, { status: string; price?: number | null }>>({});
+  const { checkDomain } = useCheckDomain();
+
+  useEffect(() => {
+    if (!results || results.length === 0) return;
+    
+    const checkAllDomains = async () => {
+      const statuses: Record<string, { status: string; price?: number | null }> = {};
+      
+      for (const domain of results) {
+        const result = await checkDomain(domain.domain);
+        if (result) {
+          statuses[domain.domain] = { 
+            status: result.status,
+            price: result.priceUsd 
+          };
+        } else {
+          statuses[domain.domain] = { status: 'unknown' };
+        }
+      }
+      
+      setDomainStatuses(statuses);
+    };
+    
+    checkAllDomains();
+  }, [results]);
 
   if (loading) return <div className="text-center mt-6">Loading results...</div>;
   if (!results || results.length === 0) return null;
-
-  const isValidPriceAndAvailable = (domain: any) => {
-    return domain.available && domain.price && domain.price > 0;
-  };
 
   return (
     <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 px-4" data-testid="domain-results">
       {results.map((domain) => {
         const apiRedirect = `/api/go/spaceship?d=${encodeURIComponent(domain.domain)}`;
-        const isAvailable = domain.available;
-        const price = domain.price ? `$${domain.price.toFixed(2)}` : null;
-        const flipScore = domain.flipScore ?? Math.floor(Math.random() * 41) + 60; // fallback 60–100
+        const domainStatus = domainStatuses[domain.domain];
+        const status = domainStatus?.status || 'unknown';
+        const isAvailable = status === 'available';
+        const isRegistered = status === 'registered';
+        const price = domainStatus?.price ? `$${domainStatus.price.toFixed(2)}` : null;
+        const flipScore = domain.flipScore ?? Math.floor(Math.random() * 41) + 60;
 
         return (
           <div
@@ -33,22 +59,20 @@ export default function DomainResults() {
 
               {/* Price & Status */}
               <div className="text-sm text-muted-foreground" data-testid="domain-price">
-                {isAvailable ? (
-                  price ? (
-                    <div className="flex items-center gap-2">
-                      <span className="inline-flex items-center rounded-full bg-green-100 px-2 py-0.5 text-green-800 text-xs">
-                        Available
-                      </span>
-                      <span>{price}</span>
-                    </div>
-                  ) : (
-                    <span className="inline-flex items-center rounded-full bg-gray-100 px-2 py-0.5 text-gray-800 text-xs">
-                      Status unknown — verify on Spaceship
-                    </span>
-                  )
-                ) : (
+                {isRegistered ? (
                   <span className="inline-flex items-center rounded-full bg-red-100 px-2 py-0.5 text-red-800 text-xs">
-                    Unavailable
+                    Registered
+                  </span>
+                ) : isAvailable ? (
+                  <div className="flex items-center gap-2">
+                    <span className="inline-flex items-center rounded-full bg-green-100 px-2 py-0.5 text-green-800 text-xs">
+                      Available
+                    </span>
+                    {price && <span>{price}</span>}
+                  </div>
+                ) : (
+                  <span className="inline-flex items-center rounded-full bg-gray-100 px-2 py-0.5 text-gray-800 text-xs">
+                    Checking...
                   </span>
                 )}
               </div>
@@ -67,17 +91,19 @@ export default function DomainResults() {
               )}
 
               {/* Buy Button */}
-              <div className="w-full">
-                <a
-                  href={apiRedirect}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="mt-3 inline-flex w-full items-center justify-center px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 text-sm font-medium transition-colors mobile-touch-target"
-                  data-testid="buy-button"
-                >
-                  Buy on Spaceship
-                </a>
-              </div>
+              {isAvailable && (
+                <div className="w-full">
+                  <a
+                    href={apiRedirect}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="mt-3 inline-flex w-full items-center justify-center px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 text-sm font-medium transition-colors mobile-touch-target"
+                    data-testid="buy-button"
+                  >
+                    Buy on Spaceship
+                  </a>
+                </div>
+              )}
             </div>
           </div>
         );
