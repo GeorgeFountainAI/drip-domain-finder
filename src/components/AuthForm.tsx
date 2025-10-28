@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { AlertCircle, Loader2, Mail, Lock, Sparkles } from "lucide-react";
+import { AlertCircle, Loader2, Mail, Lock, Sparkles, Chrome } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
@@ -24,6 +24,31 @@ export const AuthForm = ({ onAuthSuccess, initialTab }: AuthFormProps) => {
   const [showForgotPassword, setShowForgotPassword] = useState(false);
   const { toast } = useToast();
   const navigate = useNavigate();
+
+  const handleGoogleSignIn = async () => {
+    setError(null);
+    setIsLoading(true);
+
+    try {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: window.location.origin + '/auth/callback'
+        }
+      });
+
+      if (error) {
+        setError("Failed to sign in with Google. Please try again.");
+        setIsLoading(false);
+      }
+    } catch (err) {
+      if (import.meta.env.DEV) {
+        console.error('Google OAuth error:', err);
+      }
+      setError("An unexpected error occurred. Please try again.");
+      setIsLoading(false);
+    }
+  };
 
   const validateEmail = (email: string) => {
     return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
@@ -236,6 +261,30 @@ export const AuthForm = ({ onAuthSuccess, initialTab }: AuthFormProps) => {
               </TabsList>
 
               <TabsContent value="login">
+                <div className="space-y-4">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="w-full"
+                    onClick={handleGoogleSignIn}
+                    disabled={isLoading}
+                  >
+                    <Chrome className="h-4 w-4 mr-2" />
+                    Sign in with Google
+                  </Button>
+                  
+                  <div className="relative">
+                    <div className="absolute inset-0 flex items-center">
+                      <span className="w-full border-t" />
+                    </div>
+                    <div className="relative flex justify-center text-xs uppercase">
+                      <span className="bg-background px-2 text-muted-foreground">
+                        Or continue with
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
                 <form onSubmit={handleLogin} className="space-y-4">
                   <div className="space-y-2">
                     <Label htmlFor="login-email">Email</Label>
@@ -359,6 +408,30 @@ export const AuthForm = ({ onAuthSuccess, initialTab }: AuthFormProps) => {
               </TabsContent>
 
               <TabsContent value="signup">
+                <div className="space-y-4">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="w-full"
+                    onClick={handleGoogleSignIn}
+                    disabled={isLoading}
+                  >
+                    <Chrome className="h-4 w-4 mr-2" />
+                    Sign in with Google
+                  </Button>
+                  
+                  <div className="relative">
+                    <div className="absolute inset-0 flex items-center">
+                      <span className="w-full border-t" />
+                    </div>
+                    <div className="relative flex justify-center text-xs uppercase">
+                      <span className="bg-background px-2 text-muted-foreground">
+                        Or continue with
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
                 <form onSubmit={handleSignup} className="space-y-4">
                   <div className="space-y-2">
                     <Label htmlFor="signup-email">Email</Label>
