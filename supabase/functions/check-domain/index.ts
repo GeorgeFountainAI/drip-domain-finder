@@ -53,24 +53,33 @@ async function rdapLookup(domain: string): Promise<CheckResult | null> {
     
     const data = await r.json();
     
-    // Check for registration indicators:
-    // 1. events contains "registration" (case-insensitive)
+    // Check for registration indicators (case-insensitive):
+    // 1. events contains "registration"
     const hasRegistrationEvent = data?.events?.some((e: any) => 
       e?.eventAction?.toLowerCase() === "registration"
     );
     
-    // 2. nameservers is a non-empty array
+    // 2. status array contains "active" or "ok"
+    const hasActiveStatus = Array.isArray(data?.status) && data.status.some((s: any) => 
+      ["active", "ok"].includes(String(s).toLowerCase())
+    );
+    
+    // 3. nameservers is a non-empty array
     const hasNameservers = Array.isArray(data?.nameservers) && data.nameservers.length > 0;
     
-    // 3. entities contains registrar/registrant role
+    // 4. entities contains registrar/registrant role
     const hasRegistrarEntity = data?.entities?.some((e: any) => 
       Array.isArray(e?.roles) && e.roles.some((role: string) => 
         ["registrar", "registrant"].includes(role.toLowerCase())
       )
     );
     
+    // 5. objectClassName includes "domain"
+    const hasDomainClass = Array.isArray(data?.objectClassName) && 
+      data.objectClassName.some((c: any) => String(c).toLowerCase().includes("domain"));
+    
     // If any indicator holds → registered
-    if (hasRegistrationEvent || hasNameservers || hasRegistrarEntity) {
+    if (hasRegistrationEvent || hasActiveStatus || hasNameservers || hasRegistrarEntity || hasDomainClass) {
       // Find earliest registration date
       const registrationDates = data?.events
         ?.filter((e: any) => e?.eventAction?.toLowerCase() === "registration")
