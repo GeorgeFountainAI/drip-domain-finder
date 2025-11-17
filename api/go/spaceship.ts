@@ -1,29 +1,26 @@
-import type { VercelRequest, VercelResponse } from '@vercel/node';
+// api/go/spaceship.ts
+import type { NextApiRequest, NextApiResponse } from "next";
 
-const DOMAIN_RE = /^(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,}$/i;
+export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+  const { domain } = req.query;
+  if (!domain) {
+    return res.status(400).json({ error: "Missing domain parameter" });
+  }
 
-export default async function handler(req: VercelRequest, res: VercelResponse) {
+  const API_USER = process.env.NAMECHEAP_API_USER;
+  const API_KEY = process.env.NAMECHEAP_API_KEY;
+  const CLIENT_IP = process.env.NAMECHEAP_CLIENT_IP;
+
+  const url = `https://api.namecheap.com/xml.response?ApiUser=${API_USER}&ApiKey=${API_KEY}&UserName=${API_USER}&ClientIp=${CLIENT_IP}&Command=namecheap.domains.check&DomainList=${domain}`;
+
   try {
-    const domain = String(req.query.d || '').trim();
+    const response = await fetch(url);
+    const xml = await response.text();
 
-    if (!domain) {
-      return res.status(400).json({ error: 'Missing required query param: d' });
-    }
-    if (!DOMAIN_RE.test(domain)) {
-      return res.status(400).json({ error: 'Invalid domain format', domain });
-    }
-
-    const aff = 'https://spaceship.sjv.io/APQy0D';
-    const url = new URL('https://www.spaceship.com/domains/search');
-    url.searchParams.set('query', domain);
-    if (aff) url.searchParams.set('aff', aff);
-
-    // Use 302 so client navigates and preserves analytics.
-    res.setHeader('Location', url.toString());
-    return res.status(302).end();
+    // Basic XML parse: look for Available="true"
+    const available = xml.includes('Available="true"');
+    res.status(200).json({ domain, available });
   } catch (err: any) {
-    return res
-      .status(400)
-      .json({ error: 'Redirect failed', detail: String(err?.message || err) });
+    res.status(500).json({ error: "Namecheap lookup failed", details: err.message });
   }
 }
