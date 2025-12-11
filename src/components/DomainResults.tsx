@@ -1,12 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useSearchStore } from '../lib/store';
 import { useCheckDomain } from '@/hooks/useCheckDomain';
-
-// Generate Namecheap API redirect link for domain results
-const getNamecheapLink = (domain: string) => {
-  if (!domain) return "/api/go/namecheap"; // fallback
-  return `/api/go/namecheap?d=${encodeURIComponent(domain.trim().toLowerCase())}`;
-};
+import { getNamecheapLink } from '@/utils/getNamecheapLink';
 
 // In-memory cache for domain checks to avoid duplicate API calls
 const domainCheckCache = new Map<string, { status: string; price?: number | null }>();

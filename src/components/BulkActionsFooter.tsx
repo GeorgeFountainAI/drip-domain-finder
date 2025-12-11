@@ -5,13 +5,7 @@ import { ShoppingCart, Download, Copy, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { trackBulkBuy, trackExportCSV, trackCopyDomains, trackClearSelection } from "@/utils/analytics";
 import { toast } from "sonner";
-
-// Generate dynamic Namecheap affiliate deep link
-const getNamecheapLink = (domain: string) => {
-  if (!domain) return "https://namecheap.com";
-  const cleanDomain = encodeURIComponent(domain.trim().toLowerCase());
-  return `https://namecheap.pxf.io/gOzBbX/search?domain=${cleanDomain}`;
-};
+import { getNamecheapLink } from "@/utils/getNamecheapLink";
 
 const BulkActionsFooter = () => {
   const { selectedDomains, clear } = useSelectedDomains();

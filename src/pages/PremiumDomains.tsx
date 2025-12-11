@@ -8,6 +8,7 @@ import { useToast } from "@/hooks/use-toast";
 import { ModernHeader } from "@/components/ModernHeader";
 import { supabase } from "@/integrations/supabase/client";
 import domainDripLogo from "/lovable-uploads/54151200-6cf6-4c1b-b88a-bc150fc097c8.png";
+import { getNamecheapLink } from "@/utils/getNamecheapLink";
 
 interface Domain {
   name: string;
@@ -87,12 +88,6 @@ const PremiumDomains = () => {
     } finally {
       setLoading(false);
     }
-  };
-
-  const getNamecheapLink = (domain: string) => {
-    if (!domain) return "https://namecheap.com";
-    const cleanDomain = encodeURIComponent(domain.trim().toLowerCase());
-    return `https://namecheap.pxf.io/gOzBbX/search?domain=${cleanDomain}`;
   };
 
   const handleBuyDomain = (domain: Domain) => {
