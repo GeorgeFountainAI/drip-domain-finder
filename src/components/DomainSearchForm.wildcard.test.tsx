@@ -45,8 +45,6 @@ vi.mock('@/hooks/useAdminBypass', () => ({
   useAdminBypass: () => ({ isAdmin: false })
 }));
 
-// Remove RequireCredits mock since it's no longer used
-
 vi.mock('@/components/SearchHistory', () => ({
   SearchHistory: () => <div>Search History</div>
 }));
@@ -84,7 +82,7 @@ describe('DomainSearchForm - Wildcard Search', () => {
     expect(domainElements.length).toBeGreaterThanOrEqual(1);
   });
 
-  it('should render Buy buttons with correct attributes for wildcard results', async () => {
+  it('should render Buy buttons with direct Namecheap URLs for wildcard results', async () => {
     const user = userEvent.setup();
     renderComponent();
 
@@ -97,15 +95,17 @@ describe('DomainSearchForm - Wildcard Search', () => {
     // Give time for search to complete
     await new Promise(resolve => setTimeout(resolve, 200));
 
-    // Find Buy buttons
-    const buyButtons = document.querySelectorAll('a[href*="/api/go/namecheap"]');
+    // Find Buy buttons - should have direct Namecheap URLs, not API redirects
+    const buyButtons = document.querySelectorAll('a[href*="namecheap.com"]');
     expect(buyButtons.length).toBeGreaterThan(0);
 
     // Check first Buy button attributes
     const firstBuyButton = buyButtons[0] as HTMLAnchorElement;
     expect(firstBuyButton.target).toBe('_blank');
     expect(firstBuyButton.rel).toBe('noopener noreferrer');
-    expect(firstBuyButton.href).toMatch(/\/api\/go\/namecheap\?d=.*\.com/);
+    expect(firstBuyButton.href).toContain('namecheap.com');
+    expect(firstBuyButton.href).toContain('affid=gOzBbX');
+    expect(firstBuyButton.href).not.toContain('/api/go/');
   });
 
   it('should display FlipScore pills for wildcard results', async () => {

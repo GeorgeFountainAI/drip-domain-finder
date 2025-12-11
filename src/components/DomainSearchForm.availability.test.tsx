@@ -45,8 +45,6 @@ vi.mock('@/hooks/useAdminBypass', () => ({
   useAdminBypass: () => ({ isAdmin: false })
 }));
 
-// Remove RequireCredits mock since it's no longer used
-
 vi.mock('@/components/SearchHistory', () => ({
   SearchHistory: () => <div>Search History</div>
 }));
@@ -118,7 +116,7 @@ describe('DomainSearchForm - Availability Filtering', () => {
     expect(document.body.textContent).not.toContain('ai.com');
   });
 
-  it('should render available domains with correct Buy button', async () => {
+  it('should render available domains with correct Buy button using direct Namecheap URL', async () => {
     const user = userEvent.setup();
     renderComponent();
 
@@ -136,10 +134,14 @@ describe('DomainSearchForm - Availability Filtering', () => {
     // Check that getai.com is rendered and validated
     expect(document.body.textContent).toContain('getai.com');
 
-    // Check for Buy button with correct attributes
+    // Check for Buy button with correct attributes - direct Namecheap URL
     const buyButton = document.querySelector('[data-testid="buy-button"]');
     expect(buyButton).toBeTruthy();
-    expect(buyButton).toHaveAttribute('href', '/api/go/namecheap?d=getai.com');
+    const href = buyButton?.getAttribute('href') || '';
+    expect(href).toContain('namecheap.com');
+    expect(href).toContain('domain=getai.com');
+    expect(href).toContain('affid=gOzBbX');
+    expect(href).not.toContain('/api/go/');
     expect(buyButton).toHaveAttribute('target', '_blank');
     expect(buyButton).toHaveAttribute('rel', 'noopener noreferrer');
     expect(buyButton?.textContent).toContain('Buy on Namecheap');
