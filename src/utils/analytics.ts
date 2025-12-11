@@ -99,7 +99,7 @@ export const trackDomainBuyClick = (domain: string, flipScore?: number) => {
     domain,
     flipScore,
     action: 'buy_click',
-    source: 'spaceship_link'
+    source: 'namecheap_link'
   });
 };
 

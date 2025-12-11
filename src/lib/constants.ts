@@ -10,7 +10,7 @@ export const APP_CONFIG = {
   APP_BASE_URL: 'https://domaindrip.ai',
   
   // Affiliate links
-  SPACESHIP_AFFILIATE_LINK: 'https://spaceship.sjv.io/APQy0D',
+  NAMECHEAP_AFFILIATE_BASE: 'https://namecheap.pxf.io/gOzBbX/search',
   
   // Stripe (test keys) 
   STRIPE_PUBLISHABLE_KEY: 'pk_test_51QVhBzGzNKcEgtoGvcyAudLOs7WViSJns6SLGu3NLfQcSclOPE8JYGJLf6qvutRfEmZhUjKH4FUyM2FT9o9BXdMJ007gIdOSJd',

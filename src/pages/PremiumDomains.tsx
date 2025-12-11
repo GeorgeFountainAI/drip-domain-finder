@@ -89,10 +89,15 @@ const PremiumDomains = () => {
     }
   };
 
-  const handleBuyDomain = async (domain: Domain) => {
+  const getNamecheapLink = (domain: string) => {
+    if (!domain) return "https://namecheap.com";
+    const cleanDomain = encodeURIComponent(domain.trim().toLowerCase());
+    return `https://namecheap.pxf.io/gOzBbX/search?domain=${cleanDomain}`;
+  };
+
+  const handleBuyDomain = (domain: Domain) => {
     const domainName = `${domain.name}${domain.tld}`;
-    const { buildSpaceshipUrl } = await import('@/utils/spaceship');
-    const affiliateUrl = buildSpaceshipUrl(domainName);
+    const affiliateUrl = getNamecheapLink(domainName);
     window.open(affiliateUrl, '_blank', 'noopener noreferrer');
   };
 

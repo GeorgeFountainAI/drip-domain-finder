@@ -3,9 +3,15 @@ import { useSelectedDomains, useSearchStore } from "@/lib/store";
 import { Button } from "@/components/ui/button";
 import { ShoppingCart, Download, Copy, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { buildSpaceshipUrl } from "@/utils/spaceship";
 import { trackBulkBuy, trackExportCSV, trackCopyDomains, trackClearSelection } from "@/utils/analytics";
 import { toast } from "sonner";
+
+// Generate dynamic Namecheap affiliate deep link
+const getNamecheapLink = (domain: string) => {
+  if (!domain) return "https://namecheap.com";
+  const cleanDomain = encodeURIComponent(domain.trim().toLowerCase());
+  return `https://namecheap.pxf.io/gOzBbX/search?domain=${cleanDomain}`;
+};
 
 const BulkActionsFooter = () => {
   const { selectedDomains, clear } = useSelectedDomains();
@@ -15,10 +21,6 @@ const BulkActionsFooter = () => {
   if (selectedDomains.length === 0) {
     return null;
   }
-
-  const buildBuyLink = (domain: string) => {
-    return buildSpaceshipUrl(domain);
-  };
 
   const handleBuyAll = async () => {
     const selectedResults = results.filter(r => 
@@ -35,7 +37,7 @@ const BulkActionsFooter = () => {
         });
         
         if (!error && data?.ok) {
-          const url = buildSpaceshipUrl(domain);
+          const url = getNamecheapLink(domain);
           window.open(url, '_blank', 'noopener,noreferrer');
         }
       } catch (error) {

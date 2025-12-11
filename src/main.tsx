@@ -4,9 +4,9 @@ import './index.css'
 
 // Log example affiliate URL for verification
 if (import.meta.env.DEV) {
-  import('./utils/spaceship').then(({ buildSpaceshipUrl }) => {
-    console.log('Example BUY URL:', buildSpaceshipUrl('mytest123.com'));
-  });
+  const exampleDomain = 'mytest123.com';
+  const exampleUrl = `https://namecheap.pxf.io/gOzBbX/search?domain=${encodeURIComponent(exampleDomain)}`;
+  console.log('Example BUY URL:', exampleUrl);
 }
 
 createRoot(document.getElementById("root")!).render(
