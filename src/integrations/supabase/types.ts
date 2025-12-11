@@ -217,10 +217,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      admin_heal_zero_credit_users: {
-        Args: Record<PropertyKey, never>
-        Returns: Json
-      }
+      admin_heal_zero_credit_users: { Args: never; Returns: Json }
       admin_update_user_credits: {
         Args: { credit_change: number; target_user_id: string }
         Returns: Json
@@ -238,7 +235,7 @@ export type Database = {
         Returns: Json
       }
       get_all_users_with_credits: {
-        Args: Record<PropertyKey, never>
+        Args: never
         Returns: {
           created_at: string
           current_credits: number
@@ -248,18 +245,9 @@ export type Database = {
           user_id: string
         }[]
       }
-      get_credit_balance: {
-        Args: Record<PropertyKey, never>
-        Returns: number
-      }
-      is_admin: {
-        Args: { user_id?: string }
-        Returns: boolean
-      }
-      verify_admin_access: {
-        Args: Record<PropertyKey, never>
-        Returns: boolean
-      }
+      get_credit_balance: { Args: never; Returns: number }
+      is_admin: { Args: { user_id?: string }; Returns: boolean }
+      verify_admin_access: { Args: never; Returns: boolean }
     }
     Enums: {
       [_ in never]: never
