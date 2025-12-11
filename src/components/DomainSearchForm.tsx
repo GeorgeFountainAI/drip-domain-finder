@@ -874,13 +874,13 @@ export const DomainSearchForm = forwardRef<DomainSearchFormRef, DomainSearchForm
                                 </div>
                               )}
                               <a
-                                href={`/api/go/spaceship?d=${encodeURIComponent(domain.name)}`}
+                                href={`https://namecheap.pxf.io/gOzBbX/search?domain=${encodeURIComponent(domain.name.trim().toLowerCase())}`}
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 className="mt-2 inline-flex items-center justify-center px-3 py-1.5 text-sm font-medium bg-primary text-primary-foreground rounded-md hover:bg-primary/90"
                                 data-testid="buy-button"
                               >
-                                Buy on Spaceship
+                                Buy on Namecheap
                               </a>
                             </div>
                           )}

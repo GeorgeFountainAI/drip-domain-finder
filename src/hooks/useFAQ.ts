@@ -22,7 +22,7 @@ const DEFAULT_FAQ_DATA: FAQItem[] = [
   {
     id: "purchase-domain",
     question: "How do I purchase a domain I like?",
-    answer: "When you find a domain you want, click the 'Buy Domain' button. This will redirect you to our trusted partner Spaceship.com where you can complete the purchase securely. We earn a small affiliate commission to keep DomainDrip running, but this doesn't affect your purchase price."
+    answer: "When you find a domain you want, click the 'Buy on Namecheap' button. This will redirect you to our trusted partner Namecheap.com where you can complete the purchase securely. We earn a small affiliate commission to keep DomainDrip running, but this doesn't affect your purchase price."
   },
   {
     id: "signup-credits",
