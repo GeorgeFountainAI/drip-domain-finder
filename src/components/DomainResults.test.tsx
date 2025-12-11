@@ -249,7 +249,7 @@ describe('DomainResults', () => {
       const { getByTestId } = render(<DomainResults />);
       
       const buyLink = getByTestId('buy-button');
-      expect(buyLink).toHaveAttribute('href', 'https://spaceship.sjv.io/APQy0D');
+      expect(buyLink).toHaveAttribute('href', '/api/go/namecheap?d=test.com');
     });
 
     it('should never include deprecated paths', () => {

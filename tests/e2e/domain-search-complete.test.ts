@@ -4,7 +4,7 @@ import userEvent from '@testing-library/user-event';
 import '@testing-library/jest-dom';
 import { DomainSearchForm } from '../../src/components/DomainSearchForm';
 import DomainResults from '../../src/components/DomainResults';
-import { buildSpaceshipUrl } from '../../src/utils/spaceship';
+import { getNamecheapLink } from '../../src/utils/getNamecheapLink';
 import { analytics } from '../../src/utils/analytics';
 
 // Mock Supabase
@@ -181,24 +181,19 @@ describe('End-to-End Domain Search Flow', () => {
     });
   });
 
-  describe('Spaceship Link Generation', () => {
-    it('should generate valid affiliate URLs with tracking parameters', () => {
+  describe('Namecheap Link Generation', () => {
+    it('should generate valid affiliate URLs with domain parameter', () => {
       const testDomains = ['example.com', 'test.net', 'my-domain.org'];
       
       testDomains.forEach(domain => {
-        const url = buildSpaceshipUrl(domain);
+        const url = getNamecheapLink(domain);
         
-        // Should contain CJ tracking
-        expect(url).toMatch(/spaceship\.sjv\.io.*6354443.*1794549.*21274/);
-        expect(url).toContain('url=');
+        // Should use the API redirect pattern
+        expect(url).toContain('/api/go/namecheap?d=');
+        expect(url).toContain(encodeURIComponent(domain));
         
-        // Should be a valid URL
-        expect(() => new URL(url)).not.toThrow();
-        
-        // Should properly encode the target URL
-        const parsedUrl = new URL(url);
-        const targetUrl = parsedUrl.searchParams.get('url');
-        expect(targetUrl).toContain(encodeURIComponent(domain));
+        // Should be a valid relative URL path
+        expect(url.startsWith('/api/go/namecheap')).toBe(true);
       });
     });
 
