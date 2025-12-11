@@ -2,11 +2,10 @@ import React, { useEffect, useState } from 'react';
 import { useSearchStore } from '../lib/store';
 import { useCheckDomain } from '@/hooks/useCheckDomain';
 
-// Generate dynamic Namecheap affiliate deep link for domain results
+// Generate Namecheap API redirect link for domain results
 const getNamecheapLink = (domain: string) => {
-  if (!domain) return "https://namecheap.com"; // fallback
-  const cleanDomain = encodeURIComponent(domain.trim().toLowerCase());
-  return `https://namecheap.pxf.io/gOzBbX/search?domain=${cleanDomain}`;
+  if (!domain) return "/api/go/namecheap"; // fallback
+  return `/api/go/namecheap?d=${encodeURIComponent(domain.trim().toLowerCase())}`;
 };
 
 // In-memory cache for domain checks to avoid duplicate API calls
