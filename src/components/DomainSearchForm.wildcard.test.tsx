@@ -98,14 +98,14 @@ describe('DomainSearchForm - Wildcard Search', () => {
     await new Promise(resolve => setTimeout(resolve, 200));
 
     // Find Buy buttons
-    const buyButtons = document.querySelectorAll('a[href*="/api/go/spaceship"]');
+    const buyButtons = document.querySelectorAll('a[href*="/api/go/namecheap"]');
     expect(buyButtons.length).toBeGreaterThan(0);
 
     // Check first Buy button attributes
     const firstBuyButton = buyButtons[0] as HTMLAnchorElement;
     expect(firstBuyButton.target).toBe('_blank');
     expect(firstBuyButton.rel).toBe('noopener noreferrer');
-    expect(firstBuyButton.href).toMatch(/\/api\/go\/spaceship\?d=.*\.com/);
+    expect(firstBuyButton.href).toMatch(/\/api\/go\/namecheap\?d=.*\.com/);
   });
 
   it('should display FlipScore pills for wildcard results', async () => {

@@ -30,6 +30,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import searchDomains from "@/api/domainSearchClient";
 import { generateWildcardSuggestions } from "@/utils/domainGenerator";
 import { supabase } from "@/integrations/supabase/client";
+import { getNamecheapLink } from "@/utils/getNamecheapLink";
 
 interface Domain {
   name: string;
@@ -874,7 +875,7 @@ export const DomainSearchForm = forwardRef<DomainSearchFormRef, DomainSearchForm
                                 </div>
                               )}
                               <a
-                                href={`https://namecheap.pxf.io/gOzBbX/search?domain=${encodeURIComponent(domain.name.trim().toLowerCase())}`}
+                                href={getNamecheapLink(domain.name)}
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 className="mt-2 inline-flex items-center justify-center px-3 py-1.5 text-sm font-medium bg-primary text-primary-foreground rounded-md hover:bg-primary/90"

@@ -139,10 +139,10 @@ describe('DomainSearchForm - Availability Filtering', () => {
     // Check for Buy button with correct attributes
     const buyButton = document.querySelector('[data-testid="buy-button"]');
     expect(buyButton).toBeTruthy();
-    expect(buyButton).toHaveAttribute('href', '/api/go/spaceship?d=getai.com');
+    expect(buyButton).toHaveAttribute('href', '/api/go/namecheap?d=getai.com');
     expect(buyButton).toHaveAttribute('target', '_blank');
     expect(buyButton).toHaveAttribute('rel', 'noopener noreferrer');
-    expect(buyButton?.textContent).toContain('Buy on Spaceship');
+    expect(buyButton?.textContent).toContain('Buy on Namecheap');
   });
 
   it('should validate domains in batches using edge function', async () => {
