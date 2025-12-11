@@ -2,6 +2,13 @@ import React, { useEffect, useState } from 'react';
 import { useSearchStore } from '../lib/store';
 import { useCheckDomain } from '@/hooks/useCheckDomain';
 
+// Generate dynamic Namecheap affiliate deep link for domain results
+const getNamecheapLink = (domain: string) => {
+  if (!domain) return "https://namecheap.com"; // fallback
+  const cleanDomain = encodeURIComponent(domain.trim().toLowerCase());
+  return `https://namecheap.pxf.io/gOzBbX/search?domain=${cleanDomain}`;
+};
+
 // In-memory cache for domain checks to avoid duplicate API calls
 const domainCheckCache = new Map<string, { status: string; price?: number | null }>();
 
@@ -57,7 +64,6 @@ export default function DomainResults() {
   return (
     <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 px-4" data-testid="domain-results">
       {results.map((domain) => {
-        const apiRedirect = `/api/go/spaceship?d=${encodeURIComponent(domain.domain)}`;
         const domainStatus = domainStatuses[domain.domain];
         const status = domainStatus?.status || 'unknown';
         const isAvailable = status === 'available';
@@ -114,13 +120,13 @@ export default function DomainResults() {
               {isAvailable && (
                 <div className="w-full">
                   <a
-                    href={apiRedirect}
+                    href={getNamecheapLink(domain.domain)}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="mt-3 inline-flex w-full items-center justify-center px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 text-sm font-medium transition-colors mobile-touch-target"
                     data-testid="buy-button"
                   >
-                    Buy on Spaceship
+                    Buy on Namecheap
                   </a>
                 </div>
               )}
