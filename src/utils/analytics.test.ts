@@ -1,9 +1,18 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { analytics, trackDomainBuyClick, trackDomainSelection, trackBulkBuy } from './analytics';
 
+// Mock localStorage
+const localStorageMock = {
+  getItem: vi.fn(() => '[]'),
+  setItem: vi.fn(),
+  removeItem: vi.fn(),
+};
+Object.defineProperty(global, 'localStorage', { value: localStorageMock });
+
 describe('Analytics Logger', () => {
   beforeEach(() => {
     analytics.clear();
+    vi.clearAllMocks();
   });
 
   describe('Domain Interaction Tracking', () => {
@@ -17,7 +26,7 @@ describe('Analytics Logger', () => {
       expect(event).toMatchObject({
         domain: 'example.com',
         action: 'buy_click',
-        source: 'spaceship_link',
+        source: 'namecheap_link',
         flipScore: 85
       });
       expect(event.timestamp).toBeTypeOf('number');
@@ -42,7 +51,7 @@ describe('Analytics Logger', () => {
       expect(event).toMatchObject({
         domain: 'simple.com',
         action: 'buy_click',
-        source: 'spaceship_link'
+        source: 'namecheap_link'
       });
       expect(event.flipScore).toBeUndefined();
     });

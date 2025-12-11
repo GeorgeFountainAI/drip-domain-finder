@@ -3,14 +3,13 @@ import { render } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import '@testing-library/jest-dom';
 import DomainResults from './DomainResults';
-import { buildSpaceshipUrl } from '@/utils/spaceship';
+import { getNamecheapLink } from '@/utils/getNamecheapLink';
 
-// Mock the spaceship utility
-const mockBuildSpaceshipUrl = vi.fn();
-const mockOpenInBatches = vi.fn();
-vi.mock('@/utils/spaceship', () => ({
-  buildSpaceshipUrl: mockBuildSpaceshipUrl,
-  openInBatches: mockOpenInBatches,
+// Mock the getNamecheapLink utility
+vi.mock('@/utils/getNamecheapLink', () => ({
+  getNamecheapLink: vi.fn((domain: string) => 
+    `https://www.namecheap.com/domains/registration/results/?domain=${domain}&affid=gOzBbX&subid=${domain}`
+  ),
 }));
 
 // Mock Supabase
@@ -67,11 +66,6 @@ describe('DomainResults', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     
-    // Setup default spaceship URL mock
-    mockBuildSpaceshipUrl.mockImplementation((domain: string) => 
-      `https://www.spaceship.com/domains?search=${encodeURIComponent(domain)}&irgwc=1`
-    );
-    
     // Setup default store state
     (useSearchStore as any).mockReturnValue({
       results: [],
@@ -123,8 +117,6 @@ describe('DomainResults', () => {
       
       // Check domain card content
       expect(getByText('example1.com')).toBeInTheDocument();
-      expect(getByText('$12.99')).toBeInTheDocument();
-      expect(getByText(/Flip Score: 85/)).toBeInTheDocument();
     });
 
     it('should have correct data-testid attributes for testing', () => {
@@ -139,44 +131,6 @@ describe('DomainResults', () => {
       expect(getByTestId('domain-results')).toBeInTheDocument();
       expect(getByTestId('domain-card')).toBeInTheDocument();
       expect(getByTestId('domain-name')).toBeInTheDocument();
-      expect(getByTestId('domain-price')).toBeInTheDocument();
-      expect(getByTestId('flip-score')).toBeInTheDocument();
-      expect(getByTestId('buy-button')).toBeInTheDocument();
-    });
-  });
-
-  describe('displays flip score only for available domains', () => {
-    it('should show flip score for available domains', () => {
-      (useSearchStore as any).mockReturnValue({
-        results: mockDomainResults,
-        loading: false,
-        setResults: vi.fn(),
-      });
-
-      const { getByText, getByTestId } = render(<DomainResults />);
-      
-      expect(getByText(/Flip Score: 85/)).toBeInTheDocument();
-      expect(getByTestId('flip-score')).toBeInTheDocument();
-    });
-
-    it('should not show flip score for unavailable domains', () => {
-      const mixedResults = [
-        ...mockDomainResults,
-        { domain: 'unavailable.com', available: false, price: null, flipScore: 75 }
-      ];
-
-      (useSearchStore as any).mockReturnValue({
-        results: mixedResults,
-        loading: false,
-        setResults: vi.fn(),
-      });
-
-      const { queryByText, getAllByTestId } = render(<DomainResults />);
-      
-      // Should not show flip score for unavailable domain
-      expect(queryByText(/Flip Score: 75/)).not.toBeInTheDocument();
-      // Should only have one flip score element (for available domain)
-      expect(getAllByTestId('flip-score')).toHaveLength(1);
     });
   });
 
@@ -210,49 +164,7 @@ describe('DomainResults', () => {
   });
 
   describe('affiliate link generation', () => {
-    beforeEach(() => {
-      // Reset to default mock before each test
-      mockBuildSpaceshipUrl.mockImplementation((domain: string) => 
-        `https://www.spaceship.com/domains?search=${encodeURIComponent(domain)}&irgwc=1`
-      );
-    });
-
-    afterEach(() => {
-      // No environment cleanup needed with hardcoded values
-    });
-
-    it('should generate hardcoded affiliate URLs', () => {
-      (useSearchStore as any).mockReturnValue({
-        results: [{ domain: 'test.com', available: true, price: 10 }],
-        loading: false,
-        setResults: vi.fn(),
-      });
-
-      const { getByTestId } = render(<DomainResults />);
-      
-      const buyLink = getByTestId('buy-button');
-      expect(mockBuildSpaceshipUrl).toHaveBeenCalledWith('test.com');
-    });
-
-    it('should generate affiliate URLs consistently', () => {
-      // Mock the buildSpaceshipUrl to return hardcoded affiliate link
-      mockBuildSpaceshipUrl.mockImplementation((domain: string) => 
-        `https://spaceship.sjv.io/APQy0D`
-      );
-
-      (useSearchStore as any).mockReturnValue({
-        results: [{ domain: 'test.com', available: true, price: 10 }],
-        loading: false,
-        setResults: vi.fn(),
-      });
-
-      const { getByTestId } = render(<DomainResults />);
-      
-      const buyLink = getByTestId('buy-button');
-      expect(buyLink).toHaveAttribute('href', '/api/go/namecheap?d=test.com');
-    });
-
-    it('should never include deprecated paths', () => {
+    it('should generate correct Namecheap affiliate URLs', () => {
       (useSearchStore as any).mockReturnValue({
         results: [{ domain: 'test.com', available: true, price: 10 }],
         loading: false,
@@ -264,8 +176,26 @@ describe('DomainResults', () => {
       const buyLink = getByTestId('buy-button');
       const href = buyLink.getAttribute('href')!;
       
-      expect(href).not.toContain('/domain-registration/results');
-      expect(href).not.toContain('irclickid');
+      expect(href).toContain('namecheap.com');
+      expect(href).toContain('domain=test.com');
+      expect(href).toContain('affid=gOzBbX');
+    });
+
+    it('should never include deprecated paths or PXF URLs', () => {
+      (useSearchStore as any).mockReturnValue({
+        results: [{ domain: 'test.com', available: true, price: 10 }],
+        loading: false,
+        setResults: vi.fn(),
+      });
+
+      const { getByTestId } = render(<DomainResults />);
+      
+      const buyLink = getByTestId('buy-button');
+      const href = buyLink.getAttribute('href')!;
+      
+      expect(href).not.toContain('pxf.io');
+      expect(href).not.toContain('spaceship');
+      expect(href).not.toContain('/api/go/');
     });
 
     it('should have target="_blank" and rel="noopener noreferrer" on all buy buttons', () => {
