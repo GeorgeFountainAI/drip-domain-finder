@@ -2,6 +2,8 @@ import React, { useEffect, useState } from 'react';
 import { useSearchStore } from '../lib/store';
 import { useCheckDomain } from '@/hooks/useCheckDomain';
 import { getNamecheapLink } from '@/utils/getNamecheapLink';
+import { RefreshCw } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 // In-memory cache for domain checks to avoid duplicate API calls
 const domainCheckCache = new Map<string, { status: string; price?: number | null }>();
@@ -9,6 +11,7 @@ const domainCheckCache = new Map<string, { status: string; price?: number | null
 export default function DomainResults() {
   const { results, loading } = useSearchStore();
   const [domainStatuses, setDomainStatuses] = useState<Record<string, { status: string; price?: number | null }>>({});
+  const [retryingDomains, setRetryingDomains] = useState<Set<string>>(new Set());
   const { checkDomain } = useCheckDomain();
 
   useEffect(() => {
@@ -39,10 +42,12 @@ export default function DomainResults() {
         const status = result ? { 
           status: result.status,
           price: result.priceUsd 
-        } : { status: 'unknown' };
+        } : { status: 'error' }; // Default to 'error' instead of 'unknown'
         
-        // Cache the result
-        domainCheckCache.set(domainName, status);
+        // Only cache successful checks, not errors
+        if (result && result.status !== 'error') {
+          domainCheckCache.set(domainName, status);
+        }
         
         // Update state
         setDomainStatuses(prev => ({ ...prev, [domainName]: status }));
@@ -52,6 +57,32 @@ export default function DomainResults() {
     checkAllDomains();
   }, [results, checkDomain]);
 
+  // Handle retry for a specific domain
+  const handleRetry = async (domainName: string) => {
+    setRetryingDomains(prev => new Set(prev).add(domainName));
+    
+    try {
+      const result = await checkDomain(domainName);
+      const status = result ? { 
+        status: result.status,
+        price: result.priceUsd 
+      } : { status: 'error' };
+      
+      // Cache if successful
+      if (result && result.status !== 'error') {
+        domainCheckCache.set(domainName, status);
+      }
+      
+      setDomainStatuses(prev => ({ ...prev, [domainName]: status }));
+    } finally {
+      setRetryingDomains(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(domainName);
+        return newSet;
+      });
+    }
+  };
+
   if (loading) return <div className="text-center mt-6">Loading results...</div>;
   if (!results || results.length === 0) return null;
 
@@ -59,9 +90,11 @@ export default function DomainResults() {
     <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 px-4" data-testid="domain-results">
       {results.map((domain) => {
         const domainStatus = domainStatuses[domain.domain];
-        const status = domainStatus?.status || 'unknown';
+        const status = domainStatus?.status || 'checking';
         const isAvailable = status === 'available';
         const isRegistered = status === 'registered';
+        const isError = status === 'error';
+        const isChecking = status === 'checking' || retryingDomains.has(domain.domain);
         const price = domainStatus?.price ? `$${domainStatus.price.toFixed(2)}` : null;
         const flipScore = domain.flipScore ?? Math.floor(Math.random() * 41) + 60;
 
@@ -79,7 +112,27 @@ export default function DomainResults() {
 
               {/* Price & Status */}
               <div className="text-sm text-muted-foreground" data-testid="domain-price">
-                {isRegistered ? (
+                {isChecking ? (
+                  <span className="inline-flex items-center rounded-full bg-blue-100 px-2 py-0.5 text-blue-800 text-xs">
+                    <RefreshCw className="h-3 w-3 mr-1 animate-spin" />
+                    Checking...
+                  </span>
+                ) : isError ? (
+                  <div className="flex items-center gap-2">
+                    <span className="inline-flex items-center rounded-full bg-yellow-100 px-2 py-0.5 text-yellow-800 text-xs">
+                      Unable to verify
+                    </span>
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      onClick={() => handleRetry(domain.domain)}
+                      className="h-6 px-2 text-xs"
+                    >
+                      <RefreshCw className="h-3 w-3 mr-1" />
+                      Retry
+                    </Button>
+                  </div>
+                ) : isRegistered ? (
                   <span className="inline-flex items-center rounded-full bg-red-100 px-2 py-0.5 text-red-800 text-xs">
                     Registered
                   </span>
@@ -124,6 +177,20 @@ export default function DomainResults() {
                   </a>
                 </div>
               )}
+              
+              {/* Retry message shows Buy link for error state */}
+              {isError && (
+                <div className="w-full">
+                  <a
+                    href={getNamecheapLink(domain.domain)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="mt-3 inline-flex w-full items-center justify-center px-4 py-2 bg-secondary text-secondary-foreground rounded-md hover:bg-secondary/90 text-sm font-medium transition-colors mobile-touch-target"
+                  >
+                    Check on Namecheap
+                  </a>
+                </div>
+              )}
             </div>
           </div>
         );
@@ -132,7 +199,7 @@ export default function DomainResults() {
       {/* Trust Layer Badge */}
       {results.length > 0 && (
         <div className="text-sm text-muted-foreground text-right mt-6 pr-2 col-span-full" data-testid="trust-layer">
-          🛡️ <span className="text-primary font-semibold">Trust Layer Certified</span> &nbsp;•&nbsp; Tested. Logged. Safe to Buy.
+          🛡️ <span className="text-primary font-semibold">Namecheap Verified</span> &nbsp;•&nbsp; Live availability check.
         </div>
       )}
     </div>

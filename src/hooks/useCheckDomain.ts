@@ -2,9 +2,11 @@ import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 
 type CheckResult = {
-  status: 'available' | 'registered' | 'reserved' | 'unknown';
+  status: 'available' | 'registered' | 'reserved' | 'unknown' | 'error';
   createdAt?: string;
   priceUsd?: number | null;
+  source?: string;
+  message?: string;
 };
 
 export function useCheckDomain() {
@@ -24,19 +26,25 @@ export function useCheckDomain() {
         throw functionError;
       }
 
-      // Edge function now returns { status, createdAt, priceUsd }
+      // Edge function now returns { status, createdAt, priceUsd, source, message }
       const rawData = data as any;
       
       return {
-        status: rawData.status || 'unknown',
+        status: rawData.status || 'error',
         createdAt: rawData.createdAt || undefined,
-        priceUsd: rawData.priceUsd || null
+        priceUsd: rawData.priceUsd || null,
+        source: rawData.source || undefined,
+        message: rawData.message || undefined
       };
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Domain check failed';
       setError(errorMessage);
       console.error('Domain check error:', err);
-      return null;
+      // Return error status instead of null - never default to unavailable
+      return {
+        status: 'error',
+        message: errorMessage
+      };
     } finally {
       setLoading(false);
     }
