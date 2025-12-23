@@ -18,7 +18,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Loader2, Search, Check, X, AlertCircle, Star, TrendingUp, HelpCircle } from "lucide-react";
+import { Loader2, Search, Check, X, AlertCircle, Star, TrendingUp, HelpCircle, RefreshCw } from "lucide-react";
 import { LoadingSparkles } from "@/components/LoadingSparkles";
 import { useToast } from "@/hooks/use-toast";
 import { useConsumeCreditRPC } from '@/hooks/useConsumeCreditRPC';
@@ -40,6 +40,7 @@ interface Domain {
   flipScore?: number; // 1-100, brandability + resale potential
   trendStrength?: number; // 1-5 stars, keyword trends
   validated?: boolean; // Whether the domain has been validated
+  checkStatus?: 'verified' | 'error';
 }
 
 interface DomainSearchFormProps {
@@ -162,11 +163,50 @@ export const DomainSearchForm = forwardRef<DomainSearchFormRef, DomainSearchForm
   const [lastSearchedKeyword, setLastSearchedKeyword] = useState<string>("");
   const [selectedVibe, setSelectedVibe] = useState<string>("");
   const [oneWordOnly, setOneWordOnly] = useState(false);
+  const [retryingAvailability, setRetryingAvailability] = useState<Set<string>>(new Set());
   
   const { toast } = useToast();
   const { consumeCredits, loading: consumingCredit } = useConsumeCreditRPC();
   const { credits, loading: creditsLoading } = useGetCreditBalance();
   const { isAdmin } = useAdminBypass();
+
+  const retryDomainAvailability = async (domainName: string) => {
+    setRetryingAvailability((prev) => new Set(prev).add(domainName));
+
+    try {
+      const { data, error: functionError } = await supabase.functions.invoke('check-domain', {
+        body: { domain: domainName.trim().toLowerCase() }
+      });
+
+      if (functionError) {
+        throw new Error(functionError.message);
+      }
+
+      const status = (data as any)?.status as string | undefined;
+      const priceUsd = (data as any)?.priceUsd as number | null | undefined;
+
+      setDomains((prev) =>
+        prev.map((d) => {
+          if (d.name !== domainName) return d;
+          return {
+            ...d,
+            available: status === 'available',
+            price: typeof priceUsd === 'number' ? priceUsd : d.price,
+            checkStatus: status === 'error' ? 'error' : 'verified',
+          };
+        })
+      );
+    } catch (err) {
+      console.error('Retry domain availability failed:', err);
+      setDomains((prev) => prev.map((d) => (d.name === domainName ? { ...d, checkStatus: 'error' } : d)));
+    } finally {
+      setRetryingAvailability((prev) => {
+        const next = new Set(prev);
+        next.delete(domainName);
+        return next;
+      });
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -834,7 +874,25 @@ export const DomainSearchForm = forwardRef<DomainSearchFormRef, DomainSearchForm
                                 </Badge>
                               </div>
                               <div className="flex items-center gap-2 mb-2">
-                                {domain.available ? (
+                                {domain.checkStatus === 'error' ? (
+                                  <div className="flex items-center gap-2">
+                                    <Badge variant="secondary" className="bg-yellow-100 text-yellow-800">
+                                      <AlertCircle className="mr-1 h-3 w-3" />
+                                      Unable to verify — retry
+                                    </Badge>
+                                    <Button
+                                      type="button"
+                                      variant="ghost"
+                                      size="sm"
+                                      className="h-7 px-2 text-xs"
+                                      onClick={() => retryDomainAvailability(domain.name)}
+                                      disabled={retryingAvailability.has(domain.name)}
+                                    >
+                                      <RefreshCw className={"mr-1 h-3 w-3 " + (retryingAvailability.has(domain.name) ? 'animate-spin' : '')} />
+                                      Retry
+                                    </Button>
+                                  </div>
+                                ) : domain.available ? (
                                   <Badge variant="default" className="bg-green-100 text-green-800 hover:bg-green-200">
                                     <Check className="mr-1 h-3 w-3" />
                                     Available
