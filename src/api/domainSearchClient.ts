@@ -8,6 +8,7 @@ interface Domain {
   tld: string;
   flipScore?: number; // 1-100, brandability + resale potential
   trendStrength?: number; // 1-5 stars, keyword trends
+  checkStatus?: 'verified' | 'error';
 }
 
 interface SearchResponse {
@@ -112,23 +113,55 @@ export const searchDomains = async (keyword: string, forceDemoMode = false): Pro
     return { domains: [], error: 'Keyword is required' };
   }
   
-  // Direct lookup mode: if input matches full domain pattern, return only that domain
+  // Direct lookup mode: if input matches full domain pattern, perform live Namecheap check immediately
   const fullDomainPattern = /^[a-z0-9-]+\.[a-z]{2,}$/i;
   if (fullDomainPattern.test(cleanKeyword)) {
     const exactDomain = cleanKeyword.toLowerCase();
     const tld = exactDomain.split('.').pop() || '';
-    
-    await logSearchAttempt(cleanKeyword, true);
-    
-    return {
-      domains: [{
-        name: exactDomain,
-        available: false, // Will be checked by useCheckDomain hook
-        price: null,
-        tld
-      }],
-      isDemo: false
-    };
+
+    try {
+      // Live availability check at search time (Namecheap is source of truth)
+      const { data: checkData, error: checkError } = await supabase.functions.invoke('check-domain', {
+        body: { domain: exactDomain }
+      });
+
+      if (checkError) {
+        throw new Error(checkError.message);
+      }
+
+      const status = (checkData as any)?.status as string | undefined;
+      const priceUsd = (checkData as any)?.priceUsd as number | null | undefined;
+
+      await logSearchAttempt(cleanKeyword, true);
+
+      return {
+        domains: [{
+          name: exactDomain,
+          available: status === 'available',
+          price: typeof priceUsd === 'number' ? priceUsd : null,
+          tld,
+          // For UI: allow retry state if Namecheap check failed
+          checkStatus: status === 'error' ? 'error' : 'verified'
+        }],
+        isDemo: false
+      };
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Unable to verify availability - please retry';
+      console.error('Direct domain check error:', err);
+      await logSearchAttempt(cleanKeyword, false, errorMessage);
+
+      return {
+        domains: [{
+          name: exactDomain,
+          available: false,
+          price: null,
+          tld,
+          checkStatus: 'error'
+        }],
+        error: 'Unable to verify — retry',
+        isDemo: false
+      };
+    }
   }
   
   // Only use demo mode if explicitly forced (for presentations)
