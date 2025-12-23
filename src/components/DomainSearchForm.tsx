@@ -40,7 +40,7 @@ interface Domain {
   flipScore?: number; // 1-100, brandability + resale potential
   trendStrength?: number; // 1-5 stars, keyword trends
   validated?: boolean; // Whether the domain has been validated
-  checkStatus?: 'verified' | 'error';
+  checkStatus?: 'verified' | 'error' | 'pending';
 }
 
 interface DomainSearchFormProps {
@@ -874,7 +874,7 @@ export const DomainSearchForm = forwardRef<DomainSearchFormRef, DomainSearchForm
                                 </Badge>
                               </div>
                               <div className="flex items-center gap-2 mb-2">
-                                {domain.checkStatus === 'error' ? (
+                                {domain.checkStatus === 'error' || domain.checkStatus === 'pending' ? (
                                   <div className="flex items-center gap-2">
                                     <Badge variant="secondary" className="bg-yellow-100 text-yellow-800">
                                       <AlertCircle className="mr-1 h-3 w-3" />

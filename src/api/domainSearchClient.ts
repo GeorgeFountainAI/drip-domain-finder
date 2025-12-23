@@ -8,7 +8,7 @@ interface Domain {
   tld: string;
   flipScore?: number; // 1-100, brandability + resale potential
   trendStrength?: number; // 1-5 stars, keyword trends
-  checkStatus?: 'verified' | 'error';
+  checkStatus?: 'verified' | 'error' | 'pending';
 }
 
 interface SearchResponse {
@@ -238,8 +238,20 @@ export const searchDomains = async (keyword: string, forceDemoMode = false): Pro
       };
     }
     
+    // Ensure checkStatus is propagated from edge function response
+    const domainsWithStatus = (data.domains || []).map((d: any) => ({
+      name: d.name,
+      available: d.available,
+      price: d.price,
+      tld: d.tld,
+      flipScore: d.flipScore,
+      trendStrength: d.trendStrength,
+      // CRITICAL: Propagate checkStatus from Namecheap verification
+      checkStatus: d.checkStatus || (d.available ? 'verified' : undefined)
+    }));
+
     return {
-      domains: data.domains || [],
+      domains: domainsWithStatus,
       isDemo: false
     };
     
