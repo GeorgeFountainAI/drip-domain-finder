@@ -24,9 +24,11 @@ const generateMockDomains = (keyword: string): Domain[] => {
   
   return tlds.map(tld => ({
     name: `${cleanKeyword}.${tld}`,
-    available: false, // Untrusted availability
+    available: false, // Unknown until Namecheap verifies
     price: null, // No fabricated price
-    tld
+    tld,
+    // IMPORTANT: never imply "unavailable" from fallback data
+    checkStatus: 'pending'
   }));
 };
 
@@ -51,9 +53,11 @@ const generateEnhancedMockDomains = (keyword: string): Domain[] => {
     tlds.slice(0, 3).forEach(tld => {
       domains.push({
         name: `${variation}.${tld}`,
-        available: false, // Untrusted availability
+        available: false, // Unknown until Namecheap verifies
         price: null, // No fabricated price
-        tld
+        tld,
+        // IMPORTANT: never imply "unavailable" from fallback data
+        checkStatus: 'pending'
       });
     });
   });
@@ -246,8 +250,8 @@ export const searchDomains = async (keyword: string, forceDemoMode = false): Pro
       tld: d.tld,
       flipScore: d.flipScore,
       trendStrength: d.trendStrength,
-      // CRITICAL: Propagate checkStatus from Namecheap verification
-      checkStatus: d.checkStatus || (d.available ? 'verified' : undefined)
+      // CRITICAL: use server-provided verification state; if missing, treat as pending
+      checkStatus: d.checkStatus || 'pending'
     }));
 
     return {

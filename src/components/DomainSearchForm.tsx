@@ -170,6 +170,74 @@ export const DomainSearchForm = forwardRef<DomainSearchFormRef, DomainSearchForm
   const { credits, loading: creditsLoading } = useGetCreditBalance();
   const { isAdmin } = useAdminBypass();
 
+  // Namecheap is the single source of truth for availability.
+  // We only ever show "Unavailable" when Namecheap explicitly verifies registered.
+  const verifyAvailabilityAtSearchTime = async (domainsToVerify: Domain[], batchSize: number = 5) => {
+    if (!domainsToVerify.length) return;
+
+    // Mark any unverified items as pending immediately (prevents accidental "Unavailable")
+    setDomains((prev) =>
+      prev.map((d) =>
+        domainsToVerify.some((x) => x.name === d.name)
+          ? { ...d, checkStatus: d.checkStatus ?? 'pending' }
+          : d
+      )
+    );
+
+    const chunks = chunkArray(domainsToVerify, batchSize);
+    for (const chunk of chunks) {
+      await Promise.all(
+        chunk.map(async (domain) => {
+          try {
+            const startedAt = new Date().toISOString();
+            const { data, error: functionError } = await supabase.functions.invoke('check-domain', {
+              body: { domain: domain.name.trim().toLowerCase() },
+            });
+
+            if (functionError) throw new Error(functionError.message);
+
+            const raw = data as any;
+            const status = raw?.status as string | undefined;
+            const priceUsd = raw?.priceUsd as number | null | undefined;
+
+            console.log(`[namecheap] verify ${domain.name} @ ${startedAt}:`, raw);
+
+            setDomains((prev) =>
+              prev.map((d) => {
+                if (d.name !== domain.name) return d;
+
+                if (status === 'available') {
+                  // NAMECHEAP SAYS AVAILABLE → ALWAYS AVAILABLE
+                  return {
+                    ...d,
+                    available: true,
+                    price: typeof priceUsd === 'number' ? priceUsd : d.price,
+                    checkStatus: 'verified',
+                  };
+                }
+
+                if (status === 'registered') {
+                  // Only case we can mark unavailable
+                  return {
+                    ...d,
+                    available: false,
+                    checkStatus: 'verified',
+                  };
+                }
+
+                // Any other / malformed response → retry state (never default to unavailable)
+                return { ...d, checkStatus: 'error' };
+              })
+            );
+          } catch (err) {
+            console.error(`[namecheap] verify failed for ${domain.name}:`, err);
+            setDomains((prev) => prev.map((d) => (d.name === domain.name ? { ...d, checkStatus: 'error' } : d)));
+          }
+        })
+      );
+    }
+  };
+
   const retryDomainAvailability = async (domainName: string) => {
     setRetryingAvailability((prev) => new Set(prev).add(domainName));
 
@@ -192,6 +260,7 @@ export const DomainSearchForm = forwardRef<DomainSearchFormRef, DomainSearchForm
             ...d,
             available: status === 'available',
             price: typeof priceUsd === 'number' ? priceUsd : d.price,
+            // Only verified when Namecheap responded (available or registered)
             checkStatus: status === 'error' ? 'error' : 'verified',
           };
         })
@@ -268,7 +337,8 @@ export const DomainSearchForm = forwardRef<DomainSearchFormRef, DomainSearchForm
             price: null, // No fabricated price
             tld: 'com',
             flipScore: 60 + Math.floor(Math.random() * 30),
-            trendStrength: Math.floor(Math.random() * 5) + 1
+          trendStrength: Math.floor(Math.random() * 5) + 1,
+          checkStatus: 'pending'
           }));
         
         // Filter out blocked domains and validate in batches (temporary bypass for wildcard)
@@ -314,11 +384,17 @@ export const DomainSearchForm = forwardRef<DomainSearchFormRef, DomainSearchForm
         );
         
         // First set unvalidated results so user always sees domains
-        setDomains(unblockedDomains);
+        // Ensure domains without a verification state are treated as pending (not unavailable)
+        const pendingSafeDomains = unblockedDomains.map((d) => ({
+          ...d,
+          checkStatus: d.checkStatus ?? 'pending',
+        }));
+
+        setDomains(pendingSafeDomains);
         setLastSearchedKeyword(keyword.trim());
         
         // Notify parent with unvalidated results immediately
-        const unvalidatedResults = unblockedDomains.map(d => ({ ...d, validated: false }));
+        const unvalidatedResults = pendingSafeDomains.map(d => ({ ...d, validated: false }));
         if (onResults) {
           onResults(unvalidatedResults);
         }
@@ -326,9 +402,13 @@ export const DomainSearchForm = forwardRef<DomainSearchFormRef, DomainSearchForm
           onStateChange('results');
         }
         
+        // P0: perform live Namecheap checks at search time.
+        // This ensures "Available" is never overridden by cache/fallback signals.
+        verifyAvailabilityAtSearchTime(pendingSafeDomains.filter((d) => d.checkStatus !== 'verified'));
+
         // Run validation in background - only filter if validation succeeds
         try {
-          const validatedDomains = await validateDomainsInBatches(unblockedDomains);
+          const validatedDomains = await validateDomainsInBatches(pendingSafeDomains);
           if (validatedDomains.length > 0) {
             // Only update if validation found valid domains
             setDomains(validatedDomains);
@@ -444,7 +524,8 @@ export const DomainSearchForm = forwardRef<DomainSearchFormRef, DomainSearchForm
             price: null, // No fabricated price
             tld: 'com',
             flipScore: 60 + Math.floor(Math.random() * 30),
-            trendStrength: Math.floor(Math.random() * 5) + 1
+            trendStrength: Math.floor(Math.random() * 5) + 1,
+            checkStatus: 'pending'
           }));
         
         // Filter out blocked domains and validate in batches (temporary bypass for wildcard)
@@ -456,7 +537,7 @@ export const DomainSearchForm = forwardRef<DomainSearchFormRef, DomainSearchForm
           ? await validateDomainsInBatches(unblockedDomains)
           : unblockedDomains; // Bypass validation for wildcard searches
         
-        setDomains(validatedDomains);
+        setDomains(validatedDomains.map((d) => ({ ...d, checkStatus: d.checkStatus ?? 'pending' })));
         setLastSearchedKeyword(normalizedKeyword);
         
         if (onResults) {
@@ -489,11 +570,15 @@ export const DomainSearchForm = forwardRef<DomainSearchFormRef, DomainSearchForm
         );
         
         // First set unvalidated results so user always sees domains
-        setDomains(unblockedDomains);
+        const pendingSafeDomains = unblockedDomains.map((d) => ({
+          ...d,
+          checkStatus: d.checkStatus ?? 'pending',
+        }));
+        setDomains(pendingSafeDomains);
         setLastSearchedKeyword(normalizedKeyword);
         
         // Notify parent with unvalidated results immediately
-        const unvalidatedResults = unblockedDomains.map(d => ({ ...d, validated: false }));
+        const unvalidatedResults = pendingSafeDomains.map(d => ({ ...d, validated: false }));
         if (onResults) {
           onResults(unvalidatedResults);
         }
@@ -501,9 +586,12 @@ export const DomainSearchForm = forwardRef<DomainSearchFormRef, DomainSearchForm
           onStateChange('results');
         }
         
+        // P0: perform live Namecheap checks at search time.
+        verifyAvailabilityAtSearchTime(pendingSafeDomains.filter((d) => d.checkStatus !== 'verified'));
+
         // Run validation in background - only filter if validation succeeds
         try {
-          const validatedDomains = await validateDomainsInBatches(unblockedDomains);
+          const validatedDomains = await validateDomainsInBatches(pendingSafeDomains);
           if (validatedDomains.length > 0) {
             // Only update if validation found valid domains
             setDomains(validatedDomains);
@@ -646,18 +734,33 @@ export const DomainSearchForm = forwardRef<DomainSearchFormRef, DomainSearchForm
           const unblockedDomains = searchResult.domains.filter(domain => 
             !DOMAIN_BLOCKLIST.includes(domain.name)
           );
-          
-          const validatedDomains = await validateDomainsInBatches(unblockedDomains);
-          
-          setDomains(validatedDomains);
-          
-          // Notify parent with results
-          if (onResults) {
-            onResults(validatedDomains);
-          }
+
+          const pendingSafeDomains = unblockedDomains.map((d) => ({
+            ...d,
+            checkStatus: d.checkStatus ?? 'pending',
+          }));
+
+          // Show results immediately
+          setDomains(pendingSafeDomains);
+          if (onResults) onResults(pendingSafeDomains);
           if (onStateChange) {
             onStateChange('results');
           }
+
+          // P0: perform live Namecheap checks at search time
+          verifyAvailabilityAtSearchTime(pendingSafeDomains.filter((d) => d.checkStatus !== 'verified'));
+
+          // Validation in background (non-blocking)
+          validateDomainsInBatches(pendingSafeDomains)
+            .then((validatedDomains) => {
+              if (validatedDomains.length > 0) {
+                setDomains(validatedDomains);
+                if (onResults) onResults(validatedDomains);
+              }
+            })
+            .catch((validationError) => {
+              console.warn('Domain validation failed, keeping unvalidated results:', validationError);
+            });
           
           if (searchResult.isDemo) {
             toast({
@@ -676,7 +779,7 @@ export const DomainSearchForm = forwardRef<DomainSearchFormRef, DomainSearchForm
     focusOnResults: () => {
       // Implement focus logic if needed
     }
-  }), [toast, onResults, onStateChange]);
+  }), [toast, onResults, onStateChange, verifyAvailabilityAtSearchTime]);
 
   return (
     <TooltipProvider>
@@ -874,9 +977,9 @@ export const DomainSearchForm = forwardRef<DomainSearchFormRef, DomainSearchForm
                                 </Badge>
                               </div>
                               <div className="flex items-center gap-2 mb-2">
-                                {domain.checkStatus === 'error' || domain.checkStatus === 'pending' ? (
+                                {domain.checkStatus === 'error' ? (
                                   <div className="flex items-center gap-2">
-                                    <Badge variant="secondary" className="bg-yellow-100 text-yellow-800">
+                                    <Badge variant="secondary" className="text-destructive">
                                       <AlertCircle className="mr-1 h-3 w-3" />
                                       Unable to verify — retry
                                     </Badge>
@@ -892,15 +995,25 @@ export const DomainSearchForm = forwardRef<DomainSearchFormRef, DomainSearchForm
                                       Retry
                                     </Button>
                                   </div>
+                                ) : domain.checkStatus === 'pending' ? (
+                                  <Badge variant="secondary" className="text-muted-foreground">
+                                    <Loader2 className="mr-1 h-3 w-3 animate-spin" />
+                                    Checking…
+                                  </Badge>
                                 ) : domain.available ? (
-                                  <Badge variant="default" className="bg-green-100 text-green-800 hover:bg-green-200">
+                                  <Badge variant="default">
                                     <Check className="mr-1 h-3 w-3" />
                                     Available
                                   </Badge>
-                                ) : (
-                                  <Badge variant="secondary" className="bg-red-100 text-red-800">
+                                ) : domain.checkStatus === 'verified' ? (
+                                  <Badge variant="secondary" className="text-destructive">
                                     <X className="mr-1 h-3 w-3" />
                                     Unavailable
+                                  </Badge>
+                                ) : (
+                                  <Badge variant="secondary" className="text-muted-foreground">
+                                    <Loader2 className="mr-1 h-3 w-3 animate-spin" />
+                                    Checking…
                                   </Badge>
                                 )}
                               </div>
