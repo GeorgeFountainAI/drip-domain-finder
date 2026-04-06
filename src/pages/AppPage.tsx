@@ -59,10 +59,7 @@ const AppPage: React.FC = () => {
     );
   }
 
-  // Don't render if no user (will redirect)
-  if (!user) {
-    return null;
-  }
+  // Render even without user (no login required)
 
   return (
     <div className="min-h-screen bg-background">
