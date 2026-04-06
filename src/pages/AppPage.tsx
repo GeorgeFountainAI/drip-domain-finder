@@ -15,13 +15,10 @@ const AppPage: React.FC = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Get current session first
+    // Get current session (no redirect if unauthenticated)
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session?.user) {
         setUser(session.user);
-      } else {
-        // Redirect to auth if not authenticated
-        navigate('/auth');
       }
       setLoading(false);
     });
@@ -41,8 +38,7 @@ const AppPage: React.FC = () => {
             });
           }, 0);
         } else {
-          // Redirect to auth if logged out
-          navigate('/auth');
+          setUser(null);
         }
         setLoading(false);
       }
@@ -63,10 +59,7 @@ const AppPage: React.FC = () => {
     );
   }
 
-  // Don't render if no user (will redirect)
-  if (!user) {
-    return null;
-  }
+  // Render even without user (no login required)
 
   return (
     <div className="min-h-screen bg-background">
